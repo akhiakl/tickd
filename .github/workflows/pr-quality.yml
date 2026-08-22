@@ -73,7 +73,7 @@ jobs:
       - name: Run e2e tests
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: e2e-results.json
-        run: npx playwright test --project=e2e --reporter=json --reporter=html
+        run: npx playwright test --project=e2e
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -112,7 +112,7 @@ jobs:
       - name: Run accessibility tests
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: a11y-results.json
-        run: npx playwright test --project=a11y --reporter=json --reporter=html
+        run: npx playwright test --project=a11y
       - if: always()
         uses: actions/upload-artifact@v4
         with:
