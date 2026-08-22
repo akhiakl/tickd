@@ -20,7 +20,7 @@ reference; nothing in that folder ships in the app.
 - **next/og** (`ImageResponse`) for the personal share card, generated server-side as a PNG
 - **Vercel Analytics** and **Speed Insights**
 - **Vitest** + **Testing Library** for unit and component tests
-- **Husky** + **lint-staged** + **Prettier** + **ESLint** (flat config)
+- **Husky** + **lint-staged** + **commitlint** + **Prettier** + **ESLint** (flat config)
 
 ## Getting started
 
@@ -106,7 +106,9 @@ npm run format:check  # Prettier
 
 `npm run lint` enforces a 300-line maximum on non-test files and 500 lines on test files
 (`eslint.config.mjs`) - split a file that grows past that rather than disabling the rule. Husky
-runs `lint-staged` on every commit (ESLint + Prettier on staged files).
+runs `lint-staged` on every commit (ESLint + Prettier on staged files) and `commitlint` on every
+commit message, which must follow [Conventional Commits](https://www.conventionalcommits.org/)
+(`commitlint.config.js`).
 
 ### Unit and component tests
 
