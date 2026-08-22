@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <style>
+    .cell { fill: #55743f; }
+    .cell-last { fill: #d07a3c; }
+    @media (prefers-color-scheme: dark) {
+      .cell { fill: #9cbd72; }
+      .cell-last { fill: #e79457; }
+    }
+  </style>
+  <rect class="cell" x="6" y="25" width="8" height="8" rx="2.6" />
+  <rect class="cell" x="14.5" y="33.5" width="8" height="8" rx="2.6" />
+  <rect class="cell" x="23" y="25" width="8" height="8" rx="2.6" />
+  <rect class="cell" x="31.5" y="16.5" width="8" height="8" rx="2.6" />
+  <rect class="cell-last" x="40" y="8" width="8" height="8" rx="2.6" />
+</svg>
