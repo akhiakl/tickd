@@ -19,8 +19,19 @@ describe("InviteCodePanel", () => {
   it("copies the invite link and confirms it with a toast", async () => {
     render(<InviteCodePanel groupId="g1" initialCode="ABC123" />);
     fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("tickd.app/j/ABC123");
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("tickd.app/join?code=ABC123");
     expect(await screen.findByText("Invite link copied")).toBeInTheDocument();
+  });
+
+  it("shows a fallback toast when the clipboard write fails", async () => {
+    Object.assign(navigator, {
+      clipboard: { writeText: vi.fn().mockRejectedValue(new Error("denied")) },
+    });
+    render(<InviteCodePanel groupId="g1" initialCode="ABC123" />);
+    fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
+    expect(
+      await screen.findByText("Couldn't copy - try selecting the code instead"),
+    ).toBeInTheDocument();
   });
 
   it("swaps in a new code after regenerating", async () => {

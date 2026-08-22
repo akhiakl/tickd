@@ -18,8 +18,9 @@ export function InviteCodePanel({
 
   function copy() {
     navigator.clipboard
-      .writeText(`tickd.app/j/${code}`)
-      .then(() => showToast("Invite link copied"));
+      .writeText(`tickd.app/join?code=${code}`)
+      .then(() => showToast("Invite link copied"))
+      .catch(() => showToast("Couldn't copy - try selecting the code instead"));
   }
 
   function regenerate() {

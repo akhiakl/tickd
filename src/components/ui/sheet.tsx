@@ -17,6 +17,7 @@ export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) 
   return (
     <div className="bg-panel-deep/60 absolute inset-0 z-20 flex flex-col justify-end">
       <button
+        type="button"
         aria-label="Close"
         onClick={onClose}
         className="flex-1 cursor-pointer border-0 bg-transparent p-0"
@@ -28,6 +29,7 @@ export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) 
             {subtitle && <div className="text-muted text-[12.5px]">{subtitle}</div>}
           </div>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close"
             className="bg-surface hover:bg-surface-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full"

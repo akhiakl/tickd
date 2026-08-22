@@ -15,6 +15,7 @@ export function ShareButton({ groupId }: { groupId: string }) {
   async function handleShare() {
     try {
       const res = await fetch(imageUrl);
+      if (!res.ok) throw new Error(`Failed to load share image: ${res.status}`);
       const blob = await res.blob();
       const file = new File([blob], "tickd-share.png", { type: "image/png" });
       if (navigator.canShare?.({ files: [file] })) {

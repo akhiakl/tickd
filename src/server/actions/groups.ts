@@ -1,5 +1,6 @@
 "use server";
 
+import { randomInt } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -9,11 +10,12 @@ import { requireUserId } from "@/server/auth/require-user";
 import { createGroupSchema, joinGroupSchema } from "@/server/validation/schemas";
 import type { ActionResult } from "./auth";
 
+/** Invite codes gate group membership, so they're drawn from a CSPRNG rather than Math.random(). */
 function randomInviteCode(): string {
   const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
   const alnum = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const pick = (chars: string, length: number) =>
-    Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    Array.from({ length }, () => chars[randomInt(chars.length)]).join("");
   return `${pick(letters, 4)}-${pick(alnum, 4)}`;
 }
 
