@@ -51,6 +51,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // server-only has no runtime content; stub it so server-layer modules
+      // (e.g. src/server/queries/users.ts) can be unit-tested under Vitest.
+      "server-only": path.resolve(__dirname, "./src/__mocks__/server-only.ts"),
     },
   },
 });

@@ -55,4 +55,18 @@ test.describe("join a group", () => {
     await page.goto("/join?code=lowercase-code");
     await expect(page.getByLabel("Invite code")).toHaveValue("LOWERCASE-CODE");
   });
+
+  test("short-link /j/<code> redirects to /join?code=<code> and pre-fills the invite code", async ({
+    page,
+    context,
+    baseURL,
+  }) => {
+    const group = await seedFreshGroup();
+    const user = await seedLoneUser("Joiner");
+    await signInAs(context, user, baseURL!);
+
+    await page.goto(`/j/${group.inviteCode}`);
+    await expect(page).toHaveURL(`/join?code=${group.inviteCode}`);
+    await expect(page.getByLabel("Invite code")).toHaveValue(group.inviteCode);
+  });
 });
