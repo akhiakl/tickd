@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/organic-b23afb13-af27-4088-86d7-c9a927b71ba1/styles.css">
+<script src="_ds/organic-b23afb13-af27-4088-86d7-c9a927b71ba1/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;500;600;700;800&display=swap">
+<style>
+  body {
+    --c-bg: #f7f3e9; --c-bg-rgb: 246,241,230; --c-surface: #e9e3d2; --c-surface-2: #ded7c2;
+    --c-text: #1d2019; --c-text-rgb: 29,32,25; --c-muted: #5f6455; --c-faint: #8b8f7f;
+    --c-panel: #232720; --c-panel-rgb: 35,39,32; --c-panel-2: #3b4034; --c-panel-soft: #9aa08c;
+    --c-panel-deep: #1a1d17; --c-panel-deep-rgb: 26,29,23;
+    --c-acc: #55743f; --c-acc-rgb: 85,116,63; --c-acc-d: #3f5a2c; --c-acc-xd: #2c4020;
+    --c-sage: #7a8a5e; --c-acc-deep: #2c3a1c; --c-acc-deep-rgb: 44,58,28;
+    --c-flame: #d07a3c; --c-flame-l: #eda061; --c-flame-l-rgb: 237,160,97;
+    --c-ok-bg: #e6eeda; --c-ok: #55743f; --c-ok-d: #34401f; --c-ok-d-rgb: 52,64,31;
+    --c-ok-2: #a8bd8b; --c-ok-3: #8aa26a; --c-ok-4: #c8dab0; --c-ok-5: #728157;
+    --c-zero: #f2ded0; --c-future: #e3ddcb; --c-card-fg: #f7f2e6; --c-card-fg-rgb: 247,242,230;
+    --c-on-panel: #f6f1e6; --c-on-panel-rgb: 246,241,230;
+    --c-stage: #dcd6c8; --c-glow-1: #eef4dd; --c-glow-2: #f5e6d6;
+    --c-bezel: #232720; --c-bezel-2: #6c7360;
+  }
+  [data-theme-root="light"] {
+    --c-on-panel: #f6f1e6; --c-on-panel-rgb: 246,241,230;
+    --c-bg: #f7f3e9; --c-bg-rgb: 246,241,230;
+    --c-surface: #e9e3d2; --c-surface-2: #ded7c2;
+    --c-text: #1d2019; --c-text-rgb: 29,32,25;
+    --c-muted: #5f6455; --c-faint: #8b8f7f;
+    --c-panel: #232720; --c-panel-rgb: 35,39,32;
+    --c-panel-2: #3b4034; --c-panel-soft: #9aa08c; --c-panel-deep: #1a1d17; --c-panel-deep-rgb: 26,29,23;
+    --c-acc: #55743f; --c-acc-rgb: 85,116,63; --c-acc-d: #3f5a2c; --c-acc-xd: #2c4020;
+    --c-sage: #7a8a5e; --c-acc-deep: #2c3a1c; --c-acc-deep-rgb: 44,58,28;
+    --c-flame: #d07a3c; --c-flame-l: #eda061; --c-flame-l-rgb: 237,160,97;
+    --c-ok-bg: #e6eeda; --c-ok: #55743f; --c-ok-d: #34401f; --c-ok-d-rgb: 52,64,31;
+    --c-ok-2: #a8bd8b; --c-ok-3: #8aa26a; --c-ok-4: #c8dab0; --c-ok-5: #728157;
+    --c-zero: #f2ded0; --c-future: #e3ddcb;
+    --c-card-fg: #f7f2e6; --c-card-fg-rgb: 247,242,230;
+    --c-stage: #dcd6c8; --c-glow-1: #eef4dd; --c-glow-2: #f5e6d6;
+    --c-bezel: #232720; --c-bezel-2: #6c7360;
+  }
+  [data-theme-root="dark"] {
+    color-scheme: dark;
+    --c-on-panel: #f1ece0; --c-on-panel-rgb: 241,236,224;
+    --c-bg: #14160f; --c-bg-rgb: 20,22,15;
+    --c-surface: #1f231a; --c-surface-2: #282d22;
+    --c-text: #f1ece0; --c-text-rgb: 241,236,224;
+    --c-muted: #a9ad9b; --c-faint: #8b8f7f;
+    --c-panel: #262b1f; --c-panel-rgb: 38,43,31;
+    --c-panel-2: #3a4034; --c-panel-soft: #9aa08c; --c-panel-deep: #10120d; --c-panel-deep-rgb: 16,18,13;
+    --c-acc: #9cbd72; --c-acc-rgb: 156,189,114; --c-acc-d: #46592f; --c-acc-xd: #c8dab0;
+    --c-sage: #93aa72; --c-acc-deep: #101a08; --c-acc-deep-rgb: 16,26,8;
+    --c-flame: #e79457; --c-flame-l: #f0ae76; --c-flame-l-rgb: 240,174,118;
+    --c-ok-bg: #263019; --c-ok: #9cbd72; --c-ok-d: #dfe9cf; --c-ok-d-rgb: 223,233,207;
+    --c-ok-2: #7d9660; --c-ok-3: #6c8351; --c-ok-4: #46562e; --c-ok-5: #8aa26a;
+    --c-zero: #33291f; --c-future: #1d2017;
+    --c-card-fg: #f7f2e6; --c-card-fg-rgb: 247,242,230;
+    --c-stage: #0f110c; --c-glow-1: #1c2416; --c-glow-2: #2a2118;
+    --c-bezel: #050604; --c-bezel-2: #3c4136;
+  }
+  html, body { margin: 0; background: var(--c-stage); }
+  * { -webkit-tap-highlight-color: transparent; }
+  .scroll::-webkit-scrollbar { width: 0; height: 0; }
+  a { color: var(--c-acc-d); }
+  a:hover { color: var(--c-acc-xd); }
+  body, body * { transition: background-color .2s ease, color .2s ease, border-color .2s ease; }
+  @keyframes pop { 0% { transform: scale(.5); } 55% { transform: scale(1.18); } 100% { transform: scale(1); } }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @keyframes toastin { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; background: radial-gradient(760px 520px at 12% 6%, var(--c-glow-1) 0%, transparent 62%), radial-gradient(680px 520px at 92% 88%, var(--c-glow-2) 0%, transparent 62%), var(--c-stage); font-family: 'Figtree', system-ui, sans-serif; color: var(--c-text);" data-theme-root="{{ themeFlag }}">
+ <div style="width: 390px; height: 844px; background: var(--c-bg); border-radius: 46px; box-shadow: 0 24px 60px rgba(var(--c-panel-deep-rgb),.4), 0 0 0 10px var(--c-bezel), 0 0 0 12px var(--c-bezel-2); overflow: hidden; display: flex; flex-direction: column; position: relative;">
+
+  <div style="flex: none; height: 46px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 7px; font-size: 12.5px; font-weight: 700;">
+   <span>9:41</span>
+   <span style="display: flex; gap: 6px; align-items: center;">
+    <span style="display: block; width: 17px; height: 9px; border: 1.5px solid var(--c-text); border-radius: 3px; opacity: .8;"></span>
+   </span>
+  </div>
+
+  <div class="scroll" style="flex: 1; overflow-y: auto; overflow-x: hidden; position: relative;">
+
+   <sc-if value="{{ atLanding }}" hint-placeholder-val="{{ true }}">
+    <div style="padding: 26px 26px 40px; display: flex; flex-direction: column; min-height: 700px;">
+     <div style="display: flex; align-items: center; gap: 10px;">
+      <svg viewBox="0 0 48 48" width="34" height="34" fill="none" aria-label="Tickd logo">
+       <rect x="6" y="25" width="8" height="8" rx="2.6" fill="var(--c-acc)"></rect>
+       <rect x="14.5" y="33.5" width="8" height="8" rx="2.6" fill="var(--c-acc)"></rect>
+       <rect x="23" y="25" width="8" height="8" rx="2.6" fill="var(--c-acc)"></rect>
+       <rect x="31.5" y="16.5" width="8" height="8" rx="2.6" fill="var(--c-acc)"></rect>
+       <rect x="40" y="8" width="8" height="8" rx="2.6" fill="var(--c-flame)"></rect>
+      </svg>
+      <span style="font-family: 'Caprasimo', serif; font-size: 22px; letter-spacing: -.025em;">Tickd</span>
+     </div>
+
+     <h1 style="font-family: 'Caprasimo', serif; font-size: 52px; line-height: .96; letter-spacing: -.02em; margin: 44px 0 16px;">Everyone's<br>in.<br>Every day.</h1>
+     <p style="font-size: 16.5px; line-height: 1.5; color: var(--c-muted); margin: 0 0 30px; max-width: 290px; text-wrap: pretty;">A shared daily checklist for your group. Tick your list, watch the wall fill in, don't be the one with the gap.</p>
+
+     <div style="display: flex; flex-direction: column; gap: 10px;">
+      <button onClick="{{ goSignin }}" style="width: 100%; border: 0; cursor: pointer; background: var(--c-acc); color: var(--c-on-panel); font-family: 'Caprasimo', serif; font-size: 17px; padding: 17px; border-radius: 999px; box-shadow: 0 6px 16px rgba(var(--c-acc-rgb),.35);" style-hover="background: var(--c-acc-d);">Start a group</button>
+      <button onClick="{{ goJoin }}" style="width: 100%; cursor: pointer; background: transparent; color: var(--c-text); border: 1.5px solid rgba(var(--c-text-rgb),.22); font-family: 'Caprasimo', serif; font-size: 17px; padding: 16px; border-radius: 999px;" style-hover="background: rgba(var(--c-text-rgb),.06);">Join with a code</button>
+     </div>
+
+     <div style="margin-top: 38px; display: flex; align-items: center; gap: 10px;">
+      <div style="height: 1px; flex: 1; background: rgba(var(--c-text-rgb),.16);"></div>
+      <span style="font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--c-faint);">Your groups</span>
+      <div style="height: 1px; flex: 1; background: rgba(var(--c-text-rgb),.16);"></div>
+     </div>
+
+     <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px;">
+      <sc-for list="{{ myGroups }}" as="g" hint-placeholder-count="2">
+       <button onClick="{{ g.open }}" style="width: 100%; text-align: left; cursor: pointer; border: 0; background: var(--c-surface); border-radius: 24px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; font-family: inherit;" style-hover="background: var(--c-surface-2);">
+        <div style="width: 42px; height: 42px; flex: none; border-radius: 999px; background: var(--c-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1;">
+         <span style="font-family: 'Caprasimo', serif; font-size: 15px;">{{ g.day }}</span>
+         <span style="font-size: 8px; letter-spacing: .1em; color: var(--c-faint);">DAY</span>
+        </div>
+        <div style="flex: 1;">
+         <div style="font-weight: 700; font-size: 15.5px;">{{ g.name }}</div>
+         <div style="font-size: 12.5px; color: var(--c-muted);">{{ g.sub }}</div>
+        </div>
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--c-faint)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+       </button>
+      </sc-for>
+     </div>
+    </div>
+   </sc-if>
+
+   <sc-if value="{{ atSignin }}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 8px 26px 40px; min-height: 700px; display: flex; flex-direction: column;">
+     <button onClick="{{ goLanding }}" style="width: 36px; height: 36px; flex: none; margin: 6px 0 30px; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.18); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(var(--c-text-rgb),.06);">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--c-text)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+     </button>
+
+     <svg viewBox="0 0 48 48" width="44" height="44" fill="none" aria-label="Tickd logo">
+      <rect x="6" y="25" width="8" height="8" rx="2.6" fill="var(--c-acc)"></rect>
+      <rect x="14.5" y="33.5" width="8" height="8" rx="2.6" fill="var(--c-acc)"></rect>
+      <rect x="23" y="25" width="8" height="8" rx="2.6" fill="var(--c-acc)"></rect>
+      <rect x="31.5" y="16.5" width="8" height="8" rx="2.6" fill="var(--c-acc)"></rect>
+      <rect x="40" y="8" width="8" height="8" rx="2.6" fill="var(--c-flame)"></rect>
+     </svg>
+     <h1 style="font-family: 'Caprasimo', serif; font-size: 33px; line-height: 1.05; margin: 20px 0 8px;">Sign in to Tickd</h1>
+     <p style="font-size: 15px; color: var(--c-muted); margin: 0 0 26px;">So your streak follows you to a new phone.</p>
+
+     <div style="display: flex; flex-direction: column; gap: 9px;">
+      <sc-for list="{{ providers }}" as="p" hint-placeholder-count="3">
+       <button onClick="{{ p.go }}" style="width: 100%; display: flex; align-items: center; gap: 12px; cursor: pointer; background: var(--c-surface); color: var(--c-text); border: 1.5px solid rgba(var(--c-text-rgb),.12); font-family: inherit; font-weight: 700; font-size: 15px; padding: 14px 18px; border-radius: 999px;" style-hover="background: var(--c-surface-2);">
+        <span style="{{ p.dotStyle }}">{{ p.initial }}</span>
+        <span>Continue with {{ p.name }}</span>
+       </button>
+      </sc-for>
+     </div>
+
+     <div style="display: flex; align-items: center; gap: 10px; margin: 24px 0 20px;">
+      <div style="height: 1px; flex: 1; background: rgba(var(--c-text-rgb),.14);"></div>
+      <span style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c-faint);">or email</span>
+      <div style="height: 1px; flex: 1; background: rgba(var(--c-text-rgb),.14);"></div>
+     </div>
+
+     <input value="{{ email }}" onChange="{{ setEmail }}" placeholder="you@email.com" style="width: 100%; font-family: inherit; font-size: 16px; font-weight: 600; padding: 15px 18px; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.16); background: var(--c-surface); color: var(--c-text);">
+     <button onClick="{{ goCode }}" style="width: 100%; margin-top: 10px; border: 0; cursor: pointer; background: var(--c-acc); color: var(--c-on-panel); font-family: 'Caprasimo', serif; font-size: 17px; padding: 17px; border-radius: 999px; box-shadow: 0 6px 16px rgba(var(--c-acc-rgb),.35);" style-hover="background: var(--c-acc-d);">Send me a code</button>
+     <p style="font-size: 12px; color: var(--c-faint); margin: 16px 0 0; line-height: 1.5;">No passwords, ever. We email a six-digit code.</p>
+    </div>
+   </sc-if>
+
+   <sc-if value="{{ atCode }}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 8px 26px 40px; min-height: 700px;">
+     <button onClick="{{ goSignin }}" style="width: 36px; height: 36px; flex: none; margin: 6px 0 40px; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.18); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(var(--c-text-rgb),.06);">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--c-text)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+     </button>
+
+     <h1 style="font-family: 'Caprasimo', serif; font-size: 31px; line-height: 1.08; margin: 0 0 8px;">Check your email</h1>
+     <p style="font-size: 15px; color: var(--c-muted); margin: 0 0 30px;">Six digits sent to {{ emailDisplay }}</p>
+
+     <div style="display: flex; gap: 8px;">
+      <sc-for list="{{ codeBoxes }}" as="b" hint-placeholder-count="6">
+       <span style="{{ b.style }}">{{ b.char }}</span>
+      </sc-for>
+     </div>
+
+     <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px;">
+      <sc-for list="{{ keypad }}" as="k" hint-placeholder-count="12">
+       <button onClick="{{ k.press }}" style="{{ k.style }}">{{ k.label }}</button>
+      </sc-for>
+     </div>
+
+     <button onClick="{{ verifyCode }}" style="width: 100%; margin-top: 22px; border: 0; cursor: pointer; background: var(--c-acc); color: var(--c-on-panel); font-family: 'Caprasimo', serif; font-size: 17px; padding: 17px; border-radius: 999px; box-shadow: 0 6px 16px rgba(var(--c-acc-rgb),.35);" style-hover="background: var(--c-acc-d);">Verify</button>
+     <button onClick="{{ resendCode }}" style="width: 100%; margin-top: 8px; cursor: pointer; background: transparent; border: 0; color: var(--c-muted); font-family: inherit; font-weight: 700; font-size: 13.5px; padding: 10px;" style-hover="color: var(--c-text);">Send it again</button>
+    </div>
+   </sc-if>
+
+   <sc-if value="{{ atAccount }}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 8px 0 40px;">
+     <div style="padding: 6px 22px 18px; display: flex; align-items: center; gap: 12px;">
+      <button onClick="{{ goToday }}" style="width: 36px; height: 36px; flex: none; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.18); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(var(--c-text-rgb),.06);">
+       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--c-text)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+      </button>
+      <span style="font-family: 'Caprasimo', serif; font-size: 21px;">Your account</span>
+     </div>
+
+     <div style="margin: 0 16px; background: var(--c-surface); border-radius: 28px; padding: 20px; display: flex; align-items: center; gap: 15px;">
+      <div style="{{ accountAvatarStyle }}">{{ myInitial }}</div>
+      <div style="flex: 1; min-width: 0;">
+       <input value="{{ myNameEdit }}" onChange="{{ setMyName }}" style="width: 100%; border: 0; background: transparent; font-family: 'Caprasimo', serif; font-size: 21px; color: var(--c-text); padding: 0;">
+       <div style="font-size: 12.5px; color: var(--c-muted); margin-top: 2px;">{{ emailDisplay }}</div>
+      </div>
+     </div>
+
+     <div style="padding: 26px 24px 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c-faint);">Your colour</div>
+     <div style="padding: 0 22px; display: flex; gap: 10px; flex-wrap: wrap;">
+      <sc-for list="{{ mySwatches }}" as="s" hint-placeholder-count="6">
+       <button onClick="{{ s.pick }}" style="{{ s.style }}"></button>
+      </sc-for>
+     </div>
+
+     <div style="padding: 26px 24px 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c-faint);">Preferences</div>
+     <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 7px;">
+      <sc-for list="{{ prefs }}" as="p" hint-placeholder-count="4">
+       <button onClick="{{ p.toggle }}" style="width: 100%; display: flex; align-items: center; gap: 14px; cursor: pointer; border: 0; background: var(--c-surface); border-radius: 22px; padding: 15px 17px; font-family: inherit; text-align: left; color: var(--c-text);" style-hover="background: var(--c-surface-2);">
+        <span style="flex: 1;">
+         <span style="display: block; font-size: 15px; font-weight: 700;">{{ p.label }}</span>
+         <span style="display: block; font-size: 12.5px; color: var(--c-muted); margin-top: 2px;">{{ p.sub }}</span>
+        </span>
+        <span style="{{ p.trackStyle }}"><span style="{{ p.knobStyle }}"></span></span>
+       </button>
+      </sc-for>
+     </div>
+
+     <div style="padding: 26px 24px 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c-faint);">Groups</div>
+     <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 7px;">
+      <button onClick="{{ goSettings }}" style="width: 100%; display: flex; align-items: center; gap: 12px; cursor: pointer; border: 0; background: var(--c-surface); border-radius: 22px; padding: 15px 17px; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--c-text);" style-hover="background: var(--c-surface-2);">
+       <span style="flex: 1; text-align: left;">{{ groupName }}</span>
+       <span style="font-size: 12.5px; font-weight: 600; color: var(--c-muted);">admin</span>
+       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--c-faint)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+      </button>
+     </div>
+
+     <div style="padding: 26px 16px 0;">
+      <button onClick="{{ signOut }}" style="width: 100%; cursor: pointer; background: transparent; border: 1.5px solid rgba(var(--c-text-rgb),.2); color: var(--c-text); font-family: 'Caprasimo', serif; font-size: 15px; padding: 15px; border-radius: 999px;" style-hover="background: rgba(var(--c-text-rgb),.06);">Sign out</button>
+     </div>
+    </div>
+   </sc-if>
+
+   <sc-if value="{{ atCreate }}" hint-placeholder-val="{{ true }}">
+    <div style="padding: 8px 22px 40px;">
+     <div style="display: flex; align-items: center; gap: 12px; padding: 6px 0 18px;">
+      <button onClick="{{ goLanding }}" style="width: 36px; height: 36px; flex: none; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.18); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(var(--c-text-rgb),.06);">
+       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--c-text)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+      </button>
+      <span style="font-family: 'Caprasimo', serif; font-size: 21px;">New group</span>
+     </div>
+
+     <label style="display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--c-faint); margin: 0 0 7px;">Group name</label>
+     <input value="{{ newName }}" onChange="{{ setNewName }}" placeholder="The August Eight" style="width: 100%; font-family: inherit; font-size: 16px; font-weight: 600; padding: 13px 16px; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.16); background: var(--c-surface); color: var(--c-text);">
+
+     <label style="display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--c-faint); margin: 22px 0 7px;">Runs for</label>
+     <div style="display: flex; gap: 8px;">
+      <sc-for list="{{ durations }}" as="d" hint-placeholder-count="3">
+       <button onClick="{{ d.pick }}" style="{{ d.style }}">{{ d.label }}</button>
+      </sc-for>
+     </div>
+
+     <label style="display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--c-faint); margin: 22px 0 7px;">Starts</label>
+     <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.16); background: var(--c-surface);">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--c-faint)" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+      <span style="font-size: 15px; font-weight: 600;">1 August 2026</span>
+     </div>
+
+     <div style="display: flex; align-items: baseline; justify-content: space-between; margin: 26px 0 10px;">
+      <span style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--c-faint);">Daily checklist</span>
+      <span style="font-size: 12px; color: var(--c-muted);">{{ draftCount }} items · drag to reorder</span>
+     </div>
+
+     <div style="display: flex; flex-direction: column; gap: 7px;">
+      <sc-for list="{{ draftItems }}" as="it" hint-placeholder-count="8">
+       <div onDragOver="{{ it.dragOver }}" onDrop="{{ it.drop }}" style="{{ it.rowStyle }}">
+        <span draggable="true" onDragStart="{{ it.dragStart }}" onDragEnd="{{ it.dragEnd }}" title="Drag to reorder" style="width: 26px; flex: none; cursor: grab; display: flex; flex-direction: column; gap: 3px; align-items: center; padding: 5px 0;"><span style="width: 13px; height: 2px; border-radius: 999px; background: rgba(var(--c-text-rgb),.3); display: block;"></span><span style="width: 13px; height: 2px; border-radius: 999px; background: rgba(var(--c-text-rgb),.3); display: block;"></span><span style="width: 13px; height: 2px; border-radius: 999px; background: rgba(var(--c-text-rgb),.3); display: block;"></span></span>
+        <input value="{{ it.label }}" onChange="{{ it.rename }}" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: inherit; font-size: 14.5px; font-weight: 600; color: var(--c-text); padding: 2px 0;">
+        <button onClick="{{ it.remove }}" style="width: 26px; height: 26px; flex: none; border: 0; background: transparent; cursor: pointer; border-radius: 999px; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(var(--c-acc-rgb),.16);">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--c-acc-d)" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+         </button>
+       </div>
+      </sc-for>
+     </div>
+
+     <button onClick="{{ addDraftItem }}" style="width: 100%; margin-top: 10px; cursor: pointer; background: transparent; border: 1.5px dashed rgba(var(--c-text-rgb),.25); color: var(--c-muted); font-family: inherit; font-weight: 700; font-size: 14px; padding: 12px; border-radius: 18px;" style-hover="border-color: var(--c-acc); color: var(--c-acc-d);">+ Add an item</button>
+
+     <button onClick="{{ createGroup }}" style="width: 100%; margin-top: 26px; border: 0; cursor: pointer; background: var(--c-acc); color: var(--c-on-panel); font-family: 'Caprasimo', serif; font-size: 17px; padding: 17px; border-radius: 999px; box-shadow: 0 6px 16px rgba(var(--c-acc-rgb),.35);" style-hover="background: var(--c-acc-d);">Create & get invite link</button>
+    </div>
+   </sc-if>
+
+   <sc-if value="{{ atJoin }}" hint-placeholder-val="{{ true }}">
+    <div style="padding: 8px 26px 40px;">
+     <div style="display: flex; align-items: center; gap: 12px; padding: 6px 0 22px;">
+      <button onClick="{{ goLanding }}" style="width: 36px; height: 36px; flex: none; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.18); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(var(--c-text-rgb),.06);">
+       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--c-text)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+      </button>
+      <span style="font-family: 'Caprasimo', serif; font-size: 21px;">Join a group</span>
+     </div>
+
+     <div style="background: var(--c-ok-bg); border-radius: 26px; padding: 18px 20px; display: flex; align-items: center; gap: 12px;">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--c-ok)" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"></path><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path></svg>
+      <div style="font-size: 13px; color: var(--c-ok-d); line-height: 1.4;">Code picked up from your invite link.</div>
+     </div>
+
+     <label style="display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--c-faint); margin: 24px 0 8px;">Invite code</label>
+     <input value="{{ joinCode }}" onChange="{{ setJoinCode }}" style="width: 100%; font-family: 'Caprasimo', serif; font-size: 26px; letter-spacing: .18em; text-align: center; padding: 15px 10px; border-radius: 22px; border: 1.5px solid rgba(var(--c-text-rgb),.16); background: var(--c-surface); color: var(--c-text);">
+
+     <label style="display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--c-faint); margin: 24px 0 8px;">Your name</label>
+     <input value="{{ joinName }}" onChange="{{ setJoinName }}" placeholder="What the group calls you" style="width: 100%; font-family: inherit; font-size: 16px; font-weight: 600; padding: 13px 16px; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.16); background: var(--c-surface); color: var(--c-text);">
+
+     <label style="display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--c-faint); margin: 24px 0 10px;">Your colour</label>
+     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <sc-for list="{{ swatches }}" as="s" hint-placeholder-count="6">
+       <button onClick="{{ s.pick }}" style="{{ s.style }}"></button>
+      </sc-for>
+     </div>
+
+     <div style="margin-top: 30px; display: flex; align-items: center; gap: 14px; background: var(--c-surface); border-radius: 26px; padding: 16px 18px;">
+      <div style="{{ previewAvatarStyle }}">{{ joinInitial }}</div>
+      <div>
+       <div style="font-weight: 700; font-size: 15.5px;">{{ joinNameDisplay }}</div>
+       <div style="font-size: 12.5px; color: var(--c-muted);">joins {{ groupName }} · day {{ groupDay }}</div>
+      </div>
+     </div>
+
+     <button onClick="{{ joinGroup }}" style="width: 100%; margin-top: 22px; border: 0; cursor: pointer; background: var(--c-acc); color: var(--c-on-panel); font-family: 'Caprasimo', serif; font-size: 17px; padding: 17px; border-radius: 999px; box-shadow: 0 6px 16px rgba(var(--c-acc-rgb),.35);" style-hover="background: var(--c-acc-d);">Join the group</button>
+     <p style="text-align: center; font-size: 12px; color: var(--c-faint); margin: 14px 0 0;">No password. This phone remembers you.</p>
+    </div>
+   </sc-if>
+
+   <sc-if value="{{ atToday }}" hint-placeholder-val="{{ true }}">
+    <div style="padding: 4px 0 30px;">
+     <div style="padding: 6px 22px 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+      <button onClick="{{ openSwitcher }}" style="border: 0; background: transparent; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: var(--c-text); min-width: 0;" style-hover="opacity: .72;">
+       <span style="display: flex; align-items: center; gap: 7px;">
+        <span style="font-family: 'Caprasimo', serif; font-size: 24px; line-height: 1.05;">{{ groupName }}</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--c-faint)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="flex: none;"><path d="m6 9 6 6 6-6"></path></svg>
+       </span>
+       <span style="display: block; font-size: 13px; color: var(--c-muted); margin-top: 3px;">Day {{ groupDay }} of {{ groupSpan }} · Wed 12 August</span>
+      </button>
+      <button onClick="{{ toggleTheme }}" style="width: 36px; height: 36px; flex: none; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.16); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(var(--c-text-rgb),.06);">
+       <sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--c-flame-l)" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"></path></svg>
+       </sc-if>
+       <sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--c-text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+       </sc-if>
+      </button>
+      <button onClick="{{ goAccount }}" style="width: 36px; height: 36px; flex: none; border: 0; padding: 0; border-radius: 999px; cursor: pointer;" style-hover="opacity: .85;">
+       <span style="{{ headerAvatarStyle }}">{{ myInitial }}</span>
+      </button>
+      <button onClick="{{ goSettings }}" style="width: 36px; height: 36px; flex: none; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.16); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(var(--c-text-rgb),.06);">
+       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--c-text)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.6.66 1.05 1.28 1.09H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+     </div>
+
+     <div style="margin: 16px 16px 0; background: var(--c-panel); border-radius: 30px; padding: 20px 22px; display: flex; align-items: center; gap: 18px; color: var(--c-on-panel);">
+      <div style="{{ ringStyle }}">
+       <div style="width: 62px; height: 62px; border-radius: 999px; background: var(--c-panel); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1;">
+        <span style="font-family: 'Caprasimo', serif; font-size: 22px;">{{ doneToday }}</span>
+        <span style="font-size: 9px; letter-spacing: .1em; color: var(--c-panel-soft);">OF {{ itemCount }}</span>
+       </div>
+      </div>
+      <div style="flex: 1;">
+       <div style="font-size: 10.5px; letter-spacing: .13em; color: var(--c-panel-soft);">DAY {{ groupDay }} OF {{ groupSpan }}</div>
+       <div style="font-family: 'Caprasimo', serif; font-size: 20px; margin: 3px 0 8px;">{{ statusLine }}</div>
+       <div style="display: flex; align-items: center; gap: 7px;">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="var(--c-flame-l)" stroke="none"><path d="M12 2s5 4.5 5 9a5 5 0 0 1-10 0c0-1.6.7-3 .7-3S8 11 9.5 11 12 8 12 8s-1 2 0 2 1.5-1.5 1.5-1.5S12 5 12 2z"></path><path d="M12 22a6 6 0 0 0 6-6c0-2-1-4-1-4s-1 6-5 6-5-6-5-6-1 2-1 4a6 6 0 0 0 6 6z"></path></svg>
+        <span style="font-size: 13px; font-weight: 700;">{{ myStreak }}-day streak</span>
+       </div>
+      </div>
+     </div>
+
+     <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 24px 24px 10px;">
+      <span style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c-faint);">Today's list</span>
+      <span style="font-size: 12px; color: var(--c-muted);">tap to tick</span>
+     </div>
+
+     <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 8px;">
+      <sc-for list="{{ todayList }}" as="it" hint-placeholder-count="8">
+       <button onClick="{{ it.toggle }}" style="{{ it.rowStyle }}">
+        <span style="{{ it.boxStyle }}">
+         <sc-if value="{{ it.done }}" hint-placeholder-val="{{ false }}">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--c-on-panel)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" style="animation: pop .3s cubic-bezier(.2,1.3,.5,1);"><path d="M20 6 9 17l-5-5"></path></svg>
+         </sc-if>
+        </span>
+        <span style="{{ it.labelStyle }}">{{ it.label }}</span>
+        <sc-if value="{{ it.isQuest }}" hint-placeholder-val="{{ false }}">
+         <span style="font-size: 9.5px; letter-spacing: .08em; padding: 3px 8px; border-radius: 999px; background: var(--c-ok-bg); color: var(--c-ok); flex: none;">SIDE QUEST</span>
+        </sc-if>
+       </button>
+      </sc-for>
+     </div>
+
+     <div style="margin: 22px 16px 0; display: flex; gap: 10px;">
+      <div style="flex: 1; background: var(--c-surface); border-radius: 24px; padding: 15px 17px;">
+       <div style="font-size: 10.5px; letter-spacing: .1em; color: var(--c-faint);">GROUP TODAY</div>
+       <div style="font-family: 'Caprasimo', serif; font-size: 25px; margin-top: 2px;">{{ groupToday }}<span style="font-size: 14px; color: var(--c-faint);">/{{ groupTodayMax }}</span></div>
+      </div>
+      <div style="flex: 1; background: var(--c-surface); border-radius: 24px; padding: 15px 17px;">
+       <div style="font-size: 10.5px; letter-spacing: .1em; color: var(--c-faint);">YOUR TOTAL</div>
+       <div style="font-family: 'Caprasimo', serif; font-size: 25px; margin-top: 2px;">{{ myTotal }}<span style="font-size: 14px; color: var(--c-faint);">/248</span></div>
+      </div>
+     </div>
+
+     <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 26px 24px 10px;">
+      <span style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c-faint);">The group</span>
+      <span style="font-size: 12px; color: var(--c-muted);">{{ memberCount }} people</span>
+     </div>
+
+     <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 2px;">
+      <sc-for list="{{ memberRows }}" as="m" hint-placeholder-count="8">
+       <button onClick="{{ m.open }}" style="{{ m.rowStyle }}">
+        <span style="{{ m.avatarStyle }}">{{ m.initial }}</span>
+        <span style="flex: 1; min-width: 0; text-align: left;">
+         <span style="display: block; font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ m.name }}</span>
+         <span style="display: block; height: 5px; border-radius: 999px; background: rgba(var(--c-text-rgb),.1); margin-top: 5px; overflow: hidden;">
+          <span style="{{ m.barStyle }}"></span>
+         </span>
+        </span>
+        <span style="display: flex; align-items: center; gap: 3px; flex: none; width: 42px; justify-content: flex-end;">
+         <svg viewBox="0 0 24 24" width="12" height="12" fill="var(--c-flame)" stroke="none"><path d="M12 22a6 6 0 0 0 6-6c0-4-4-6-4-11 0 0-2 2-2 5 0 0-2-1-2-3 0 0-4 3-4 9a6 6 0 0 0 6 6z"></path></svg>
+         <span style="font-size: 12.5px; font-weight: 700;">{{ m.streak }}</span>
+        </span>
+        <span style="flex: none; width: 44px; text-align: right; font-size: 12.5px; font-weight: 700; color: var(--c-muted);">{{ m.pct }}%</span>
+       </button>
+      </sc-for>
+     </div>
+    </div>
+   </sc-if>
+
+   <sc-if value="{{ atGrid }}" hint-placeholder-val="{{ true }}">
+    <div style="padding: 6px 0 30px;">
+     <div style="padding: 6px 22px 14px;">
+      <div style="font-family: 'Caprasimo', serif; font-size: 25px;">The wall</div>
+      <div style="font-size: 13px; color: var(--c-muted);">31 days · 15 people · tap any square</div>
+     </div>
+
+     <div style="display: flex; gap: 14px; padding: 0 22px 14px; font-size: 11px; color: var(--c-muted);">
+      <span style="display: flex; align-items: center; gap: 5px;"><span style="width: 11px; height: 11px; border-radius: 3px; background: var(--c-ok); display: block;"></span>all 8</span>
+      <span style="display: flex; align-items: center; gap: 5px;"><span style="width: 11px; height: 11px; border-radius: 3px; background: var(--c-ok-2); display: block;"></span>partial</span>
+      <span style="display: flex; align-items: center; gap: 5px;"><span style="width: 11px; height: 11px; border-radius: 3px; background: var(--c-zero); display: block;"></span>zero</span>
+     </div>
+
+     <div class="scroll" style="overflow-x: auto; padding: 0 0 6px 16px;">
+      <div style="display: inline-block; min-width: max-content; padding-right: 16px;">
+       <div style="display: flex; gap: 3px; margin-left: 84px; margin-bottom: 5px;">
+        <sc-for list="{{ dayHeads }}" as="d" hint-placeholder-count="31">
+         <span style="{{ d.style }}">{{ d.n }}</span>
+        </sc-for>
+       </div>
+       <sc-for list="{{ gridRows }}" as="row" hint-placeholder-count="15">
+        <div style="display: flex; align-items: center; gap: 3px; margin-bottom: 3px;">
+         <span style="{{ row.nameStyle }}">{{ row.name }}</span>
+         <sc-for list="{{ row.cells }}" as="c" hint-placeholder-count="31">
+          <button onClick="{{ c.tap }}" style="{{ c.style }}"></button>
+         </sc-for>
+        </div>
+       </sc-for>
+      </div>
+     </div>
+
+     <sc-if value="{{ hasCell }}" hint-placeholder-val="{{ false }}">
+      <div style="margin: 18px 16px 0; background: var(--c-panel); color: var(--c-on-panel); border-radius: 28px; padding: 18px 20px; animation: rise .22s ease;">
+       <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+         <div style="font-family: 'Caprasimo', serif; font-size: 18px;">{{ cellTitle }}</div>
+         <div style="font-size: 12px; color: var(--c-panel-soft);">{{ cellSub }}</div>
+        </div>
+        <button onClick="{{ closeCell }}" style="width: 30px; height: 30px; border: 0; border-radius: 999px; background: rgba(var(--c-on-panel-rgb),.12); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--c-on-panel)" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+        </button>
+       </div>
+       <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 7px;">
+        <sc-for list="{{ cellItems }}" as="ci" hint-placeholder-count="8">
+         <div style="display: flex; align-items: center; gap: 9px;">
+          <span style="{{ ci.dotStyle }}"></span>
+          <span style="{{ ci.textStyle }}">{{ ci.label }}</span>
+         </div>
+        </sc-for>
+       </div>
+      </div>
+     </sc-if>
+    </div>
+   </sc-if>
+
+   <sc-if value="{{ atRanks }}" hint-placeholder-val="{{ true }}">
+    <div style="padding: 6px 0 30px;">
+     <div style="padding: 6px 22px 14px;">
+      <div style="font-family: 'Caprasimo', serif; font-size: 25px;">Standings</div>
+      <div style="font-size: 13px; color: var(--c-muted);">by items completed</div>
+     </div>
+
+     <div style="padding: 0 22px 16px; display: flex; gap: 7px;">
+      <sc-for list="{{ rankFilters }}" as="f" hint-placeholder-count="3">
+       <button onClick="{{ f.pick }}" style="{{ f.style }}">{{ f.label }}</button>
+      </sc-for>
+     </div>
+
+     <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 7px;">
+      <sc-for list="{{ ranked }}" as="r" hint-placeholder-count="15">
+       <button onClick="{{ r.open }}" style="{{ r.rowStyle }}">
+        <span style="{{ r.rankStyle }}">{{ r.rank }}</span>
+        <span style="{{ r.avatarStyle }}">{{ r.initial }}</span>
+        <span style="flex: 1; min-width: 0; text-align: left; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.name }}</span>
+        <span style="display: flex; align-items: center; gap: 3px; flex: none;">
+         <svg viewBox="0 0 24 24" width="12" height="12" fill="var(--c-flame)" stroke="none"><path d="M12 22a6 6 0 0 0 6-6c0-4-4-6-4-11 0 0-2 2-2 5 0 0-2-1-2-3 0 0-4 3-4 9a6 6 0 0 0 6 6z"></path></svg>
+         <span style="font-size: 12.5px; font-weight: 700; color: var(--c-muted);">{{ r.streak }}</span>
+        </span>
+        <span style="flex: none; width: 54px; text-align: right; font-family: 'Caprasimo', serif; font-size: 17px;">{{ r.score }}</span>
+       </button>
+      </sc-for>
+     </div>
+    </div>
+   </sc-if>
+
+   <sc-if value="{{ atProfile }}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 8px 0 30px;">
+     <div style="padding: 6px 22px 0; display: flex; align-items: center; gap: 12px;">
+      <button onClick="{{ backFromProfile }}" style="width: 36px; height: 36px; flex: none; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.18); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(var(--c-text-rgb),.06);">
+       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--c-text)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+      </button>
+      <span style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c-faint);">Member</span>
+     </div>
+
+     <div style="padding: 18px 22px 0; display: flex; align-items: center; gap: 16px;">
+      <div style="{{ profAvatarStyle }}">{{ profInitial }}</div>
+      <div>
+       <div style="font-family: 'Caprasimo', serif; font-size: 27px; line-height: 1.05;">{{ profName }}</div>
+       <div style="font-size: 13px; color: var(--c-muted);">{{ profSub }}</div>
+      </div>
+     </div>
+
+     <div style="display: flex; gap: 8px; padding: 20px 16px 0;">
+      <sc-for list="{{ profStats }}" as="s" hint-placeholder-count="3">
+       <div style="flex: 1; background: var(--c-surface); border-radius: 22px; padding: 14px 12px; text-align: center;">
+        <div style="font-family: 'Caprasimo', serif; font-size: 24px;">{{ s.value }}</div>
+        <div style="font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--c-faint); margin-top: 2px;">{{ s.label }}</div>
+       </div>
+      </sc-for>
+     </div>
+
+     <div style="padding: 26px 24px 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c-faint);">Per item</div>
+     <div style="padding: 0 22px; display: flex; flex-direction: column; gap: 11px;">
+      <sc-for list="{{ profItems }}" as="p" hint-placeholder-count="8">
+       <div>
+        <div style="display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 600; margin-bottom: 5px;">
+         <span>{{ p.label }}</span><span style="color: var(--c-muted);">{{ p.pct }}%</span>
+        </div>
+        <div style="height: 7px; border-radius: 999px; background: rgba(var(--c-text-rgb),.1); overflow: hidden;">
+         <div style="{{ p.barStyle }}"></div>
+        </div>
+       </div>
+      </sc-for>
+     </div>
+
+     <div style="padding: 26px 24px 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c-faint);">History</div>
+     <div style="padding: 0 22px; display: flex; flex-wrap: wrap; gap: 5px; max-width: 340px;">
+      <sc-for list="{{ profDays }}" as="d" hint-placeholder-count="31">
+       <span style="{{ d.style }}">{{ d.n }}</span>
+      </sc-for>
+     </div>
+    </div>
+   </sc-if>
+
+   <sc-if value="{{ atSettings }}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 8px 0 30px;">
+     <div style="padding: 6px 22px 18px; display: flex; align-items: center; gap: 12px;">
+      <button onClick="{{ goToday }}" style="width: 36px; height: 36px; flex: none; border-radius: 999px; border: 1.5px solid rgba(var(--c-text-rgb),.18); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(var(--c-text-rgb),.06);">
+       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--c-text)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+      </button>
+      <span style="font-family: 'Caprasimo', serif; font-size: 21px;">Group settings</span>
+     </div>
+
+     <div style="margin: 0 16px; background: var(--c-panel); color: var(--c-on-panel); border-radius: 28px; padding: 18px 20px;">
+      <div style="font-size: 10.5px; letter-spacing: .12em; color: var(--c-panel-soft);">INVITE CODE</div>
+      <div style="font-family: 'Caprasimo', serif; font-size: 30px; letter-spacing: .16em; margin: 6px 0 14px;">{{ inviteCode }}</div>
+      <div style="display: flex; gap: 8px;">
+       <button onClick="{{ copyInvite }}" style="flex: 1; border: 0; cursor: pointer; background: var(--c-acc); color: var(--c-on-panel); font-family: inherit; font-weight: 700; font-size: 13.5px; padding: 11px; border-radius: 999px;" style-hover="background: var(--c-flame);">Copy link</button>
+       <button onClick="{{ regenInvite }}" style="flex: 1; cursor: pointer; background: transparent; color: var(--c-on-panel); border: 1.5px solid rgba(var(--c-on-panel-rgb),.3); font-family: inherit; font-weight: 700; font-size: 13.5px; padding: 11px; border-radius: 999px;" style-hover="background: rgba(var(--c-on-panel-rgb),.1);">Regenerate</button>
+      </div>
+     </div>
+
+     <div style="padding: 26px 24px 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c-faint);">Checklist items</div>
+     <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 7px;">
+      <sc-for list="{{ settingItems }}" as="it" hint-placeholder-count="8">
+       <div onDragOver="{{ it.dragOver }}" onDrop="{{ it.drop }}" style="{{ it.rowStyle }}">
+        <span draggable="true" onDragStart="{{ it.dragStart }}" onDragEnd="{{ it.dragEnd }}" title="Drag to reorder" style="width: 26px; flex: none; cursor: grab; display: flex; flex-direction: column; gap: 3px; align-items: center; padding: 5px 0;"><span style="width: 13px; height: 2px; border-radius: 999px; background: rgba(var(--c-text-rgb),.3); display: block;"></span><span style="width: 13px; height: 2px; border-radius: 999px; background: rgba(var(--c-text-rgb),.3); display: block;"></span><span style="width: 13px; height: 2px; border-radius: 999px; background: rgba(var(--c-text-rgb),.3); display: block;"></span></span>
+        <input value="{{ it.label }}" onChange="{{ it.rename }}" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: inherit; font-size: 14.5px; font-weight: 600; color: var(--c-text);">
+        <button onClick="{{ it.remove }}" style="width: 26px; height: 26px; flex: none; border: 0; background: transparent; cursor: pointer; border-radius: 999px; display: flex; align-items: center; justify-content: center;" style-hover="background: rgba(var(--c-acc-rgb),.16);">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--c-acc-d)" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+         </button>
+       </div>
+      </sc-for>
+     </div>
+     <div style="padding: 10px 16px 0;">
+      <button onClick="{{ addSettingItem }}" style="width: 100%; cursor: pointer; background: transparent; border: 1.5px dashed rgba(var(--c-text-rgb),.25); color: var(--c-muted); font-family: inherit; font-weight: 700; font-size: 14px; padding: 12px; border-radius: 18px;" style-hover="border-color: var(--c-acc); color: var(--c-acc-d);">+ Add an item</button>
+     </div>
+
+     <div style="padding: 26px 24px 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--c-faint);">Members</div>
+     <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 2px;">
+      <sc-for list="{{ settingMembers }}" as="m" hint-placeholder-count="6">
+       <div style="display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 18px;">
+        <span style="{{ m.avatarStyle }}">{{ m.initial }}</span>
+        <span style="flex: 1; font-size: 14.5px; font-weight: 600;">{{ m.name }}</span>
+        <button onClick="{{ m.remove }}" style="border: 0; background: transparent; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--c-acc-d); padding: 5px 10px; border-radius: 999px;" style-hover="background: rgba(var(--c-acc-rgb),.14);">Remove</button>
+       </div>
+      </sc-for>
+     </div>
+
+     <div style="margin: 26px 16px 0; border: 1.5px solid rgba(var(--c-acc-rgb),.35); border-radius: 26px; padding: 16px 18px;">
+      <div style="font-family: 'Caprasimo', serif; font-size: 16px; margin-bottom: 4px;">End of the road</div>
+      <p style="font-size: 12.5px; color: var(--c-muted); margin: 0 0 12px;">Archiving keeps the wall visible but locks new ticks.</p>
+      <div style="display: flex; gap: 8px;">
+       <button onClick="{{ archiveGroup }}" style="flex: 1; cursor: pointer; background: transparent; border: 1.5px solid rgba(var(--c-text-rgb),.2); font-family: inherit; font-weight: 700; font-size: 13.5px; padding: 11px; border-radius: 999px; color: var(--c-text);" style-hover="background: rgba(var(--c-text-rgb),.06);">Archive</button>
+       <button onClick="{{ deleteGroup }}" style="flex: 1; cursor: pointer; background: var(--c-acc-d); border: 0; color: var(--c-on-panel); font-family: inherit; font-weight: 700; font-size: 13.5px; padding: 11px; border-radius: 999px;" style-hover="background: var(--c-acc-xd);">Delete group</button>
+      </div>
+     </div>
+    </div>
+   </sc-if>
+
+
+  </div>
+
+  <sc-if value="{{ atToday }}" hint-placeholder-val="{{ true }}">
+   <button onClick="{{ openPreview }}" style="position: absolute; right: 18px; bottom: 96px; z-index: 5; display: flex; align-items: center; gap: 9px; border: 0; cursor: pointer; padding: 14px 20px 14px 17px; border-radius: 999px; background: var(--c-acc); color: var(--c-on-panel); font-family: 'Caprasimo', serif; font-size: 15px; box-shadow: 0 10px 24px rgba(var(--c-acc-rgb),.42);" style-hover="background: var(--c-acc-d);">
+    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"></path><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+    <span>Share today</span>
+   </button>
+  </sc-if>
+
+  <sc-if value="{{ showNav }}" hint-placeholder-val="{{ false }}">
+   <div style="flex: none; display: flex; padding: 7px 10px 20px; background: var(--c-bg); border-top: 1px solid rgba(var(--c-text-rgb),.1);">
+    <button onClick="{{ goToday }}" style="{{ navToday }}">
+     <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"></rect><path d="m8 12.5 2.5 2.5L16 9"></path></svg>
+     <span>Today</span>
+    </button>
+    <button onClick="{{ goGrid }}" style="{{ navGrid }}">
+     <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg>
+     <span>Wall</span>
+    </button>
+    <button onClick="{{ goRanks }}" style="{{ navRanks }}">
+     <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"></path></svg>
+     <span>Ranks</span>
+    </button>
+   </div>
+  </sc-if>
+
+  <sc-if value="{{ showPreview }}" hint-placeholder-val="{{ false }}">
+   <div style="position: absolute; inset: 0; z-index: 20; background: rgba(var(--c-panel-deep-rgb),.62); display: flex; flex-direction: column; justify-content: flex-end;">
+    <div onClick="{{ closePreview }}" style="flex: 1; cursor: pointer;"></div>
+    <div style="background: var(--c-bg); border-radius: 34px 34px 0 0; padding: 20px 18px 26px; animation: rise .22s ease;">
+     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+      <div>
+       <div style="font-family: 'Caprasimo', serif; font-size: 19px;">Share this</div>
+       <div style="font-size: 12.5px; color: var(--c-muted);">preview before you post it</div>
+      </div>
+      <button onClick="{{ closePreview }}" style="width: 32px; height: 32px; border: 0; border-radius: 999px; background: var(--c-surface); cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: var(--c-surface-2);">
+       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--c-text)" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+      </button>
+     </div>
+
+     <div style="background: #0d0e0b; border-radius: 24px; padding: 0; overflow: hidden; position: relative; box-shadow: 0 14px 32px rgba(13,14,11,.4);">
+      <div style="position: absolute; top: -70px; right: -70px; width: 230px; height: 230px; border-radius: 999px; background: radial-gradient(circle, rgba(143,169,106,.34) 0%, transparent 68%);"></div>
+      <div style="position: absolute; bottom: -90px; left: -60px; width: 220px; height: 220px; border-radius: 999px; background: radial-gradient(circle, rgba(237,160,97,.2) 0%, transparent 70%);"></div>
+
+      <div style="position: relative; padding: 22px 22px 20px;">
+       <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+         <span style="width: 26px; height: 26px; border-radius: 999px; background: #8fa96a; color: #0d0e0b; display: flex; align-items: center; justify-content: center; font-family: 'Caprasimo', serif; font-size: 12px;">{{ myInitial }}</span>
+         <span style="font-family: 'Figtree', sans-serif; font-weight: 800; font-size: 12px; letter-spacing: .14em; color: #f4f1e6; text-transform: uppercase;">{{ myName }}</span>
+        </div>
+        <span style="font-family: 'Figtree', sans-serif; font-weight: 800; font-size: 11px; letter-spacing: .18em; color: #6d7361;">DAY 12/31</span>
+       </div>
+
+       <div style="display: flex; align-items: flex-end; gap: 12px; margin: 26px 0 0;">
+        <div style="font-family: 'Caprasimo', serif; font-size: 82px; line-height: .78; color: #f4f1e6;">{{ doneToday }}</div>
+        <div style="padding-bottom: 8px;">
+         <div style="font-family: 'Caprasimo', serif; font-size: 26px; color: #8fa96a; line-height: 1;">of {{ itemCount }}</div>
+         <div style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 11.5px; letter-spacing: .16em; color: #6d7361; text-transform: uppercase; margin-top: 4px;">done today</div>
+        </div>
+       </div>
+
+       <div style="display: flex; gap: 4px; margin-top: 20px;">
+        <sc-for list="{{ previewTicks }}" as="t" hint-placeholder-count="8">
+         <span style="{{ t.style }}"></span>
+        </sc-for>
+       </div>
+
+       <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 18px;">
+        <sc-for list="{{ previewRows }}" as="r" hint-placeholder-count="8">
+         <div style="{{ r.rowStyle }}">
+          <sc-if value="{{ r.done }}" hint-placeholder-val="{{ false }}">
+           <svg viewBox="0 0 34 22" width="24" height="16" fill="none" stroke="#0d0e0b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="flex: none; transform: rotate(-6deg);"><path d="M3 12 11 19 31 3"></path></svg>
+          </sc-if>
+          <sc-if value="{{ r.pending }}" hint-placeholder-val="{{ true }}">
+           <span style="width: 24px; flex: none; display: flex; justify-content: center;">
+            <span style="width: 12px; height: 2px; border-radius: 999px; background: rgba(244,241,230,.28); display: block;"></span>
+           </span>
+          </sc-if>
+          <span style="{{ r.labelStyle }}">{{ r.label }}</span>
+         </div>
+        </sc-for>
+       </div>
+
+       <div style="display: flex; align-items: center; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(244,241,230,.12);">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="#eda061" stroke="none" style="flex: none;"><path d="M12 22a6 6 0 0 0 6-6c0-4-4-6-4-11 0 0-2 2-2 5 0 0-2-1-2-3 0 0-4 3-4 9a6 6 0 0 0 6 6z"></path></svg>
+        <span style="font-family: 'Figtree', sans-serif; font-weight: 800; font-size: 12.5px; letter-spacing: .06em; color: #eda061; text-transform: uppercase;">{{ myStreak }} day streak</span>
+        <span style="flex: 1;"></span>
+        <span style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: .14em; color: #6d7361; text-transform: uppercase;">The August Eight</span>
+       </div>
+      </div>
+     </div>
+
+     <div style="display: flex; gap: 8px; margin-top: 16px;">
+      <button onClick="{{ shareCard }}" style="flex: 1; border: 0; cursor: pointer; background: var(--c-acc); color: var(--c-on-panel); font-family: 'Caprasimo', serif; font-size: 15px; padding: 15px; border-radius: 999px;" style-hover="background: var(--c-acc-d);">Share</button>
+      <button onClick="{{ downloadCard }}" style="flex: 1; cursor: pointer; background: transparent; border: 1.5px solid rgba(var(--c-text-rgb),.2); color: var(--c-text); font-family: 'Caprasimo', serif; font-size: 15px; padding: 14px; border-radius: 999px;" style-hover="background: rgba(var(--c-text-rgb),.06);">Save image</button>
+     </div>
+    </div>
+   </div>
+  </sc-if>
+
+  <sc-if value="{{ showSwitcher }}" hint-placeholder-val="{{ false }}">
+   <div style="position: absolute; inset: 0; z-index: 22; background: rgba(var(--c-panel-deep-rgb),.6); display: flex; flex-direction: column; justify-content: flex-end;">
+    <div onClick="{{ closeSwitcher }}" style="flex: 1; cursor: pointer;"></div>
+    <div style="background: var(--c-bg); border-radius: 34px 34px 0 0; padding: 20px 16px 26px; animation: rise .22s ease;">
+     <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 6px 14px;">
+      <span style="font-family: 'Caprasimo', serif; font-size: 19px;">Your groups</span>
+      <button onClick="{{ closeSwitcher }}" style="width: 32px; height: 32px; border: 0; border-radius: 999px; background: var(--c-surface); cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: var(--c-surface-2);">
+       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--c-text)" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+      </button>
+     </div>
+
+     <div style="display: flex; flex-direction: column; gap: 7px;">
+      <sc-for list="{{ groupList }}" as="g" hint-placeholder-count="3">
+       <button onClick="{{ g.pick }}" style="{{ g.rowStyle }}">
+        <span style="{{ g.dayStyle }}">
+         <span style="font-family: 'Caprasimo', serif; font-size: 15px;">{{ g.day }}</span>
+         <span style="font-size: 8px; letter-spacing: .1em; opacity: .7;">DAY</span>
+        </span>
+        <span style="flex: 1; min-width: 0; text-align: left;">
+         <span style="display: block; font-size: 15.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ g.name }}</span>
+         <span style="display: block; font-size: 12.5px; opacity: .72; margin-top: 1px;">{{ g.sub }}</span>
+        </span>
+        <sc-if value="{{ g.active }}" hint-placeholder-val="{{ false }}">
+         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex: none;"><path d="M20 6 9 17l-5-5"></path></svg>
+        </sc-if>
+       </button>
+      </sc-for>
+     </div>
+
+     <div style="display: flex; gap: 8px; margin-top: 14px;">
+      <button onClick="{{ goJoinFromSwitcher }}" style="flex: 1; cursor: pointer; border: 1.5px dashed rgba(var(--c-text-rgb),.25); background: transparent; color: var(--c-text); font-family: inherit; font-weight: 700; font-size: 14px; padding: 14px; border-radius: 20px;" style-hover="border-color: var(--c-acc); color: var(--c-acc-d);">Join another</button>
+      <button onClick="{{ goCreateFromSwitcher }}" style="flex: 1; cursor: pointer; border: 0; background: var(--c-acc); color: var(--c-on-panel); font-family: inherit; font-weight: 700; font-size: 14px; padding: 14px; border-radius: 20px;" style-hover="background: var(--c-acc-d);">Start a group</button>
+     </div>
+    </div>
+   </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+   <div style="position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); background: var(--c-panel); color: var(--c-on-panel); font-size: 13.5px; font-weight: 600; padding: 11px 20px; border-radius: 999px; white-space: nowrap; box-shadow: 0 10px 24px rgba(var(--c-panel-rgb),.35); animation: toastin .2s ease;">{{ toast }}</div>
+  </sc-if>
+
+ </div>
+</div>
+
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:470,&quot;height&quot;:940},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Theme&quot;}}">
+class Component extends DCLogic {
+  seedNames() {
+    return [
+      ['Ada', 'var(--c-acc)'], ['Priya', 'var(--c-sage)'], ['Marcus', 'var(--c-acc-d)'], ['Lena', 'var(--c-ok)'],
+      ['Tomás', 'var(--c-flame)'], ['Aisha', 'var(--c-ok-5)'], ['Ben', 'var(--c-acc-xd)'], ['Chloé', 'var(--c-ok-3)'],
+      ['Diego', 'var(--c-flame-l)'], ['Nour', 'var(--c-ok-d)'], ['Sam', 'var(--c-muted)'], ['Ines', 'var(--c-ok-2)'],
+      ['Kofi', 'var(--c-acc-deep)'], ['Mira', 'var(--c-panel-soft)'], ['Jonas', 'var(--c-panel-2)']
+    ];
+  }
+  rnd(seed) { let s = seed * 9301 + 49297; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
+  makeMembers(DAYS, TODAY, people, salt) {
+    DAYS = DAYS || 31; TODAY = TODAY || 12; people = people || 15; salt = salt || 0;
+    return this.seedNames().slice(0, people).map((n, i0) => {
+      const i = i0 + salt;
+      const r = this.rnd(i + 3);
+      const rigor = i0 === 0 ? 0.82 : 0.35 + r() * 0.6;
+      const history = [];
+      for (let d = 0; d < DAYS; d++) {
+        if (d >= TODAY - 1) { history.push(null); continue; }
+        const x = r();
+        history.push(x < rigor - 0.28 ? 8 : x < rigor + 0.32 ? Math.max(1, Math.round(2 + r() * 5)) : 0);
+      }
+      let streak = 0;
+      for (let d = TODAY - 2; d >= 0; d--) { if (history[d] > 0) streak++; else break; }
+      let best = 0, run = 0;
+      history.forEach(v => { if (v > 0) { run++; best = Math.max(best, run); } else if (v === 0) run = 0; });
+      return { id: i0, name: n[0], color: n[1], history, streak, best, isMe: i0 === 0 };
+    });
+  }
+  defaultItems() {
+    return ['Wake before 7', 'Move for 45 min', '3 litres of water', 'Read 20 pages',
+      'No sugar', '10,000 steps', 'Lights out by 11', 'Side quest'];
+  }
+  members = this.makeMembers();
+  state = {
+    screen: 'landing', prev: 'today',
+    items: this.defaultItems(),
+    draft: this.defaultItems(),
+    newName: '',
+    checks: [true, true, false, true, false, false, true, false],
+    todayCounts: null,
+    members: this.members,
+    joinCode: 'AUG8-2K', joinName: '', joinColor: 'var(--c-acc)',
+    duration: '31 days', rankFilter: 'This month',
+    cell: null, profileId: 0, invite: 'AUG8-2K', toast: '', bump: 0, cardDark: false, preview: false,
+    email: '', code: '', myName: 'Ada', myColor: '#56633f',
+    prefs: { reminder: true, weekly: true, flames: true, quiet: false },
+    dragging: null, groupId: 'aug', switcher: false,
+    groups: [
+      { id: 'aug', name: 'The August Eight', code: 'AUG8-2K', day: 12, span: 31, people: 15, admin: true },
+      { id: 'run', name: 'Sunrise Run Crew', code: 'RUN-4M', day: 12, span: 31, people: 6, admin: false },
+      { id: 'read', name: 'Book a Night', code: 'READ-9X', day: 5, span: 21, people: 9, admin: false }
+    ]
+  };
+
+  componentDidMount() {
+    const r = this.rnd(77);
+    const counts = this.state.members.map((m, i) => i === 0 ? null : Math.round(r() * 8));
+    this.setState({ todayCounts: counts });
+    this.applyTheme(this.props.dark ?? this.state.cardDark);
+  }
+  applyTheme(on) { document.body.setAttribute('data-dark', on ? '1' : '0'); }
+  componentDidUpdate(pp, ps) {
+    if (ps.cardDark !== this.state.cardDark) this.applyTheme(this.state.cardDark);
+    if (pp.dark !== this.props.dark && this.props.dark != null) {
+      this.applyTheme(this.props.dark);
+      if (this.props.dark !== this.state.cardDark) this.setState({ cardDark: this.props.dark });
+    }
+  }
+  ping(msg) {
+    clearTimeout(this._t);
+    this.setState({ toast: msg });
+    this._t = setTimeout(() => this.setState({ toast: '' }), 1700);
+  }
+  go(screen) { this.setState({ screen, cell: null }); }
+  avatar(color, size) {
+    return { width: size + 'px', height: size + 'px', flex: 'none', borderRadius: '999px',
+      background: color, color: 'var(--c-on-panel)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: "'Caprasimo', serif", fontSize: Math.round(size * 0.42) + 'px' };
+  }
+  totals(m) { return m.history.reduce((a, b) => a + (b || 0), 0); }
+  dragProps(key, i) {
+    const s = this.state, drag = s.dragging;
+    const active = drag && drag.key === key && drag.from === i;
+    const over = drag && drag.key === key && drag.over === i && drag.from !== i;
+    return {
+      dragStart: e => { e.dataTransfer.effectAllowed = 'move'; this.setState({ dragging: { key, from: i, over: i } }); },
+      dragEnd: () => this.setState({ dragging: null }),
+      dragOver: e => { e.preventDefault();
+        if (drag && drag.key === key && drag.over !== i) this.setState({ dragging: { ...drag, over: i } }); },
+      drop: e => { e.preventDefault();
+        if (!drag || drag.key !== key || drag.from === i) return this.setState({ dragging: null });
+        const arr = [...s[key]]; const [moved] = arr.splice(drag.from, 1); arr.splice(i, 0, moved);
+        const next = { [key]: arr, dragging: null };
+        if (key === 'items') { const c = [...s.checks]; const [mc] = c.splice(drag.from, 1); c.splice(i, 0, mc); next.checks = c; }
+        this.setState(next); },
+      rowStyle: { display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--c-surface)',
+        borderRadius: '18px', padding: '9px 12px 9px 8px',
+        opacity: active ? .4 : 1,
+        boxShadow: over ? 'inset 0 2px 0 var(--c-acc)' : 'none',
+        transform: active ? 'scale(.98)' : 'none', transition: 'opacity .12s, transform .12s' }
+    };
+  }
+  doneSet(memberId, day, need, N) {
+    const r = this.rnd(memberId * 31 + day + 5);
+    const flags = Array.from({ length: N }, () => r());
+    return flags.map((f, i) => [f, i]).sort((a, b) => b[0] - a[0]).slice(0, need).map(x => x[1]);
+  }
+
+  renderVals() {
+    const s = this.state, ITEMS = s.items, N = ITEMS.length, TODAY = 12;
+    const counts = s.todayCounts || s.members.map(() => 0);
+    const done = s.checks.slice(0, N).filter(Boolean).length;
+    const me = s.members[0], dark = s.cardDark;
+    const g0 = s.groups.find(x => x.id === s.groupId) || s.groups[0];
+    const groupToday = done + s.members.reduce((a, m, i) => i === 0 ? a : a + (counts[i] || 0), 0);
+    const memberTotal = m => this.totals(m) + (m.isMe ? done : (counts[m.id] || 0));
+
+    const sorted = [...s.members].sort((a, b) => memberTotal(b) - memberTotal(a));
+    const rowBase = { width: '100%', display: 'flex', alignItems: 'center', gap: '11px', padding: '9px 10px',
+      border: 0, borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--c-text)' };
+
+    const memberRows = [...s.members].sort((a, b) => memberTotal(b) - memberTotal(a)).map(m => {
+      const pct = Math.round(memberTotal(m) / (TODAY * N) * 100);
+      return { name: m.isMe ? m.name + ' (you)' : m.name, initial: m.name[0], streak: m.streak + (m.isMe && done > 0 ? 1 : 0), pct,
+        avatarStyle: this.avatar(m.color, 32),
+        barStyle: { display: 'block', height: '100%', width: Math.min(100, pct) + '%', background: m.color, borderRadius: '999px' },
+        rowStyle: { ...rowBase, background: m.isMe ? 'var(--c-surface)' : 'transparent' },
+        open: () => this.setState({ screen: 'profile', prev: 'today', profileId: m.id }) };
+    });
+
+    const todayList = ITEMS.map((label, i) => {
+      const isDone = !!s.checks[i];
+      return { label, done: isDone, isQuest: /side quest/i.test(label),
+        toggle: () => { const c = [...s.checks]; c[i] = !c[i]; this.setState({ checks: c });
+          if (!isDone) this.ping(done + 1 === N ? 'Clean sweep. Day 12 done.' : 'Ticked · ' + (done + 1) + '/' + N); },
+        rowStyle: { width: '100%', display: 'flex', alignItems: 'center', gap: '13px', padding: '13px 15px',
+          border: 0, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', borderRadius: '22px',
+          background: isDone ? 'var(--c-ok-bg)' : 'var(--c-surface)', transition: 'background .16s' },
+        boxStyle: { width: '27px', height: '27px', flex: 'none', borderRadius: '9px',
+          background: isDone ? 'var(--c-ok)' : 'transparent', border: isDone ? '2px solid var(--c-ok)' : '2px solid rgba(var(--c-text-rgb),.28)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .16s' },
+        labelStyle: { flex: 1, fontSize: '15.5px', fontWeight: 600, color: isDone ? 'var(--c-ok-d)' : 'var(--c-text)',
+          textDecoration: isDone ? 'line-through' : 'none', textDecorationColor: 'rgba(var(--c-ok-d-rgb),.45)' } };
+    });
+
+    const cellFill = v => v === null ? 'var(--c-future)' : v === N ? 'var(--c-ok)' : v === 0 ? 'var(--c-zero)' : v >= N * 0.6 ? 'var(--c-ok-3)' : 'var(--c-ok-4)';
+    const gridRows = [...s.members].sort((a, b) => memberTotal(b) - memberTotal(a)).map(m => ({
+      name: m.isMe ? 'You' : m.name,
+      nameStyle: { width: '78px', flex: 'none', paddingRight: '6px', fontSize: '11.5px', fontWeight: 700,
+        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: m.isMe ? 'var(--c-acc-d)' : 'var(--c-text)' },
+      cells: m.history.map((v, d) => {
+        const val = d === TODAY - 1 ? (m.isMe ? done : counts[m.id]) : v;
+        const sel = s.cell && s.cell.m === m.id && s.cell.d === d;
+        return { style: { width: '15px', height: '15px', flex: 'none', border: sel ? '2px solid var(--c-panel)' : 0,
+            padding: 0, borderRadius: '4px', cursor: 'pointer', background: cellFill(val) },
+          tap: () => this.setState({ cell: { m: m.id, d, v: val, name: m.name } }) };
+      })
+    }));
+
+    const cell = s.cell;
+    let cellItems = [];
+    if (cell) {
+      const isMineToday = cell.m === 0 && cell.d === TODAY - 1;
+      const order = this.doneSet(cell.m, cell.d, cell.v || 0, N);
+      cellItems = ITEMS.map((label, i) => {
+        const ok = isMineToday ? !!s.checks[i] : order.indexOf(i) > -1;
+        return { label, dotStyle: { width: '15px', height: '15px', flex: 'none', borderRadius: '5px',
+            background: ok ? 'var(--c-ok-2)' : 'transparent', border: ok ? 0 : '1.5px solid rgba(var(--c-on-panel-rgb),.3)' },
+          textStyle: { fontSize: '13.5px', color: ok ? 'var(--c-bg)' : 'var(--c-faint)', textDecoration: ok ? 'none' : 'none' } };
+      });
+    }
+
+    const filterFactor = { 'This week': 7, 'This month': TODAY, 'All time': TODAY }[s.rankFilter] || TODAY;
+    const ranked = sorted.map((m, i) => {
+      const score = s.rankFilter === 'This week'
+        ? m.history.slice(TODAY - 8, TODAY - 1).reduce((a, b) => a + (b || 0), 0) + (m.isMe ? done : counts[m.id] || 0)
+        : memberTotal(m);
+      return { m, score };
+    }).sort((a, b) => b.score - a.score).map((x, i) => {
+      const m = x.m;
+      return { name: m.isMe ? m.name + ' (you)' : m.name, initial: m.name[0], score: x.score, rank: i + 1,
+        streak: m.streak + (m.isMe && done > 0 ? 1 : 0),
+        avatarStyle: this.avatar(m.color, 34),
+        rankStyle: { width: '22px', flex: 'none', textAlign: 'center', fontFamily: "'Caprasimo', serif",
+          fontSize: '15px', color: i < 3 ? 'var(--c-acc-d)' : 'var(--c-panel-soft)' },
+        rowStyle: { ...rowBase, gap: '10px', padding: '10px 12px', borderRadius: '22px',
+          background: m.isMe ? 'var(--c-panel)' : 'var(--c-surface)', color: m.isMe ? 'var(--c-bg)' : 'var(--c-text)' },
+        open: () => this.setState({ screen: 'profile', prev: 'ranks', profileId: m.id }) };
+    });
+
+    const p = s.members.find(m => m.id === s.profileId) || me;
+    const pTotal = memberTotal(p);
+    const pr = this.rnd(p.id * 13 + 2);
+    const profItems = ITEMS.map(label => {
+      const pct = Math.round(40 + pr() * 58);
+      return { label, pct, barStyle: { height: '100%', width: pct + '%', background: p.color, borderRadius: '999px' } };
+    });
+    const profDays = p.history.map((v, d) => {
+      const val = d === TODAY - 1 ? (p.isMe ? done : counts[p.id]) : v;
+      const future = d >= TODAY;
+      return { n: d + 1, style: { width: '38px', height: '34px', borderRadius: '10px', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700,
+        background: future ? 'transparent' : cellFill(val), border: future ? '1px dashed rgba(var(--c-text-rgb),.18)' : 0,
+        color: (!future && (val === N || val >= N * 0.6)) ? 'var(--c-bg)' : 'var(--c-muted)' } };
+    });
+
+    const perfect = s.members.filter((m, i) => (i === 0 ? done : counts[i]) === N).length;
+    const top = ranked[0] || { name: '—', score: 0, initial: '—' };
+    const topMember = sorted[0] || me;
+
+    const navStyle = id => ({ flex: 1, border: 0, cursor: 'pointer', fontFamily: 'inherit',
+      fontSize: '11px', fontWeight: 700, letterSpacing: '.01em',
+      color: s.screen === id ? 'var(--c-on-panel)' : 'var(--c-muted)',
+      background: s.screen === id ? 'var(--c-acc)' : 'transparent', borderRadius: '18px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '8px 0 7px' });
+
+    const pill = (active) => ({ border: 0, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700,
+      fontSize: '13px', padding: '9px 15px', borderRadius: '999px',
+      background: active ? 'var(--c-panel)' : 'var(--c-surface)', color: active ? 'var(--c-bg)' : 'var(--c-muted)' });
+
+    const setItem = (key, i, v) => {
+      const arr = [...s[key]]; arr[i] = v; this.setState({ [key]: arr });
+    };
+
+    return {
+      themeFlag: dark ? 'dark' : 'light', isDark: dark, isLight: !dark,
+      toggleTheme: () => this.setState({ cardDark: !dark }),
+      atLanding: s.screen === 'landing', atCreate: s.screen === 'create', atJoin: s.screen === 'join',
+      atToday: s.screen === 'today', atGrid: s.screen === 'grid', atRanks: s.screen === 'ranks',
+      atProfile: s.screen === 'profile', atSettings: s.screen === 'settings',
+      atSignin: s.screen === 'signin', atCode: s.screen === 'code', atAccount: s.screen === 'account',
+      goSignin: () => this.go('signin'), goAccount: () => this.go('account'),
+      goCode: () => { if (!s.email.trim()) return this.ping('Add your email first'); this.go('code'); },
+      verifyCode: () => { if (s.code.length < 6) return this.ping('Six digits, please'); this.go('create'); },
+      resendCode: () => this.ping('New code sent'),
+      signOut: () => { this.setState({ code: '' }); this.go('landing'); },
+      email: s.email, setEmail: e => this.setState({ email: e.target.value }),
+      emailDisplay: s.email.trim() || 'ada@email.com',
+      providers: [['Apple', '#1d2019'], ['Google', '#c67139'], ['WhatsApp', '#5a6c43']].map(([name, c]) => ({
+        name, initial: name[0], go: () => { this.setState({ email: name.toLowerCase() + '@email.com' }); this.go('create'); },
+        dotStyle: { width: '26px', height: '26px', flex: 'none', borderRadius: '999px', background: c,
+          color: '#f6f1e6', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: "'Caprasimo', serif", fontSize: '12px' } })),
+      codeBoxes: Array.from({ length: 6 }, (_, i) => ({ char: s.code[i] || '',
+        style: { flex: 1, height: '56px', borderRadius: '16px', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', fontFamily: "'Caprasimo', serif", fontSize: '24px',
+          background: 'var(--c-surface)',
+          border: '1.5px solid ' + (s.code.length === i ? 'var(--c-acc)' : 'rgba(var(--c-text-rgb),.14)') } })),
+      keypad: ['1','2','3','4','5','6','7','8','9','','0','⌫'].map(label => ({ label,
+        press: () => { if (!label) return;
+          if (label === '⌫') this.setState({ code: s.code.slice(0, -1) });
+          else if (s.code.length < 6) this.setState({ code: s.code + label }); },
+        style: { width: 'calc((100% - 16px) / 3)', border: 0, cursor: label ? 'pointer' : 'default',
+          background: label ? 'var(--c-surface)' : 'transparent', color: 'var(--c-text)',
+          fontFamily: "'Caprasimo', serif", fontSize: '20px', padding: '15px 0', borderRadius: '18px' } })),
+      mySwatches: ['#56633f', '#7a8a5e', '#3d472b', '#8fa073', '#c67139', '#8c491a'].map(c => ({
+        pick: () => this.setState({ myColor: c }),
+        style: { width: '44px', height: '44px', borderRadius: '999px', background: c, cursor: 'pointer',
+          border: s.myColor === c ? '3px solid var(--c-text)' : '3px solid transparent', padding: 0 } })),
+      myNameEdit: s.myName, setMyName: e => this.setState({ myName: e.target.value }),
+      accountAvatarStyle: this.avatar(s.myColor, 60),
+      headerAvatarStyle: { ...this.avatar(s.myColor, 36), fontSize: '15px' },
+      prefs: [
+        ['reminder', 'Evening nudge', 'One reminder at 8pm if items are open'],
+        ['weekly', 'Weekly recap', 'Sunday summary of your streak'],
+        ['flames', 'Show streaks', 'Flame counts on the group list'],
+        ['quiet', 'Hide me from ranks', 'You still count to group totals']
+      ].map(([key, label, sub]) => {
+        const on = !!s.prefs[key];
+        return { label, sub, toggle: () => this.setState({ prefs: { ...s.prefs, [key]: !on } }),
+          trackStyle: { width: '46px', height: '28px', flex: 'none', borderRadius: '999px', padding: '3px',
+            display: 'flex', justifyContent: on ? 'flex-end' : 'flex-start',
+            background: on ? 'var(--c-acc)' : 'rgba(var(--c-text-rgb),.16)', transition: 'all .18s' },
+          knobStyle: { width: '22px', height: '22px', borderRadius: '999px',
+            background: on ? 'var(--c-on-panel)' : 'var(--c-bg)', display: 'block' } };
+      }),
+      showNav: ['today', 'grid', 'ranks'].indexOf(s.screen) > -1,
+      hasToast: !!s.toast, toast: s.toast,
+      goLanding: () => this.go('landing'), goCreate: () => this.go('create'), goJoin: () => this.go('join'),
+      goToday: () => this.go('today'), goSettings: () => this.go('settings'),
+      backFromProfile: () => this.go(s.prev),
+      goGrid: () => this.go('grid'), goRanks: () => this.go('ranks'), goShare: () => this.go('share'),
+      navToday: navStyle('today'), navGrid: navStyle('grid'), navRanks: navStyle('ranks'), navShare: navStyle('share'),
+
+      myGroups: s.groups.map(g => ({ name: g.name, day: g.day,
+        sub: g.people + ' people · day ' + g.day + ' of ' + g.span,
+        open: () => { this.setState({ groupId: g.id }); this.go('today'); } })),
+      groupName: g0.name, groupDay: g0.day, groupSpan: g0.span,
+      showSwitcher: !!s.switcher,
+      openSwitcher: () => this.setState({ switcher: true }),
+      closeSwitcher: () => this.setState({ switcher: false }),
+      goJoinFromSwitcher: () => { this.setState({ switcher: false }); this.go('join'); },
+      goCreateFromSwitcher: () => { this.setState({ switcher: false }); this.go('create'); },
+      groupList: s.groups.map(gr => {
+        const on = gr.id === s.groupId;
+        return { name: gr.name, day: gr.day, active: on,
+          sub: gr.people + ' people · ' + (gr.admin ? 'you run this one' : 'member'),
+          pick: () => { this.setState({ groupId: gr.id, switcher: false, cell: null });
+            if (!on) this.ping('Switched to ' + gr.name); },
+          rowStyle: { width: '100%', display: 'flex', alignItems: 'center', gap: '13px', padding: '11px 14px',
+            border: 0, borderRadius: '22px', cursor: 'pointer', fontFamily: 'inherit',
+            background: on ? 'var(--c-acc)' : 'var(--c-surface)',
+            color: on ? 'var(--c-on-panel)' : 'var(--c-text)' },
+          dayStyle: { width: '42px', height: '42px', flex: 'none', borderRadius: '999px',
+            background: on ? 'rgba(var(--c-on-panel-rgb),.2)' : 'var(--c-bg)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', lineHeight: 1 } };
+      }),
+
+      newName: s.newName, setNewName: e => this.setState({ newName: e.target.value }),
+      durations: ['21 days', '31 days', 'Custom'].map(label => ({ label,
+        style: { ...pill(s.duration === label), flex: 1 }, pick: () => this.setState({ duration: label }) })),
+      draftCount: s.draft.length,
+      draftItems: s.draft.map((label, i) => ({ label, num: i + 1,
+        rename: e => setItem('draft', i, e.target.value),
+        ...this.dragProps('draft', i),
+        remove: () => this.setState({ draft: s.draft.filter((_, j) => j !== i) }) })),
+      addDraftItem: () => this.setState({ draft: [...s.draft, 'New item'] }),
+      createGroup: () => { this.setState({ items: [...s.draft], checks: s.draft.map(() => false), screen: 'today' }); this.ping('Group created · code AUG8-2K'); },
+
+      joinCode: s.joinCode, setJoinCode: e => this.setState({ joinCode: e.target.value.toUpperCase() }),
+      joinName: s.joinName, setJoinName: e => this.setState({ joinName: e.target.value }),
+      joinNameDisplay: s.joinName || 'Your name',
+      joinInitial: (s.joinName || '?')[0].toUpperCase(),
+      previewAvatarStyle: this.avatar(s.joinColor, 44),
+      swatches: ['var(--c-acc)', 'var(--c-sage)', 'var(--c-acc-d)', 'var(--c-ok)', 'var(--c-flame-l)', 'var(--c-panel-2)'].map(c => ({
+        pick: () => this.setState({ joinColor: c }),
+        style: { width: '44px', height: '44px', borderRadius: '999px', background: c, cursor: 'pointer',
+          border: s.joinColor === c ? '3px solid var(--c-text)' : '3px solid transparent', padding: 0 } })),
+      joinGroup: () => { this.go('today'); this.ping('You are in. Day ' + g0.day + ' of ' + g0.span + '.'); },
+
+      todayList, doneToday: done, itemCount: N, memberCount: s.members.length,
+      myStreak: me.streak + (done > 0 ? 1 : 0), myTotal: this.totals(me) + done,
+      groupToday, groupTodayMax: s.members.length * N,
+      statusLine: done === N ? 'All done today' : done === 0 ? 'Nothing yet today' : (N - done) + ' left today',
+      ringStyle: { width: '78px', height: '78px', flex: 'none', borderRadius: '999px',
+        background: 'conic-gradient(var(--c-flame-l) ' + (done / N * 360) + 'deg, rgba(var(--c-on-panel-rgb),.16) 0deg)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center' },
+      memberRows,
+
+      dayHeads: Array.from({ length: 31 }, (_, i) => ({ n: i + 1,
+        style: { width: '15px', flex: 'none', textAlign: 'center', fontSize: '8.5px', fontWeight: 700,
+          color: i === TODAY - 1 ? 'var(--c-acc-d)' : 'var(--c-panel-soft)' } })),
+      gridRows, hasCell: !!cell, cellItems,
+      cellTitle: cell ? (cell.name + ' · day ' + (cell.d + 1)) : '',
+      cellSub: cell ? ((cell.v == null ? 0 : cell.v) + ' of ' + N + ' done') : '',
+      closeCell: () => this.setState({ cell: null }),
+
+      rankFilters: ['This week', 'This month', 'All time'].map(label => ({ label,
+        style: { ...pill(s.rankFilter === label), flex: 1, fontSize: '12.5px', padding: '9px 8px' },
+        pick: () => this.setState({ rankFilter: label }) })),
+      ranked,
+
+      profName: p.isMe ? p.name + ' (you)' : p.name, profInitial: p.name[0],
+      profAvatarStyle: this.avatar(p.color, 62),
+      profSub: 'joined day 1 · ' + Math.round(pTotal / (TODAY * N) * 100) + '% of the challenge',
+      profStats: [{ value: p.streak + (p.isMe && done > 0 ? 1 : 0), label: 'Current streak' },
+        { value: p.best, label: 'Longest run' }, { value: pTotal, label: 'Items done' }],
+      profItems, profDays,
+
+      inviteCode: g0.code,
+      copyInvite: () => this.ping('tickd.app/j/' + g0.code + ' copied'),
+      regenInvite: () => { const c = 'AUG8-' + Math.random().toString(36).slice(2, 4).toUpperCase(); this.setState({ invite: c }); this.ping('New code: ' + c); },
+      settingItems: ITEMS.map((label, i) => ({ label, num: i + 1,
+        rename: e => setItem('items', i, e.target.value),
+        ...this.dragProps('items', i),
+        remove: () => this.setState({ items: ITEMS.filter((_, j) => j !== i), checks: s.checks.filter((_, j) => j !== i) }) })),
+      addSettingItem: () => this.setState({ items: [...ITEMS, 'New item'], checks: [...s.checks, false] }),
+      settingMembers: s.members.map(m => ({ name: m.isMe ? m.name + ' (you)' : m.name, initial: m.name[0],
+        avatarStyle: this.avatar(m.color, 30),
+        remove: () => { this.setState({ members: s.members.filter(x => x.id !== m.id) }); this.ping(m.name + ' removed'); } })),
+      archiveGroup: () => this.ping('Group archived'),
+      deleteGroup: () => this.ping('Hold on — that would delete 12 days'),
+
+      myName: me.name, myInitial: me.name[0], myBest: Math.max(me.best, me.streak + (done > 0 ? 1 : 0)),
+      myPctToday: Math.round(done / N * 100),
+      myPctLine: done === N ? 'all eight, clean sweep' : done === 0 ? 'nothing ticked yet today' : done + ' of ' + N + ' done today',
+      cardAvatarStyle: { width: '34px', height: '34px', flex: 'none', borderRadius: '999px',
+        background: 'rgba(var(--c-card-fg-rgb),.22)', color: 'var(--c-card-fg)', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', fontFamily: "'Caprasimo', serif", fontSize: '15px' },
+      cardStyle: { margin: '0 16px', borderRadius: '32px', padding: '26px 24px',
+        background: 'var(--c-acc-d)', color: 'var(--c-card-fg)',
+        boxShadow: '0 14px 34px rgba(var(--c-acc-rgb),.34)' },
+      cardDivider: { height: '1px', margin: '20px 0', background: 'rgba(var(--c-card-fg-rgb),.3)' },
+      cardStreakStyle: { marginTop: '20px', borderRadius: '22px', padding: '13px 17px', display: 'flex',
+        alignItems: 'center', gap: '11px', background: 'rgba(var(--c-acc-deep-rgb),.3)', color: 'var(--c-flame-l)' },
+      tickColor: 'var(--c-acc-d)',
+      shareDots: Array.from({ length: 31 }, (_, d) => {
+        const v = d === TODAY - 1 ? done : me.history[d];
+        const bg = d >= TODAY ? 'rgba(var(--c-card-fg-rgb),.16)'
+          : v === N ? 'var(--c-card-fg)' : v > 0 ? 'rgba(var(--c-card-fg-rgb),.55)' : 'rgba(var(--c-acc-deep-rgb),.4)';
+        return { style: { width: '9px', height: '9px', borderRadius: '3px', display: 'block', background: bg } };
+      }),
+      myHandle: me.name.toLowerCase() + '.tickd',
+      shareList: ITEMS.map((label, i) => {
+        const mine = !!s.checks[i];
+        const quest = /side quest/i.test(label);
+        return { label: label.toUpperCase(), done: mine,
+          boxStyle: { width: '46px', flex: 'none', borderRadius: '8px', background: '#f4f1e6',
+            border: '2px solid ' + (quest ? '#c9d94f' : '#8fa96a'),
+            display: 'flex', alignItems: 'center', justifyContent: 'center' },
+          rowStyle: { flex: 1, minWidth: 0, borderRadius: '8px', padding: '9px 12px',
+            background: quest ? '#c9d94f' : '#f4f1e6', color: quest ? '#3f4711' : '#0e0f0c',
+            fontFamily: "'Figtree', sans-serif", fontWeight: 800, fontSize: '13px',
+            letterSpacing: '.02em', textAlign: 'center', whiteSpace: 'nowrap',
+            overflow: 'hidden', textOverflow: 'ellipsis', opacity: mine ? 1 : .72 } };
+      }),
+      showPreview: !!s.preview,
+      openPreview: () => this.setState({ preview: true }),
+      closePreview: () => this.setState({ preview: false }),
+      previewTicks: ITEMS.map((label, i) => ({ style: { flex: 1, height: '7px', borderRadius: '999px',
+        background: s.checks[i] ? '#8fa96a' : 'rgba(244,241,230,.14)' } })),
+      previewRows: ITEMS.map((label, i) => {
+        const on = !!s.checks[i];
+        return { label, done: on, pending: !on,
+          rowStyle: { display: 'flex', alignItems: 'center', gap: '9px', padding: '7px 11px',
+            borderRadius: '10px', background: on ? '#8fa96a' : 'transparent' },
+          labelStyle: { fontFamily: "'Figtree', sans-serif", fontWeight: 800, fontSize: '12.5px',
+            letterSpacing: '.03em', textTransform: 'uppercase', whiteSpace: 'nowrap',
+            overflow: 'hidden', textOverflow: 'ellipsis',
+            color: on ? '#0d0e0b' : '#5d6350' } };
+      }),
+      shareCard: () => { this.setState({ preview: false }); this.ping('Shared to the group chat'); },
+      downloadCard: () => { this.setState({ preview: false }); this.ping('Card saved to photos'); }
+    };
+  }
+}
+
+</script>
+</body>
+</html>
