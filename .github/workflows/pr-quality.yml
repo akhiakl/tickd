@@ -1,0 +1,199 @@
+name: PR Quality Check
+
+# Gates every pull request into main on three independent suites - unit
+# tests with coverage, end-to-end tests, and accessibility scans - then
+# posts one PR comment with a result table per suite (see
+# scripts/ci/build-pr-comment.mjs). Each suite runs as its own job so one
+# failing early doesn't hide the others.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  DATABASE_URL: postgres://postgres:postgres@localhost:5432/tickd_test
+  AUTH_SECRET: ci-test-secret-do-not-use-in-production
+  NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
+
+jobs:
+  unit-tests:
+    name: Unit tests + coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - name: Run unit tests with coverage
+        run: npx vitest run --coverage --reporter=default --reporter=json --outputFile=vitest-results.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: |
+            vitest-results.json
+            coverage/coverage-summary.json
+          retention-days: 7
+          if-no-files-found: warn
+
+  e2e-tests:
+    name: End-to-end tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tickd_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run e2e tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: e2e-results.json
+        run: npx playwright test --project=e2e --reporter=json --reporter=html
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            e2e-results.json
+            playwright-report/
+          retention-days: 7
+          if-no-files-found: warn
+
+  a11y-tests:
+    name: Accessibility tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tickd_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run accessibility tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: a11y-results.json
+        run: npx playwright test --project=a11y --reporter=json --reporter=html
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-test-results
+          path: |
+            a11y-results.json
+            playwright-report/
+          retention-days: 7
+          if-no-files-found: warn
+
+  pr-comment:
+    name: Post PR quality comment
+    needs: [unit-tests, e2e-tests, a11y-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: unit-test-results
+          path: results/unit
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: e2e-test-results
+          path: results/e2e
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: a11y-test-results
+          path: results/a11y
+
+      - name: Build comment body
+        env:
+          VITEST_RESULTS_PATH: results/unit/vitest-results.json
+          COVERAGE_SUMMARY_PATH: results/unit/coverage-summary.json
+          E2E_RESULTS_PATH: results/e2e/e2e-results.json
+          A11Y_RESULTS_PATH: results/a11y/a11y-results.json
+        run: node scripts/ci/build-pr-comment.mjs > comment.md
+
+      - name: Post or update PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const body = fs.readFileSync("comment.md", "utf8");
+            const marker = "<!-- pr-quality-comment -->";
+            const fullBody = `${marker}\n${body}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body?.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: fullBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: fullBody,
+              });
+            }
+
+      - name: Fail the job if any suite failed
+        if: needs.unit-tests.result != 'success' || needs.e2e-tests.result != 'success' || needs.a11y-tests.result != 'success'
+        run: |
+          echo "One or more quality suites failed - see the PR comment for details."
+          exit 1
