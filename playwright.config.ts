@@ -32,13 +32,21 @@ const appEnv = {
   PORT: String(PORT),
 };
 
+const reporters: [string, Record<string, unknown>?][] = process.env.CI
+  ? [["github"], ["html", { open: "never" }]]
+  : [["list"]];
+
+if (process.env.PLAYWRIGHT_JSON_OUTPUT_NAME) {
+  reporters.push(["json", { outputFile: process.env.PLAYWRIGHT_JSON_OUTPUT_NAME }]);
+}
+
 export default defineConfig({
   testDir: "./tests/e2e",
   globalSetup: "./tests/e2e/global-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
+  reporter: reporters,
   timeout: 30_000,
   use: {
     baseURL,

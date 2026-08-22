@@ -6,8 +6,8 @@
  *   - Playwright JSON report for the "a11y" project
  *
  * Any input that's missing (a job failed before producing it, or didn't
- * run) is rendered as its own "did not run" row rather than crashing, so a
- * partial CI run still produces a readable comment.
+ * run) is rendered as its own "did not run" section rather than crashing, so
+ * a partial CI run still produces a readable comment.
  *
  * Usage: node scripts/ci/build-pr-comment.mjs > comment.md
  * Reads paths from env vars (see the `paths` object below), all optional.
@@ -30,93 +30,85 @@ function readJson(path) {
 }
 
 const mark = (ok) => (ok ? "✅" : "❌");
-const basename = (path) => path.split("/").pop();
 
-/** Vitest JSON: one entry per test file, each with its own assertionResults. */
 function summarizeVitest(json) {
   if (!json) return null;
-  const rows = json.testResults.map((file) => {
-    const total = file.assertionResults.length;
-    const passed = file.assertionResults.filter((t) => t.status === "passed").length;
-    return { name: basename(file.name), passed, total, ok: passed === total && total > 0 };
-  });
-  return { rows, ok: json.numFailedTests === 0 && json.numTotalTests > 0 };
+
+  const passed = json.numPassedTests ?? 0;
+  const failed = json.numFailedTests ?? 0;
+  const skipped = json.numPendingTests ?? 0;
+  const total = json.numTotalTests ?? passed + failed + skipped;
+
+  return {
+    ok: failed === 0 && total > 0,
+    metrics: [
+      ["Total tests", total],
+      ["Passed", passed],
+      ["Failed", failed],
+      ["Skipped", skipped],
+    ],
+  };
 }
 
 function summarizeCoverage(json) {
   if (!json?.total) return null;
   const t = json.total;
+  return [
+    ["Statements", `${t.statements.pct}%`],
+    ["Branches", `${t.branches.pct}%`],
+    ["Functions", `${t.functions.pct}%`],
+    ["Lines", `${t.lines.pct}%`],
+  ];
+}
+
+function summarizePlaywright(json) {
+  if (!json?.stats) return null;
+
+  const passed = json.stats.expected ?? 0;
+  const failed = json.stats.unexpected ?? 0;
+  const flaky = json.stats.flaky ?? 0;
+  const skipped = json.stats.skipped ?? 0;
+  const total = passed + failed + flaky + skipped;
+
   return {
-    statements: t.statements.pct,
-    branches: t.branches.pct,
-    functions: t.functions.pct,
-    lines: t.lines.pct,
+    ok: failed === 0 && total > 0,
+    metrics: [
+      ["Total tests", total],
+      ["Passed", passed],
+      ["Failed", failed],
+      ["Flaky", flaky],
+      ["Skipped", skipped],
+    ],
   };
 }
 
-/** Playwright JSON: a nested suite tree; flatten to per-top-level-file pass/fail counts. */
-function summarizePlaywright(json) {
-  if (!json) return null;
-  const perFile = new Map();
-
-  function visitSpec(fileTitle, spec) {
-    const bucket = perFile.get(fileTitle) ?? { passed: 0, total: 0 };
-    bucket.total += 1;
-    if (spec.ok) bucket.passed += 1;
-    perFile.set(fileTitle, bucket);
-  }
-
-  function visitSuite(suite, fileTitle) {
-    const title = fileTitle ?? suite.title;
-    for (const spec of suite.specs ?? []) visitSpec(title, spec);
-    for (const child of suite.suites ?? []) visitSuite(child, title);
-  }
-
-  for (const suite of json.suites ?? []) visitSuite(suite, null);
-
-  const rows = [...perFile.entries()].map(([name, { passed, total }]) => ({
-    name,
-    passed,
-    total,
-    ok: passed === total && total > 0,
-  }));
-  const ok = (json.stats?.unexpected ?? 0) === 0 && (json.stats?.expected ?? 0) > 0;
-  return { rows, ok, stats: json.stats };
+function renderMetricTable(metrics) {
+  return [
+    "| Metric | Value |",
+    "| --- | --- |",
+    ...metrics.map(([label, value]) => `| ${label} | ${value} |`),
+  ].join("\n");
 }
 
-function renderTestTable(title, summary, extraColumn) {
+function renderSuite(title, summary) {
   const lines = [`### ${title}`, ""];
+
   if (!summary) {
-    lines.push(`_Did not run, or produced no results._ ${mark(false)}`, "");
+    lines.push("_Did not run, or produced no results._ ❌", "");
     return lines.join("\n");
   }
-  const header = extraColumn
-    ? `| Test file | Passed | ${extraColumn.header} | Status |`
-    : `| Test file | Passed | Status |`;
-  const divider = extraColumn ? `| --- | --- | --- | --- |` : `| --- | --- | --- |`;
-  lines.push(header, divider);
-  for (const row of summary.rows) {
-    const passedCell = `${row.passed}/${row.total}`;
-    const extraCell = extraColumn ? extraColumn.cell(row) : null;
-    lines.push(
-      extraColumn
-        ? `| ${row.name} | ${passedCell} | ${extraCell} | ${mark(row.ok)} |`
-        : `| ${row.name} | ${passedCell} | ${mark(row.ok)} |`,
-    );
-  }
-  lines.push("", `**Overall: ${mark(summary.ok)} ${summary.ok ? "Passed" : "Failed"}**`, "");
+
+  lines.push(`**Status: ${mark(summary.ok)} ${summary.ok ? "Passed" : "Failed"}**`, "");
+  lines.push(renderMetricTable(summary.metrics), "");
   return lines.join("\n");
 }
 
-function renderCoverage(coverage) {
-  if (!coverage) return "_No coverage data._";
+function renderCoverageSection(coverage) {
   return [
-    "| Metric | Coverage |",
-    "| --- | --- |",
-    `| Statements | ${coverage.statements}% |`,
-    `| Branches | ${coverage.branches}% |`,
-    `| Functions | ${coverage.functions}% |`,
-    `| Lines | ${coverage.lines}% |`,
+    "#### Coverage",
+    "",
+    coverage ? renderMetricTable(coverage) : "_No coverage data._",
+    "",
   ].join("\n");
 }
 
@@ -137,14 +129,11 @@ const body = [
   "",
   `**Overall: ${mark(overallOk)} ${overallOk ? "All checks passed" : "Some checks failed"}**`,
   "",
-  renderTestTable("Unit tests", vitest),
-  "#### Coverage (`src/lib` - the unit-tested logic layer)",
-  "",
-  renderCoverage(coverage),
-  "",
-  renderTestTable("End-to-end tests", e2e),
-  renderTestTable("Accessibility tests (axe-core)", a11y),
-  "<sub>Generated by `.github/workflows/pr-quality.yml`. Re-run the failing job to refresh this comment.</sub>",
+  renderSuite("Unit tests", vitest),
+  renderCoverageSection(coverage),
+  renderSuite("End-to-end tests", e2e),
+  renderSuite("Accessibility tests (axe-core)", a11y),
+  "<sub>Generated by `.github/workflows/pr-quality.yml`. Re-run the workflow to refresh this comment.</sub>",
 ].join("\n");
 
 process.stdout.write(body + "\n");

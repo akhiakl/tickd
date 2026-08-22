@@ -155,7 +155,7 @@ jobs:
       - name: Build comment body
         env:
           VITEST_RESULTS_PATH: results/unit/vitest-results.json
-          COVERAGE_SUMMARY_PATH: results/unit/coverage-summary.json
+          COVERAGE_SUMMARY_PATH: results/unit/coverage/coverage-summary.json
           E2E_RESULTS_PATH: results/e2e/e2e-results.json
           A11Y_RESULTS_PATH: results/a11y/a11y-results.json
         run: node scripts/ci/build-pr-comment.mjs > comment.md
