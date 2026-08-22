@@ -1,0 +1,7 @@
+.next
+node_modules
+coverage
+drizzle
+design
+pnpm-lock.yaml
+package-lock.json
