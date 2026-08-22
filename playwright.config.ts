@@ -1,4 +1,4 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices, type ReporterDescription } from "@playwright/test";
 import { existsSync } from "node:fs";
 
 const PORT = 3100;
@@ -32,7 +32,7 @@ const appEnv = {
   PORT: String(PORT),
 };
 
-const reporters: [string, Record<string, unknown>?][] = process.env.CI
+const reporters: ReporterDescription[] = process.env.CI
   ? [["github"], ["html", { open: "never" }]]
   : [["list"]];
 
