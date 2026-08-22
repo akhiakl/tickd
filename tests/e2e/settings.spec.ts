@@ -24,7 +24,7 @@ test.describe("Group settings", () => {
     await page.getByRole("button", { name: "Copy link" }).click();
     await expect(page.getByText("Invite link copied")).toBeVisible();
     const clipboard = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clipboard).toBe(`tickd.app/j/${group.inviteCode}`);
+    expect(clipboard).toBe(`tickd.app/join?code=${group.inviteCode}`);
 
     await page.getByRole("button", { name: "Regenerate" }).click();
     await expect(page.getByText(group.inviteCode)).toHaveCount(0);

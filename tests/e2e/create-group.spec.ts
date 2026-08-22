@@ -59,6 +59,8 @@ test.describe("create a group", () => {
     const [first, second] = DEFAULT_CHECKLIST_ITEMS;
     const checklist = page.getByTestId("checklist-items");
 
+    // Let dnd-kit compute fresh item rects before starting keyboard drag.
+    await page.waitForTimeout(300);
     const firstRow = checklist.locator(`input[value="${first}"]`).locator("..");
     await firstRow.getByLabel("Drag to reorder").focus();
     await page.keyboard.press("Space");
