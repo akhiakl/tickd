@@ -1,0 +1,5 @@
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true
+minimumReleaseAgeExclude:
+  - "@testing-library/user-event@14.6.6"

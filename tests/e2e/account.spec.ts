@@ -2,6 +2,7 @@ import { test, expect } from "./fixtures/test";
 import { seedFreshGroup } from "./fixtures/db";
 import { signInAs } from "./fixtures/auth-session";
 import { waitForServerAction } from "./fixtures/wait";
+import { FAKE_AUTH0_URL } from "./fixtures/constants";
 
 test.describe("account settings", () => {
   test("edit name, pick a color, and toggle preferences persist across reload", async ({
@@ -70,6 +71,6 @@ test.describe("account settings", () => {
 
     await expect(page).toHaveURL("/");
     await page.goto("/account");
-    await expect(page).toHaveURL(/\/login/);
+    await expect(page).toHaveURL(new RegExp(`^${FAKE_AUTH0_URL}/authorize`));
   });
 });

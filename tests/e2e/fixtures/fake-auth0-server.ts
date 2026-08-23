@@ -1,31 +1,14 @@
 import { createServer } from "node:http";
-import { TEST_OTP_CODE, FAKE_AUTH0_PORT, FAKE_AUTH0_URL } from "./constants";
+import { FAKE_AUTH0_PORT, FAKE_AUTH0_URL } from "./constants";
 
 /**
  * A minimal stand-in for Auth0's Authentication API, used only by the
  * Playwright suite. It implements just enough of the OIDC discovery
  * surface for Auth.js's Auth0 provider to redirect a user to `/authorize`
- * (proving the Google sign-in button is wired correctly) and the
- * Passwordless REST endpoints our own code calls directly for email OTP
- * sign-in (`src/server/auth/auth0-otp.ts`). It never validates a real
- * OAuth authorization-code exchange - the suite doesn't attempt to
- * complete a third-party login, only that it *starts* one.
+ * (proving unauthenticated visits land on Auth0's hosted login). It never
+ * validates a real OAuth authorization-code exchange - the suite doesn't
+ * attempt to complete a third-party login, only that it *starts* one.
  */
-
-function readJsonBody(req: import("node:http").IncomingMessage): Promise<Record<string, unknown>> {
-  return new Promise((resolve, reject) => {
-    let raw = "";
-    req.on("data", (chunk) => (raw += chunk));
-    req.on("end", () => {
-      try {
-        resolve(raw ? JSON.parse(raw) : {});
-      } catch (error) {
-        reject(error as Error);
-      }
-    });
-    req.on("error", reject);
-  });
-}
 
 function json(res: import("node:http").ServerResponse, status: number, body: unknown) {
   res.writeHead(status, { "content-type": "application/json" });
@@ -72,47 +55,12 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (req.method === "POST" && url.pathname === "/passwordless/start") {
-    readJsonBody(req).then(() => json(res, 200, {}));
-    return;
-  }
-
-  if (req.method === "POST" && url.pathname === "/oauth/token") {
-    readJsonBody(req)
-      .then((body) => {
-        const otp = String(body.otp ?? "");
-        const username = String(body.username ?? "");
-        if (otp !== TEST_OTP_CODE) {
-          json(res, 403, {
-            error: "invalid_grant",
-            error_description: "Wrong email or verification code.",
-          });
-          return;
-        }
-        json(res, 200, {
-          access_token: Buffer.from(username).toString("base64url"),
-          token_type: "Bearer",
-          expires_in: 86400,
-        });
-      })
-      .catch(() => json(res, 400, { error: "invalid_request" }));
-    return;
-  }
-
-  if (url.pathname === "/userinfo") {
-    const auth = req.headers.authorization ?? "";
-    const token = auth.replace(/^Bearer\s+/i, "");
-    const email = Buffer.from(token, "base64url").toString("utf8");
-    if (!email.includes("@")) {
-      json(res, 401, { error: "invalid_token" });
-      return;
-    }
-    json(res, 200, {
-      sub: `email|${email}`,
-      email,
-      email_verified: true,
-      name: email.split("@")[0],
-    });
+  if (url.pathname === "/v2/logout") {
+    // Real Auth0 ends its hosted session, then 302s to `returnTo`. This
+    // fake has no session to end, but redirecting is what the suite
+    // actually needs to verify (see the sign-out-button's Auth0 logout).
+    const returnTo = url.searchParams.get("returnTo") ?? "/";
+    res.writeHead(302, { location: returnTo }).end();
     return;
   }
 

@@ -10,9 +10,12 @@ export default auth((req) => {
   );
 
   if (needsAuth && !req.auth) {
-    const loginUrl = new URL("/login", req.nextUrl.origin);
-    loginUrl.searchParams.set("callbackUrl", `${pathname}${search}`);
-    return NextResponse.redirect(loginUrl);
+    // Skip any in-app login screen entirely: `/signin` is a pass-through
+    // Server Component (see src/app/signin/page.tsx) that calls `signIn()`
+    // directly and redirects straight on to Auth0's hosted Universal Login.
+    const signInUrl = new URL("/signin", req.nextUrl.origin);
+    signInUrl.searchParams.set("callbackUrl", `${pathname}${search}`);
+    return NextResponse.redirect(signInUrl);
   }
 
   return NextResponse.next();

@@ -8,7 +8,7 @@ import { db } from "@/server/db";
 import { checklistItems, groupMembers, groups } from "@/server/db/schema";
 import { requireUserId } from "@/server/auth/require-user";
 import { createGroupSchema, joinGroupSchema } from "@/server/validation/schemas";
-import type { ActionResult } from "./auth";
+import type { ActionResult } from "./result";
 
 /** Invite codes gate group membership, so they're drawn from a CSPRNG rather than Math.random(). */
 function randomInviteCode(): string {

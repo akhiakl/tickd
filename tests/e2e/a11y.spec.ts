@@ -27,20 +27,9 @@ test.describe("accessibility", () => {
     await expectNoViolations(page, "/");
   });
 
-  test("sign-in page", async ({ page }) => {
-    await expectNoViolations(page, "/login");
-  });
-
-  test("email code page", async ({ page }) => {
-    await page.goto("/login");
-    await page.getByPlaceholder("you@email.com").fill("a11y@example.com");
-    await page.getByRole("button", { name: "Send me a code" }).click();
-    await expect(page).toHaveURL(/\/login\/code/);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
-    expect(results.violations).toEqual([]);
-  });
+  // Sign-in has no in-app screen to audit anymore: unauthenticated visits to
+  // a protected route redirect straight to Auth0's hosted Universal Login
+  // (see tests/e2e/auth.spec.ts), which this app doesn't render.
 
   test("account settings", async ({ page, context, baseURL }) => {
     const group = await seedFreshGroup();
