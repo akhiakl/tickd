@@ -1,12 +1,12 @@
 /** Default checklist offered when creating a group; the last slot is a free-form "side quest". */
 export const DEFAULT_CHECKLIST_ITEMS = [
-  "Wake before 7",
-  "Move for 45 min",
-  "3 litres of water",
-  "Read 20 pages",
-  "No sugar",
-  "10,000 steps",
-  "Lights out by 11",
+  "Exercise for 30 minutes",
+  "Walk 10,000+ steps",
+  "Drink 2L+ water",
+  "Sleep 7+ hours",
+  "No junk food",
+  "Read 10 pages",
+  "No alcohol or smoking",
   "Side quest",
 ];
 

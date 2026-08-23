@@ -22,7 +22,7 @@ test.describe("Member profile", () => {
     await expect(page.getByText("32", { exact: true })).toBeVisible();
 
     // Ada ticked every item every seeded day - all eight sit at 80% (4 of 5 days).
-    await expect(page.getByText("Wake before 7")).toBeVisible();
+    await expect(page.getByText("Exercise for 30 minutes")).toBeVisible();
     await expect(page.getByText("80%", { exact: true })).toHaveCount(8);
   });
 

@@ -37,8 +37,8 @@ test.describe("The wall", () => {
     await expect(page.getByText("4 of 8 done")).toBeVisible();
 
     // Priya ticked the first half of the checklist every seeded day.
-    await expect(page.getByText("Wake before 7")).toBeVisible();
-    await expect(page.getByText("Lights out by 11")).toBeVisible();
+    await expect(page.getByText("Exercise for 30 minutes")).toBeVisible();
+    await expect(page.getByText("No alcohol or smoking")).toBeVisible();
 
     await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByText("Priya - day 1")).toHaveCount(0);
