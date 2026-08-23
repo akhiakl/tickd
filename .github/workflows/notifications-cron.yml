@@ -1,0 +1,45 @@
+name: Notification cron
+
+# Vercel's own Cron feature is once-a-day on the Hobby plan - too coarse
+# for src/app/api/cron/{evening-nudge,weekly-recap}, which need to run
+# hourly and let each route filter to whoever's own local hour (see
+# localHour/localWeekday in src/lib/timezone.ts) matches its target. This
+# workflow is the hourly beat instead: it just calls the two routes with
+# the same CRON_SECRET bearer auth they already check
+# (src/app/api/cron/*/route.ts), so vercel.json's `crons` array was
+# removed rather than left pointing at a schedule Vercel would reject.
+#
+# Requires two repo secrets (Settings -> Secrets and variables -> Actions):
+#   APP_URL      - the deployed origin, e.g. https://tickd.vercel.app
+#   CRON_SECRET  - must match the CRON_SECRET env var set on the Vercel
+#                  project (leave both unset to run without auth locally,
+#                  but never in production - see the routes' own check).
+#
+# GitHub's own docs note scheduled workflows can run a few minutes late
+# under load - fine here, both routes are already tolerant of "roughly
+# the top of the hour," not a precise trigger.
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  nudge:
+    name: Trigger hourly nudge routes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evening nudge
+        run: |
+          curl -sS -f -X GET "${APP_URL}/api/cron/evening-nudge" \
+            -H "Authorization: Bearer ${CRON_SECRET}"
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
+      - name: Weekly recap
+        run: |
+          curl -sS -f -X GET "${APP_URL}/api/cron/weekly-recap" \
+            -H "Authorization: Bearer ${CRON_SECRET}"
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
