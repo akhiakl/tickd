@@ -39,6 +39,7 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
       return {
         userId: m.userId,
         name: m.name,
+        username: m.username,
         color: m.color,
         avatarSeed: m.avatarSeed,
         isMe: m.isMe,

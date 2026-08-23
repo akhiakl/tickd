@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 export type MemberListRow = {
   userId: string;
   name: string;
+  username: string | null;
   color: string;
   avatarSeed: string;
   isMe: boolean;
@@ -31,6 +32,9 @@ export function MemberList({ groupId, rows }: { groupId: string; rows: MemberLis
               {row.name}
               {row.isMe && " (you)"}
             </span>
+            {row.username && (
+              <span className="text-muted block truncate text-[11.5px]">@{row.username}</span>
+            )}
             <span className="bg-text/10 mt-1 block h-[5px] overflow-hidden rounded-full">
               <span
                 className="block h-full rounded-full"

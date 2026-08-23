@@ -12,6 +12,9 @@ export type ChecklistItemView = {
 export type MemberSnapshot = {
   userId: string;
   name: string;
+  /** Set only once a guest saves credentials (src/server/actions/auth.ts's
+   * setCredentials); null otherwise, including for every Auth0 member. */
+  username: string | null;
   color: string;
   avatarSeed: string;
   role: MemberRole;

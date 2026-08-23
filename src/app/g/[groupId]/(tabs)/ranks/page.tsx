@@ -91,9 +91,21 @@ export default async function RanksPage({ params, searchParams }: PageProps<"/g/
               {i + 1}
             </span>
             <Avatar name={m.name} color={m.color} seed={m.avatarSeed} size={34} />
-            <span className="min-w-0 flex-1 truncate text-[15px] font-bold">
-              {m.name}
-              {m.isMe && " (you)"}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[15px] font-bold">
+                {m.name}
+                {m.isMe && " (you)"}
+              </span>
+              {m.username && (
+                <span
+                  className={cn(
+                    "block truncate text-[11.5px]",
+                    m.isMe ? "text-panel-soft" : "text-muted",
+                  )}
+                >
+                  @{m.username}
+                </span>
+              )}
             </span>
             <span className="flex flex-none items-center gap-0.5">
               <Flame size={12} className="fill-flame text-flame" />

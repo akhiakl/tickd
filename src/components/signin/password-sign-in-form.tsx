@@ -26,7 +26,7 @@ export function PasswordSignInForm({ callbackUrl }: { callbackUrl: string }) {
       </label>
       <input
         value={username}
-        onChange={(e) => setUsername(e.target.value)}
+        onChange={(e) => setUsername(e.target.value.toLowerCase())}
         required
         maxLength={24}
         autoFocus

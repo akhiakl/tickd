@@ -3,15 +3,22 @@ import { AVATAR_SWATCHES } from "@/lib/constants";
 
 export const guestNameSchema = z.string().trim().min(1, "Enter a name.").max(40);
 
-/** Lowercased so uniqueness and lookups are case-insensitive (see the
- * `username` column comment in src/server/db/schema/users.ts). */
+// Same shape most sites converge on (GitHub, Instagram, etc): lowercase
+// letters, digits, underscore, and period only - no uppercase, no other
+// punctuation, and no leading/trailing/doubled `.`/`_`, which read as
+// copy-paste or typo artifacts rather than an intentional name. Rejected
+// outright rather than silently normalized (the old regex had an `/i`
+// flag and lowercased after the fact) - a user who typed "Ada" should see
+// why, not have it silently become "ada" out from under them.
 export const usernameSchema = z
   .string()
   .trim()
   .min(3, "At least 3 characters.")
   .max(24, "24 characters or fewer.")
-  .regex(/^[a-z0-9_]+$/i, "Letters, numbers, and underscores only.")
-  .transform((v) => v.toLowerCase());
+  .regex(/^[a-z0-9_.]+$/, "Lowercase letters, numbers, underscores, and periods only.")
+  .regex(/^[^._]/, "Can't start with a period or underscore.")
+  .regex(/[^._]$/, "Can't end with a period or underscore.")
+  .regex(/^(?!.*[._]{2})/, "No repeated periods or underscores.");
 
 // NIST SP 800-63B recommends length + a breach/common-password check over
 // forced composition rules (require a symbol, a digit, etc.) - composition

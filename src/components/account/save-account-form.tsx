@@ -2,12 +2,10 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { Check, X, Loader2 } from "lucide-react";
-import { setCredentials, checkUsernameAvailable } from "@/server/actions/auth";
+import { setCredentials, checkUsernameAvailable, type UsernameCheck } from "@/server/actions/auth";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
-
-type Availability = "idle" | "checking" | "available" | "taken";
 
 /** Debounce delay for the live availability check - short enough to feel
  * instant (Instagram-style "is this taken" while typing), long enough
@@ -32,21 +30,21 @@ export function SaveAccountForm() {
   // at all - it's derived below as "no resolved check matches the
   // current username yet", which covers both the debounce window and the
   // request itself with no separate state to keep in sync.
-  const [lastChecked, setLastChecked] = useState<{ username: string; available: boolean } | null>(
-    null,
-  );
+  const [lastChecked, setLastChecked] = useState<{
+    username: string;
+    result: UsernameCheck;
+  } | null>(null);
   const [pending, startTransition] = useTransition();
   const { message, showToast } = useToast();
 
   const trimmed = username.trim();
-  const availability: Availability =
+  const status: UsernameCheck["status"] | "idle" | "checking" =
     trimmed.length < 3
       ? "idle"
       : lastChecked?.username === username
-        ? lastChecked.available
-          ? "available"
-          : "taken"
+        ? lastChecked.result.status
         : "checking";
+  const invalidReason = status === "invalid" ? lastChecked?.result.reason : undefined;
 
   // Debounced live check, canceled/superseded on every keystroke - the
   // `ignore` flag (React's own recommended pattern for effects that fetch)
@@ -57,8 +55,8 @@ export function SaveAccountForm() {
 
     let ignore = false;
     const timer = setTimeout(() => {
-      checkUsernameAvailable(username).then((available) => {
-        if (!ignore) setLastChecked({ username, available });
+      checkUsernameAvailable(username).then((result) => {
+        if (!ignore) setLastChecked({ username, result });
       });
     }, CHECK_DELAY_MS);
 
@@ -101,7 +99,7 @@ export function SaveAccountForm() {
       <div className="relative mb-2">
         <input
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => setUsername(e.target.value.toLowerCase())}
           required
           maxLength={24}
           autoCapitalize="none"
@@ -111,13 +109,16 @@ export function SaveAccountForm() {
           className="border-text/[0.16] bg-bg text-text w-full rounded-2xl border-[1.5px] px-4 py-3 pr-10 text-[15px]"
         />
         <span className="absolute top-1/2 right-3.5 -translate-y-1/2">
-          {availability === "checking" && <Loader2 size={16} className="text-muted animate-spin" />}
-          {availability === "available" && <Check size={16} className="text-accent" />}
-          {availability === "taken" && <X size={16} className="text-flame" />}
+          {status === "checking" && <Loader2 size={16} className="text-muted animate-spin" />}
+          {status === "available" && <Check size={16} className="text-accent" />}
+          {(status === "taken" || status === "invalid") && <X size={16} className="text-flame" />}
         </span>
       </div>
-      {availability === "taken" && (
+      {status === "taken" && (
         <p className="text-flame -mt-1 mb-2 text-[12px]">That username is taken.</p>
+      )}
+      {status === "invalid" && invalidReason && (
+        <p className="text-flame -mt-1 mb-2 text-[12px]">{invalidReason}</p>
       )}
 
       <input
@@ -135,7 +136,7 @@ export function SaveAccountForm() {
 
       <Button
         type="submit"
-        disabled={pending || availability === "taken" || availability === "checking"}
+        disabled={pending || status === "taken" || status === "invalid" || status === "checking"}
         size="sm"
         className="mt-3.5"
       >

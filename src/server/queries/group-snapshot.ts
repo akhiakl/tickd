@@ -59,6 +59,7 @@ async function getGroupCore(groupId: string): Promise<GroupCore | null> {
       .select({
         userId: users.id,
         name: users.name,
+        username: users.username,
         color: users.color,
         avatarSeed: users.avatarSeed,
         role: groupMembers.role,
@@ -72,6 +73,7 @@ async function getGroupCore(groupId: string): Promise<GroupCore | null> {
   const members: Omit<MemberSnapshot, "isMe">[] = memberRows.map((m) => ({
     userId: m.userId,
     name: m.name,
+    username: m.username,
     color: m.color,
     avatarSeed: m.avatarSeed,
     role: m.role,

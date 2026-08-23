@@ -74,25 +74,28 @@ export async function signInWithPassword(input: {
   }
 }
 
+export type UsernameCheck = { status: "available" | "taken" | "invalid"; reason?: string };
+
 /**
  * Live availability check for the username field (an Instagram-style
  * "is this taken" as you type, not a submit-and-find-out) - just an
  * indexed lookup against the `username` unique constraint, no hashing or
  * writes, so it's fast enough to call on every keystroke's debounce.
- * Invalid input (too short, bad characters) reads as "unavailable"
- * without a specific reason - the form's own validation on submit
- * explains why, this is only ever a quick yes/no while typing.
+ * Returns *why* it's unavailable (bad format vs. actually taken) rather
+ * than a plain boolean - collapsing those into one generic "unavailable"
+ * would show "That username is taken" for someone who just typed a
+ * capital letter, which is simply the wrong answer, not a simplification.
  */
-export async function checkUsernameAvailable(username: string): Promise<boolean> {
+export async function checkUsernameAvailable(username: string): Promise<UsernameCheck> {
   const parsed = usernameSchema.safeParse(username);
-  if (!parsed.success) return false;
+  if (!parsed.success) return { status: "invalid", reason: parsed.error.issues[0].message };
 
   const ip = await getClientIp();
   const allowed = await rateLimit(`username-check:${ip}`, 60, 300);
-  if (!allowed) return false;
+  if (!allowed) return { status: "invalid", reason: "Too many checks. Try again in a moment." };
 
   const existing = await getUserByUsername(parsed.data);
-  return !existing;
+  return existing ? { status: "taken" } : { status: "available" };
 }
 
 /**
