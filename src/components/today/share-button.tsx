@@ -8,36 +8,20 @@ import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
-type CardStyle = "classic" | "bold";
-
-const CARD_STYLES: { id: CardStyle; label: string; aspectRatio: string }[] = [
-  { id: "classic", label: "Classic", aspectRatio: "600 / 750" },
-  { id: "bold", label: "Bold", aspectRatio: "600 / 880" },
-];
-
 export function ShareButton({ groupId }: { groupId: string }) {
   const [open, setOpen] = useState(false);
-  const [cardStyle, setCardStyle] = useState<CardStyle>("classic");
   const [loaded, setLoaded] = useState(false);
   const { message, showToast } = useToast();
 
-  const activeStyle = CARD_STYLES.find((style) => style.id === cardStyle)!;
-  const imageUrl = `/api/share/${groupId}?style=${cardStyle}`;
+  const imageUrl = `/api/share/${groupId}`;
 
   // The Sheet unmounts its children on close, so the <img> below is a fresh
-  // element every time it opens and needs to load again - the skeleton is
-  // reset explicitly wherever `open` or `cardStyle` changes below, rather
-  // than in an effect, so there's no extra render between the state change
-  // and the skeleton reappearing.
+  // element every time it opens and needs to load again - reset the
+  // skeleton here, rather than in an effect, so there's no extra render
+  // between the state change and the skeleton reappearing.
   function openSheet() {
     setLoaded(false);
     setOpen(true);
-  }
-
-  function selectStyle(style: CardStyle) {
-    if (style === cardStyle) return;
-    setLoaded(false);
-    setCardStyle(style);
   }
 
   async function handleShare() {
@@ -84,12 +68,11 @@ export function ShareButton({ groupId }: { groupId: string }) {
       >
         <div
           className="bg-surface relative w-full overflow-hidden rounded-3xl shadow-lg"
-          style={{ aspectRatio: activeStyle.aspectRatio }}
+          style={{ aspectRatio: "600 / 750" }}
         >
-          {!loaded && <div className="bg-surface-2 absolute inset-0 animate-pulse" />}
+          {!loaded && <div className="skeleton absolute inset-0" />}
           {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered PNG, not an optimizable asset */}
           <img
-            key={imageUrl}
             src={imageUrl}
             alt="Your daily streak card"
             onLoad={() => setLoaded(true)}
@@ -99,24 +82,6 @@ export function ShareButton({ groupId }: { groupId: string }) {
               loaded ? "opacity-100" : "opacity-0",
             )}
           />
-        </div>
-
-        <div className="mt-3 flex justify-center gap-1.5">
-          {CARD_STYLES.map((style) => (
-            <button
-              key={style.id}
-              type="button"
-              onClick={() => selectStyle(style.id)}
-              className={cn(
-                "cursor-pointer rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-colors",
-                cardStyle === style.id
-                  ? "bg-accent text-on-panel"
-                  : "bg-surface text-muted hover:bg-surface-2",
-              )}
-            >
-              {style.label}
-            </button>
-          ))}
         </div>
 
         <div className="mt-4 flex gap-2">

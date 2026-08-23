@@ -51,6 +51,24 @@ async function MyGroups() {
   );
 }
 
+function MyGroupsSkeleton() {
+  return (
+    <>
+      <div className="mt-10 flex items-center gap-2.5">
+        <div className="bg-text/[0.16] h-px flex-1" />
+        <span className="text-faint text-[10.5px] tracking-[0.12em] uppercase">Your groups</span>
+        <div className="bg-text/[0.16] h-px flex-1" />
+      </div>
+
+      <div className="mt-4 flex flex-col gap-2.5">
+        {Array.from({ length: 2 }, (_, i) => (
+          <div key={i} className="skeleton h-[74px] rounded-3xl" />
+        ))}
+      </div>
+    </>
+  );
+}
+
 export default function LandingPage() {
   return (
     <Screen className="flex min-h-dvh flex-col px-6 pt-6 pb-10">
@@ -76,10 +94,7 @@ export default function LandingPage() {
         </LinkButton>
       </div>
 
-      {/* No fallback: anonymous visitors and signed-in users with no groups
-          both render nothing here, so a loading flash would be pure noise -
-          the hero above is already the meaningful content while this streams in. */}
-      <Suspense>
+      <Suspense fallback={<MyGroupsSkeleton />}>
         <MyGroups />
       </Suspense>
     </Screen>
