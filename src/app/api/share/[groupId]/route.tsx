@@ -20,11 +20,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ gro
   const me = snapshot.members.find((m) => m.isMe);
   if (!me) return new NextResponse("Not found", { status: 404 });
 
+  // snapshot.today/dayIndex are already "me"'s own (getGroupSnapshot builds
+  // them from the viewer's own localToday/localDayIndex) - use the matching
+  // local* maps rather than the UTC-keyed ones so this share card agrees
+  // with what "me" sees on their own Today page.
   const dates = dateRange(snapshot.startDate, snapshot.dayIndex);
-  const counts = dates.map((date) => me.countsByDate[date] ?? 0);
+  const counts = dates.map((date) => me.localCountsByDate[date] ?? 0);
   const streak = currentStreakWithToday(counts);
-  const doneToday = me.countsByDate[snapshot.today] ?? 0;
-  const checkedItemIds = new Set(me.itemsByDate[snapshot.today] ?? []);
+  const doneToday = me.localCountsByDate[snapshot.today] ?? 0;
+  const checkedItemIds = new Set(me.localItemsByDate[snapshot.today] ?? []);
 
   return new ImageResponse(
     <ShareCard

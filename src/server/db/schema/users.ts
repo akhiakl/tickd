@@ -29,15 +29,22 @@ export const users = pgTable("users", {
   // supplies a fresh `crypto.randomUUID()`; no app-level default.
   avatarSeed: text("avatar_seed").notNull(),
   isGuest: boolean("is_guest").notNull().default(false),
-  // IANA zone name (e.g. "America/Chicago"), captured client-side from
-  // Intl.DateTimeFormat().resolvedOptions().timeZone - see
-  // src/components/timezone-sync.tsx. Null until that first happens
-  // (a user who never opens a client page after this shipped, or a cron
-  // run before any client sync). Used only for *when* a push notification
-  // fires for this person (src/server/queries/nudge-candidates.ts) - not
-  // for the shared group "today"/day-index, which stays on the server's
-  // clock since that's group state multiple members (possibly in
-  // different zones) all see the same value for.
+  // This person's *elected* IANA zone (e.g. "America/Chicago") - a
+  // preference, not a live device reading. Defaults once from
+  // Intl.DateTimeFormat().resolvedOptions().timeZone the first time
+  // src/components/timezone-sync.tsx runs (never overwriting it again
+  // after that - see setTimezone's comment in
+  // src/server/actions/account.ts), and from then on only changes when
+  // the person picks a new one in Account settings
+  // (setTimezonePreference). Null until either happens (a user who never
+  // opened a client page after this shipped, or a cron run before any
+  // sync). Drives: when a push notification fires for this person
+  // (src/server/queries/nudge-candidates.ts), their own "today"/streak/
+  // history (src/server/queries/group-snapshot.ts's localToday/
+  // localCountsByDate), and the live clock other members see next to
+  // their name. The Wall's shared grid and `daily_checks.date` itself
+  // stay on UTC regardless - see MemberSnapshot's comments in
+  // src/types/domain.ts.
   timezone: text("timezone"),
   reminderEnabled: boolean("reminder_enabled").notNull().default(true),
   weeklyRecapEnabled: boolean("weekly_recap_enabled").notNull().default(true),

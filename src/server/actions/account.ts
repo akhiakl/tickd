@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
@@ -36,10 +36,20 @@ export async function updatePreferences(input: unknown): Promise<ActionResult> {
 }
 
 /**
- * Best-effort sync of the browser's IANA timezone, called unconditionally
- * from HydrationMarker on every page - including for anonymous visitors,
- * so this reads the session itself (`auth()`, not `requireUserId()`) and
- * quietly no-ops rather than throwing when there isn't one.
+ * Best-effort *default* for a person who's never chosen a timezone -
+ * called unconditionally from TimezoneSync on every page, including for
+ * anonymous visitors, so this reads the session itself (`auth()`, not
+ * `requireUserId()`) and quietly no-ops rather than throwing when there
+ * isn't one.
+ *
+ * Deliberately conditional on `timezone IS NULL`: a person's elected
+ * timezone (this column) drives their own "today"/streak and what other
+ * members see as their clock, so once it's set - by this default firing
+ * once, or by them picking one in Account settings - it must never get
+ * silently overwritten by whatever the browser happens to detect on a
+ * later visit (a different device, a VPN, travel). Account settings'
+ * `setTimezonePreference` below is the only path that can change it after
+ * this first write.
  */
 export async function setTimezone(timezone: string): Promise<ActionResult> {
   if (!IANA_TIMEZONE_PATTERN.test(timezone)) return { ok: false, error: "Invalid timezone." };
@@ -48,7 +58,26 @@ export async function setTimezone(timezone: string): Promise<ActionResult> {
   const userId = session?.user?.id;
   if (!userId) return { ok: false, error: "Not signed in." };
 
+  await db
+    .update(users)
+    .set({ timezone })
+    .where(and(eq(users.id, userId), isNull(users.timezone)));
+  return { ok: true };
+}
+
+/**
+ * Explicit, always-overwrites set of a person's elected timezone - the
+ * Account settings picker, pre-filled with the browser's detected zone
+ * but changeable to anything, e.g. before traveling. Unlike `setTimezone`
+ * above this requires a real session (a signed-in change, not a
+ * best-effort background sync).
+ */
+export async function setTimezonePreference(timezone: string): Promise<ActionResult> {
+  if (!IANA_TIMEZONE_PATTERN.test(timezone)) return { ok: false, error: "Invalid timezone." };
+  const userId = await requireUserId();
+
   await db.update(users).set({ timezone }).where(eq(users.id, userId));
+  revalidatePath("/account");
   return { ok: true };
 }
 

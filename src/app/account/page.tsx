@@ -33,6 +33,7 @@ export default async function AccountPage() {
         email={user.email}
         initialColor={user.color}
         initialAvatarSeed={user.avatarSeed}
+        initialTimezone={user.timezone}
         initialPrefs={{
           reminderEnabled: user.reminderEnabled,
           weeklyRecapEnabled: user.weeklyRecapEnabled,

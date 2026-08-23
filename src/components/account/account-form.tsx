@@ -1,8 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { Shuffle } from "lucide-react";
-import { updatePreferences, updateProfile, randomizeAvatar } from "@/server/actions/account";
+import {
+  updatePreferences,
+  updateProfile,
+  randomizeAvatar,
+  setTimezonePreference,
+} from "@/server/actions/account";
 import { AVATAR_SWATCHES } from "@/lib/constants";
 import { Avatar } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
@@ -35,12 +40,14 @@ export function AccountForm({
   email,
   initialColor,
   initialAvatarSeed,
+  initialTimezone,
   initialPrefs,
 }: {
   initialName: string;
   email: string | null;
   initialColor: string;
   initialAvatarSeed: string;
+  initialTimezone: string | null;
   initialPrefs: Prefs;
 }) {
   const [name, setName] = useState(initialName);
@@ -49,6 +56,40 @@ export function AccountForm({
   const [prefs, setPrefs] = useState(initialPrefs);
   const [, startTransition] = useTransition();
   const { message, showToast } = useToast();
+
+  // Pre-fills with whatever the browser/network reports so picking a
+  // timezone is a one-tap confirm for most people, but it's just a
+  // starting point for the <select> below - nothing is saved until they
+  // actually choose one (or leave the pre-filled default in place and it
+  // saves on change, same as any other field here). Never overwrites a
+  // timezone that's already stored - see setTimezone's own comment for why.
+  const detectedTimezone = useMemo(() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      return "UTC";
+    }
+  }, []);
+  const [timezone, setTimezoneState] = useState(initialTimezone ?? detectedTimezone);
+  const timezoneOptions = useMemo(() => {
+    try {
+      const zones = Intl.supportedValuesOf("timeZone");
+      // Make sure whatever's currently selected is always a valid option,
+      // even if the runtime's list doesn't happen to include it.
+      return zones.includes(timezone) ? zones : [timezone, ...zones];
+    } catch {
+      return [timezone];
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function saveTimezone(next: string) {
+    setTimezoneState(next);
+    startTransition(async () => {
+      const result = await setTimezonePreference(next);
+      if (!result.ok) showToast(result.error);
+    });
+  }
 
   function saveProfile(nextName: string, nextColor: string) {
     startTransition(async () => {
@@ -138,6 +179,32 @@ export function AccountForm({
             aria-label={`Choose ${swatch}`}
           />
         ))}
+      </div>
+
+      <div className="text-faint px-6 pt-6.5 pb-2 text-[11px] tracking-[0.12em] uppercase">
+        Your timezone
+      </div>
+      <div className="px-5.5">
+        <label className="bg-surface flex items-center justify-between gap-3 rounded-[22px] px-4.5 py-3.5">
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-bold">Timezone</span>
+            <span className="text-muted mt-0.5 block text-[12.5px]">
+              Sets your day, streak, and the clock others see next to your name
+            </span>
+          </span>
+          <select
+            value={timezone}
+            onChange={(e) => saveTimezone(e.target.value)}
+            aria-label="Your timezone"
+            className="text-text max-w-[130px] flex-none truncate bg-transparent text-right text-[13px] font-semibold focus:outline-none"
+          >
+            {timezoneOptions.map((zone) => (
+              <option key={zone} value={zone}>
+                {zone.replace(/_/g, " ")}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="text-faint px-6 pt-6.5 pb-2 text-[11px] tracking-[0.12em] uppercase">

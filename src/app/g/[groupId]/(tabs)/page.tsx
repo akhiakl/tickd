@@ -25,23 +25,31 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
 
   const { items, members, today, dayIndex, durationDays } = snapshot;
   const me = members.find((m) => m.isMe)!;
+  // `today`/`dayIndex` are already the viewer's own (see getGroupSnapshot),
+  // and `me`'s local* fields are bucketed in that same timezone since
+  // me.isMe - so these two stay in lockstep for the viewer's own checklist.
   const dates = dateRange(snapshot.startDate, dayIndex);
 
-  const doneToday = me.countsByDate[today] ?? 0;
-  const myCounts = dates.map((d) => me.countsByDate[d] ?? 0);
+  const doneToday = me.localCountsByDate[today] ?? 0;
+  const myCounts = dates.map((d) => me.localCountsByDate[d] ?? 0);
   const myStreak = currentStreakWithToday(myCounts);
 
+  // Every other member's row walks *their own* timezone (localDayIndex/
+  // localCountsByDate), independent of the viewer's today/dayIndex above -
+  // see src/types/domain.ts's MemberSnapshot comments.
   const memberRows: MemberListRow[] = [...members]
     .map((m) => {
-      const counts = dates.map((d) => m.countsByDate[d] ?? 0);
+      const mDates = dateRange(snapshot.startDate, m.localDayIndex);
+      const counts = mDates.map((d) => m.localCountsByDate[d] ?? 0);
       const total = computeTotal(counts);
-      const pct = Math.round((total / (dayIndex * items.length)) * 100);
+      const pct = Math.round((total / (m.localDayIndex * items.length)) * 100);
       return {
         userId: m.userId,
         name: m.name,
         username: m.username,
         color: m.color,
         avatarSeed: m.avatarSeed,
+        timezone: m.timezone,
         isMe: m.isMe,
         streak: currentStreakWithToday(counts),
         pct,
@@ -49,7 +57,7 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
     })
     .sort((a, b) => b.pct - a.pct);
 
-  const groupToday = members.reduce((sum, m) => sum + (m.countsByDate[today] ?? 0), 0);
+  const groupToday = members.reduce((sum, m) => sum + (m.localCountsByDate[m.localToday] ?? 0), 0);
 
   return (
     <div className="pt-1.5 pb-30">
@@ -82,7 +90,7 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
       <TodayChecklist
         groupId={groupId}
         items={items}
-        checkedItemIds={me.itemsByDate[today] ?? []}
+        checkedItemIds={me.localItemsByDate[today] ?? []}
       />
 
       <div className="mx-4 mt-5.5 flex gap-2.5">

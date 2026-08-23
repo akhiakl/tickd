@@ -6,17 +6,20 @@ import { setTimezone } from "@/server/actions/account";
 const STORAGE_KEY = "tickd-tz-synced";
 
 /**
- * Syncs the browser's IANA timezone to the signed-in user's row (used by
- * the notification cron routes to fire at each person's own local time,
- * not one fixed UTC hour for everyone - see the `timezone` column's
- * comment in src/server/db/schema/users.ts). Mounted unconditionally in
- * the root layout, so this runs for anonymous visitors too; setTimezone
- * itself reads the session and no-ops rather than throwing when there
- * isn't one, so there's nothing to gate here.
+ * Sets the signed-in user's timezone to the browser's detected IANA zone,
+ * but only as a one-time *default* - a person's timezone is an elected
+ * preference (changeable any time in Account settings), never something
+ * silently overwritten by whatever a later visit's browser/network
+ * happens to report. The actual "only if not already set" guard lives
+ * server-side in `setTimezone` (src/server/actions/account.ts), so this
+ * component staying dumb and firing on every mount is harmless - it's
+ * mounted unconditionally in the root layout (including for anonymous
+ * visitors; setTimezone reads the session itself and no-ops when there
+ * isn't one) precisely so there's nothing to gate here.
  *
  * localStorage is only a "don't bother the server every navigation"
  * optimization, not the source of truth - a viewer with storage blocked
- * or cleared just re-syncs (or resyncs once more than strictly needed),
+ * or cleared just re-syncs (a harmless no-op once a timezone is set),
  * never breaks.
  */
 export function TimezoneSync() {
