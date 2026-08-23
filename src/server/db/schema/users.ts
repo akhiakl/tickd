@@ -29,6 +29,16 @@ export const users = pgTable("users", {
   // supplies a fresh `crypto.randomUUID()`; no app-level default.
   avatarSeed: text("avatar_seed").notNull(),
   isGuest: boolean("is_guest").notNull().default(false),
+  // IANA zone name (e.g. "America/Chicago"), captured client-side from
+  // Intl.DateTimeFormat().resolvedOptions().timeZone - see
+  // src/components/timezone-sync.tsx. Null until that first happens
+  // (a user who never opens a client page after this shipped, or a cron
+  // run before any client sync). Used only for *when* a push notification
+  // fires for this person (src/server/queries/nudge-candidates.ts) - not
+  // for the shared group "today"/day-index, which stays on the server's
+  // clock since that's group state multiple members (possibly in
+  // different zones) all see the same value for.
+  timezone: text("timezone"),
   reminderEnabled: boolean("reminder_enabled").notNull().default(true),
   weeklyRecapEnabled: boolean("weekly_recap_enabled").notNull().default(true),
   showStreaks: boolean("show_streaks").notNull().default(true),

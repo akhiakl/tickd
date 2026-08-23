@@ -9,6 +9,12 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
+import { ensurePushSubscribed } from "@/lib/push-subscribe";
+
+/** Toggling either of these on needs a live push subscription behind it -
+ * see ensurePushSubscribed's own comment for why one subscription covers
+ * both. */
+const PUSH_BACKED_PREFS = new Set<keyof Prefs>(["reminderEnabled", "weeklyRecapEnabled"]);
 
 type Prefs = {
   reminderEnabled: boolean;
@@ -60,11 +66,30 @@ export function AccountForm({
   }
 
   function togglePref(key: keyof Prefs) {
-    const next = { ...prefs, [key]: !prefs[key] };
+    const turningOn = !prefs[key];
+    const next = { ...prefs, [key]: turningOn };
     setPrefs(next);
     startTransition(async () => {
       await updatePreferences(next);
     });
+
+    // Best-effort, and deliberately not blocking the toggle's own save
+    // above: the preference itself always saves regardless of whether
+    // this device can actually receive a push (an unsupported browser, a
+    // denied permission), so a failure here just means "delivery to this
+    // device won't work," not "the setting didn't save."
+    if (turningOn && PUSH_BACKED_PREFS.has(key)) {
+      ensurePushSubscribed().then((result) => {
+        if (result.ok) return;
+        if (result.reason === "denied") {
+          showToast("Notifications are blocked for this site in your browser settings");
+        } else if (result.reason === "unsupported") {
+          showToast("This browser doesn't support push notifications");
+        }
+        // "unconfigured" (no VAPID key set up) and "error" fail silently -
+        // neither is something the person toggling a preference can act on.
+      });
+    }
   }
 
   return (
