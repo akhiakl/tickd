@@ -75,3 +75,35 @@ export async function createGuestUser(input: { name: string }): Promise<User> {
 export const getUserById = cache(async (id: string) => {
   return db.query.users.findFirst({ where: eq(users.id, id) });
 });
+
+/** Looks up a user by username for the password sign-in provider. `username`
+ * must already be lowercased (see `usernameSchema`) - this does a plain
+ * equality lookup, not a case-insensitive one, by design. */
+export async function getUserByUsername(username: string) {
+  return db.query.users.findFirst({ where: eq(users.username, username) });
+}
+
+/**
+ * Sets username + password hash on an existing row - the "save your
+ * account" upgrade a guest can do from /account to make their account
+ * reachable from another device, without losing their id/history the way
+ * signing in as a fresh guest elsewhere would. Returns `null` on a
+ * username collision instead of throwing, so the caller can show a normal
+ * form error rather than a 500.
+ */
+export async function setUserCredentials(
+  userId: string,
+  username: string,
+  passwordHash: string,
+): Promise<User | null> {
+  try {
+    const [updated] = await db
+      .update(users)
+      .set({ username, passwordHash })
+      .where(eq(users.id, userId))
+      .returning();
+    return updated;
+  } catch {
+    return null;
+  }
+}
