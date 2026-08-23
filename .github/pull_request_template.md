@@ -20,10 +20,10 @@
 
 ## Checklist
 
-- [ ] `npm run lint` passes
-- [ ] `npm run typecheck` passes
-- [ ] `npm run test` passes
-- [ ] `npm run build` passes
-- [ ] Ran `npm run db:migrate` against a database matching the new schema, if this touches
+- [ ] `pnpm run lint` passes
+- [ ] `pnpm run typecheck` passes
+- [ ] `pnpm run test` passes
+- [ ] `pnpm run build` passes
+- [ ] Ran `pnpm run db:migrate` against a database matching the new schema, if this touches
       `src/server/db/schema`
 - [ ] No new em dashes snuck into copy or docs

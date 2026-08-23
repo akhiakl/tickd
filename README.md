@@ -24,11 +24,11 @@ reference; nothing in that folder ships in the app.
 ## Getting started
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env.local   # fill in DATABASE_URL and the AUTH0_* values
-npm run db:migrate           # applies drizzle/*.sql to your database
-npm run db:seed              # optional: seeds one sample group with 15 members
-npm run dev
+pnpm run db:migrate           # applies drizzle/*.sql to your database
+pnpm run db:seed              # optional: seeds one sample group with 15 members
+pnpm run dev
 ```
 
 ### Auth0 setup
@@ -97,14 +97,14 @@ showing someone a stale streak. The choices actually made:
 ## Testing and quality gates
 
 ```bash
-npm run lint          # ESLint (flat config), including a 300-line cap per source file
-npm run typecheck     # tsc --noEmit
-npm run test          # Vitest (unit and component tests)
-npm run test:coverage # Vitest with the coverage report below
-npm run format:check  # Prettier
+pnpm run lint          # ESLint (flat config), including a 300-line cap per source file
+pnpm run typecheck     # tsc --noEmit
+pnpm run test          # Vitest (unit and component tests)
+pnpm run test:coverage # Vitest with the coverage report below
+pnpm run format:check  # Prettier
 ```
 
-`npm run lint` enforces a 300-line maximum on non-test files and 500 lines on test files
+`pnpm run lint` enforces a 300-line maximum on non-test files and 500 lines on test files
 (`eslint.config.mjs`) - split a file that grows past that rather than disabling the rule. Husky
 runs `lint-staged` on every commit (ESLint + Prettier on staged files) and `commitlint` on every
 commit message, which must follow [Conventional Commits](https://www.conventionalcommits.org/)
@@ -112,7 +112,7 @@ commit message, which must follow [Conventional Commits](https://www.conventiona
 
 ### Unit and component tests
 
-`npm run test` (Vitest) covers the framework-free logic layer (`src/lib`, `src/server/validation`)
+`pnpm run test` (Vitest) covers the framework-free logic layer (`src/lib`, `src/server/validation`)
 plus the handful of components that carry real logic of their own - optimistic state, confirm
 flows, sorting, derived class names - rather than just composing other components:
 `checklist-draft-editor`, `checklist-settings-editor`, `danger-zone`, `invite-code-panel`,
@@ -127,8 +127,8 @@ enforced in CI.
 ## End-to-end tests
 
 ```bash
-npx playwright install chromium   # once, if you don't already have a Chromium build
-DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/tickd_test npm run test:e2e
+pnpm exec playwright install chromium   # once, if you don't already have a Chromium build
+DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/tickd_test pnpm run test:e2e
 ```
 
 The suite (`tests/e2e/`) drives a real, running build of the app in a real browser against a real
@@ -157,13 +157,13 @@ the share-card image, the bottom nav, the theme toggle), the wall, standings and
 member profiles, and group settings (invite code, checklist CRUD and reordering, removing a
 member, and archiving/deleting with its confirmation step).
 
-Run `npx playwright show-report` after a run to open the HTML report, or `npm run test:e2e:ui` for
+Run `pnpm exec playwright show-report` after a run to open the HTML report, or `pnpm run test:e2e:ui` for
 Playwright's interactive UI mode while writing new tests.
 
 ## Accessibility tests
 
 ```bash
-DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/tickd_test npm run test:a11y
+DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/tickd_test pnpm run test:a11y
 ```
 
 `tests/e2e/a11y.spec.ts` runs an automated [axe-core](https://github.com/dequelabs/axe-core) scan
@@ -172,7 +172,7 @@ signed in, checking WCAG 2.0/2.1 A and AA rules. It shares the same app server, 
 and database fixtures as the end-to-end suite, just as a separate Playwright project
 (`playwright.config.ts`'s `a11y` project) so it can be run and reported on independently. A failure
 prints the axe rule id, impact, and every offending element so it is actionable without opening the
-HTML report - though `npm run test:e2e:report` still works for either project.
+HTML report - though `pnpm run test:e2e:report` still works for either project.
 
 This is a floor, not a ceiling: axe catches structural, contrast, and ARIA issues automatically,
 but it cannot replace a manual keyboard-only pass or a real screen reader.
@@ -203,7 +203,7 @@ environment variables:
 - `NEXT_PUBLIC_APP_URL` (your production origin)
 - `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_ISSUER`
 
-Run `npm run db:migrate` against the production database once before the first deploy.
+Run `pnpm run db:migrate` against the production database once before the first deploy.
 
 ## Product notes and intentional deviations from the prototype
 
