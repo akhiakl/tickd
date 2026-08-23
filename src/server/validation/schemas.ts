@@ -13,10 +13,43 @@ export const usernameSchema = z
   .regex(/^[a-z0-9_]+$/i, "Letters, numbers, and underscores only.")
   .transform((v) => v.toLowerCase());
 
-// Deliberately low-friction, not a real security boundary - see the
-// account-recovery discussion this was designed around: no password reset
-// flow, no complexity rules, just "long enough to not be a one-character typo."
-export const passwordSchema = z.string().min(6, "At least 6 characters.").max(72);
+// NIST SP 800-63B recommends length + a breach/common-password check over
+// forced composition rules (require a symbol, a digit, etc.) - composition
+// rules measurably push people toward predictable patterns ("Password1!")
+// without meaningfully raising entropy, and are exactly the rule a
+// password *manager* doesn't need. So: a real length floor (8, not the
+// "6" this started at), no character-class requirements, and reject the
+// handful of passwords that show up in nearly every credential-stuffing
+// wordlist - not a full breach-corpus check, just blocking the obvious
+// zero-effort guesses.
+const COMMON_PASSWORDS = new Set([
+  "password",
+  "12345678",
+  "123456789",
+  "1234567890",
+  "qwerty123",
+  "letmein11",
+  "iloveyou1",
+  "password1",
+  "password123",
+  "11111111",
+  "00000000",
+  "abc123456",
+  "admin1234",
+  "welcome123",
+  "monkey123",
+  "dragon123",
+  "football1",
+  "baseball1",
+  "sunshine1",
+  "princess1",
+]);
+
+export const passwordSchema = z
+  .string()
+  .min(8, "At least 8 characters.")
+  .max(72)
+  .refine((v) => !COMMON_PASSWORDS.has(v.toLowerCase()), "That password is too easy to guess.");
 
 export const setCredentialsSchema = z.object({
   username: usernameSchema,

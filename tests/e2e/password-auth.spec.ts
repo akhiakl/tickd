@@ -58,7 +58,7 @@ test.describe("username/password account upgrade", () => {
     await expect(page).toHaveURL(/\/signin\/password/);
   });
 
-  test("a taken username shows an inline error instead of a 500", async ({ page }) => {
+  test("a taken username is caught by the live check and blocks submit", async ({ page }) => {
     await page.goto("/create");
     await page.getByLabel("Your name").fill("First");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -77,9 +77,30 @@ test.describe("username/password account upgrade", () => {
     await expect(page).toHaveURL(/\/create$/);
     await page.goto("/account");
     await page.getByLabel("Username").fill("taken_e2e");
-    await page.getByLabel("Password").fill("secondpassword");
-    await page.getByRole("button", { name: "Save account" }).click();
 
+    // The live availability check (debounced, server-backed) catches the
+    // collision before submit is even possible.
     await expect(page.getByText("That username is taken.")).toBeVisible();
+    await page.getByLabel("Password").fill("secondpassword");
+    await expect(page.getByRole("button", { name: "Save account" })).toBeDisabled();
+  });
+
+  test("checking your own current username doesn't falsely flag it as taken", async ({ page }) => {
+    // Regression guard for the live-check UX: typing a username, then
+    // backspacing back to nothing and retyping the same one shouldn't get
+    // stuck showing a stale "checking" state or a false "taken" flash for
+    // a name nobody else holds.
+    await page.goto("/create");
+    await page.getByLabel("Your name").fill("Solo");
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page).toHaveURL(/\/create$/);
+    await page.goto("/account");
+
+    await page.getByLabel("Username").fill("solo_e2e");
+    await expect(page.getByLabel("Password")).toBeVisible();
+    await page.getByLabel("Password").fill("solopassword");
+    await expect(page.getByRole("button", { name: "Save account" })).toBeEnabled();
+    await page.getByRole("button", { name: "Save account" }).click();
+    await expect(page.getByText("Account saved")).toBeVisible();
   });
 });

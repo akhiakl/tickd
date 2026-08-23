@@ -4,13 +4,17 @@ import { AuthError } from "next-auth";
 import { signIn } from "@/auth";
 import { hashPassword } from "@/server/auth/password";
 import { requireUserId } from "@/server/auth/require-user";
-import { setUserCredentials } from "@/server/queries/users";
+import { getUserByUsername, setUserCredentials } from "@/server/queries/users";
+import { rateLimit, getClientIp } from "@/server/rate-limit";
 import {
   guestNameSchema,
   credentialsSignInSchema,
   setCredentialsSchema,
+  usernameSchema,
 } from "@/server/validation/schemas";
 import type { ActionResult } from "./result";
+
+const TOO_MANY_ATTEMPTS: ActionResult = { ok: false, error: "Too many attempts. Try again later." };
 
 /**
  * Signs in as a brand-new guest with just a typed name - no password,
@@ -25,6 +29,13 @@ export async function signInAsGuest(input: {
   const parsed = guestNameSchema.safeParse(input.name);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
+  // Every call inserts a fresh users row with no auth barrier at all - the
+  // cheapest thing in the app for a bot to spam, so it gets the tightest
+  // limit. Generous enough for someone genuinely switching devices a lot.
+  const ip = await getClientIp();
+  const allowed = await rateLimit(`guest-signup:${ip}`, 8, 600);
+  if (!allowed) return TOO_MANY_ATTEMPTS;
+
   await signIn("guest", { name: parsed.data, redirectTo: input.callbackUrl });
   return { ok: true };
 }
@@ -38,6 +49,12 @@ export async function signInWithPassword(input: {
 }): Promise<ActionResult> {
   const parsed = credentialsSignInSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  // Per-IP rather than per-username: also blunts one IP brute-forcing
+  // across many different usernames, not just repeated guesses at one.
+  const ip = await getClientIp();
+  const allowed = await rateLimit(`password-signin:${ip}`, 20, 600);
+  if (!allowed) return TOO_MANY_ATTEMPTS;
 
   try {
     await signIn("password", {
@@ -58,6 +75,27 @@ export async function signInWithPassword(input: {
 }
 
 /**
+ * Live availability check for the username field (an Instagram-style
+ * "is this taken" as you type, not a submit-and-find-out) - just an
+ * indexed lookup against the `username` unique constraint, no hashing or
+ * writes, so it's fast enough to call on every keystroke's debounce.
+ * Invalid input (too short, bad characters) reads as "unavailable"
+ * without a specific reason - the form's own validation on submit
+ * explains why, this is only ever a quick yes/no while typing.
+ */
+export async function checkUsernameAvailable(username: string): Promise<boolean> {
+  const parsed = usernameSchema.safeParse(username);
+  if (!parsed.success) return false;
+
+  const ip = await getClientIp();
+  const allowed = await rateLimit(`username-check:${ip}`, 60, 300);
+  if (!allowed) return false;
+
+  const existing = await getUserByUsername(parsed.data);
+  return !existing;
+}
+
+/**
  * Sets username + password on the signed-in user's own row - the "save
  * your account" upgrade a guest can do from /account so they can log back
  * in from another device without losing this row's id/history. Doesn't
@@ -68,6 +106,9 @@ export async function setCredentials(input: unknown): Promise<ActionResult> {
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
   const userId = await requireUserId();
+  const allowed = await rateLimit(`set-credentials:${userId}`, 5, 3600);
+  if (!allowed) return TOO_MANY_ATTEMPTS;
+
   const passwordHash = await hashPassword(parsed.data.password);
   const updated = await setUserCredentials(userId, parsed.data.username, passwordHash);
   if (!updated) return { ok: false, error: "That username is taken." };

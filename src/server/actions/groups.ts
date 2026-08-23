@@ -7,8 +7,11 @@ import { revalidatePath, updateTag } from "next/cache";
 import { db } from "@/server/db";
 import { checklistItems, groupMembers, groups } from "@/server/db/schema";
 import { requireUserId } from "@/server/auth/require-user";
+import { rateLimit } from "@/server/rate-limit";
 import { createGroupSchema, joinGroupSchema } from "@/server/validation/schemas";
 import type { ActionResult } from "./result";
+
+const TOO_MANY_ATTEMPTS: ActionResult = { ok: false, error: "Too many attempts. Try again later." };
 
 /** Invite codes gate group membership, so they're drawn from a CSPRNG rather than Math.random(). */
 function randomInviteCode(): string {
@@ -24,6 +27,12 @@ export async function createGroup(input: unknown): Promise<ActionResult & { grou
   const parsed = createGroupSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
   const userId = await requireUserId();
+
+  // Bounds a scripted account spamming empty groups (each insert also
+  // seeds up to 20 checklist item rows), not normal usage.
+  const allowed = await rateLimit(`create-group:${userId}`, 10, 3600);
+  if (!allowed) return TOO_MANY_ATTEMPTS;
+
   const { name, durationDays, startDate, items } = parsed.data;
 
   const groupId = crypto.randomUUID();
@@ -56,6 +65,12 @@ export async function joinGroup(input: unknown): Promise<ActionResult & { groupI
   const parsed = joinGroupSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
   const userId = await requireUserId();
+
+  // Invite codes are an 8-character CSPRNG string (see randomInviteCode
+  // above), not brute-forceable in practice - but this still bounds how
+  // many guesses an account can throw at it per hour, cheaply.
+  const allowed = await rateLimit(`join-group:${userId}`, 20, 3600);
+  if (!allowed) return TOO_MANY_ATTEMPTS;
 
   const group = await db.query.groups.findFirst({
     where: eq(groups.inviteCode, parsed.data.inviteCode),
