@@ -1,44 +1,78 @@
 import NextAuth from "next-auth";
-import Auth0 from "next-auth/providers/auth0";
-import { upsertUserFromIdentity } from "@/server/queries/users";
+import { authConfig } from "@/auth.config";
+import { auth0Enabled } from "@/lib/flags";
+import { upsertUserFromIdentity, createGuestUser } from "@/server/queries/users";
+import { guestNameSchema } from "@/server/validation/schemas";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  // JWT sessions: the app's own `users` table (synced in the callbacks
-  // below) is the source of truth for profile data, so no database adapter
-  // is needed for the session itself. This keeps session reads a pure
-  // cookie decode - no database round trip on every request.
-  session: { strategy: "jwt" },
-  // No `pages.signIn` override: we want Auth.js's own `/api/auth/signin/*`
-  // route to redirect straight to Auth0's hosted Universal Login rather
-  // than rendering any in-app screen first.
-  providers: [
-    Auth0({
-      clientId: process.env.AUTH0_CLIENT_ID,
-      clientSecret: process.env.AUTH0_CLIENT_SECRET,
-      issuer: process.env.AUTH0_ISSUER,
-    }),
-  ],
-  callbacks: {
-    async jwt({ token, account, profile }) {
-      // Sync the Auth0 profile into our own users table on first sign-in
-      // and stash our internal id on the token.
-      if (account?.provider === "auth0" && profile?.sub) {
-        const identity = {
-          authSub: String(profile.sub),
-          email: String(profile.email ?? ""),
-          name: String(profile.name ?? profile.email ?? "there"),
-        };
-        const dbUser = await upsertUserFromIdentity(identity);
-        token.appUserId = dbUser.id;
-      }
+// The full Auth.js instance: real providers, DB-backed callbacks. Used by
+// the /api/auth/[...nextauth] route, Server Actions, and Server
+// Components - never by middleware (see src/auth-edge.ts for that).
+//
+// This is a config *function*, not a plain object, specifically so the
+// flag read and the provider choice can be async and per-request: Auth.js
+// resolves it once per request rather than once at module load, which is
+// what makes the dynamic `import()`s below actually code-split (only the
+// active provider's module is ever fetched/bundled at runtime) instead of
+// both providers loading unconditionally the way two static imports would.
+export const { handlers, auth, signIn, signOut } = NextAuth(async (request) => {
+  // The Flags SDK's App Router call signature (`myFlag()`, reading via
+  // `next/headers`) doesn't accept `undefined` as an explicit argument -
+  // fall back to it when Auth.js hands us no request (e.g. some internal
+  // resolution paths), and use the request-aware form when it does.
+  const useAuth0 = request ? await auth0Enabled(request) : await auth0Enabled();
+  const providers = useAuth0
+    ? [
+        (await import("next-auth/providers/auth0")).default({
+          clientId: process.env.AUTH0_CLIENT_ID,
+          clientSecret: process.env.AUTH0_CLIENT_SECRET,
+          issuer: process.env.AUTH0_ISSUER,
+        }),
+      ]
+    : [
+        (await import("next-auth/providers/credentials")).default({
+          id: "guest",
+          name: "Guest",
+          credentials: { name: { label: "Name", type: "text" } },
+          async authorize(credentials) {
+            const parsed = guestNameSchema.safeParse(credentials?.name);
+            if (!parsed.success) return null;
+            const dbUser = await createGuestUser({ name: parsed.data });
+            return { id: dbUser.id, name: dbUser.name };
+          },
+        }),
+      ];
 
-      return token;
+  return {
+    ...authConfig,
+    // No `pages.signIn` override: we want Auth.js's own `/api/auth/signin/*`
+    // route to redirect straight to Auth0's hosted Universal Login rather
+    // than rendering any in-app screen first.
+    providers,
+    callbacks: {
+      async jwt({ token, account, profile, user }) {
+        // Sync the Auth0 profile into our own users table on first sign-in
+        // and stash our internal id on the token.
+        if (account?.provider === "auth0" && profile?.sub) {
+          const identity = {
+            authSub: String(profile.sub),
+            email: String(profile.email ?? ""),
+            name: String(profile.name ?? profile.email ?? "there"),
+          };
+          const dbUser = await upsertUserFromIdentity(identity);
+          token.appUserId = dbUser.id;
+        } else if (account?.provider === "guest" && user?.id) {
+          // authorize() already created the row and returned its id.
+          token.appUserId = user.id;
+        }
+
+        return token;
+      },
+      async session({ session, token }) {
+        if (session.user && typeof token.appUserId === "string") {
+          session.user.id = token.appUserId;
+        }
+        return session;
+      },
     },
-    async session({ session, token }) {
-      if (session.user && typeof token.appUserId === "string") {
-        session.user.id = token.appUserId;
-      }
-      return session;
-    },
-  },
+  };
 });

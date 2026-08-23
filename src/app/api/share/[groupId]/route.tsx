@@ -29,8 +29,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ gro
   return new ImageResponse(
     <ShareCard
       name={me.name}
-      initial={me.name[0]?.toUpperCase() ?? "?"}
       color={me.color}
+      avatarSeed={me.avatarSeed}
       dayIndex={snapshot.dayIndex}
       durationDays={snapshot.durationDays}
       doneToday={doneToday}

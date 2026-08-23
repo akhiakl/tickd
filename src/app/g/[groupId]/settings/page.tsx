@@ -52,6 +52,7 @@ export default async function GroupSettingsPage({ params }: PageProps<"/g/[group
           userId: m.userId,
           name: m.name,
           color: m.color,
+          avatarSeed: m.avatarSeed,
           isMe: m.isMe,
         }))}
       />

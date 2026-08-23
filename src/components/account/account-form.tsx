@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updatePreferences, updateProfile } from "@/server/actions/account";
+import { Shuffle } from "lucide-react";
+import { updatePreferences, updateProfile, randomizeAvatar } from "@/server/actions/account";
 import { AVATAR_SWATCHES } from "@/lib/constants";
 import { Avatar } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
@@ -27,15 +28,18 @@ export function AccountForm({
   initialName,
   email,
   initialColor,
+  initialAvatarSeed,
   initialPrefs,
 }: {
   initialName: string;
-  email: string;
+  email: string | null;
   initialColor: string;
+  initialAvatarSeed: string;
   initialPrefs: Prefs;
 }) {
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
+  const [avatarSeed, setAvatarSeed] = useState(initialAvatarSeed);
   const [prefs, setPrefs] = useState(initialPrefs);
   const [, startTransition] = useTransition();
   const { message, showToast } = useToast();
@@ -44,6 +48,14 @@ export function AccountForm({
     startTransition(async () => {
       const result = await updateProfile({ name: nextName, color: nextColor });
       if (!result.ok) showToast(result.error);
+    });
+  }
+
+  function randomize() {
+    startTransition(async () => {
+      const result = await randomizeAvatar();
+      if (!result.ok) return showToast(result.error);
+      if (result.avatarSeed) setAvatarSeed(result.avatarSeed);
     });
   }
 
@@ -58,7 +70,17 @@ export function AccountForm({
   return (
     <div>
       <div className="bg-surface mx-4 flex items-center gap-4 rounded-[28px] p-5">
-        <Avatar name={name} color={color} size={60} />
+        <div className="relative flex-none">
+          <Avatar name={name} color={color} seed={avatarSeed} size={60} />
+          <button
+            type="button"
+            onClick={randomize}
+            aria-label="Randomize your avatar"
+            className="bg-panel text-on-panel hover:bg-panel-2 absolute -right-1 -bottom-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full ring-2 ring-[var(--color-surface)]"
+          >
+            <Shuffle size={12} strokeWidth={2.5} />
+          </button>
+        </div>
         <div className="min-w-0 flex-1">
           <input
             value={name}
@@ -67,7 +89,7 @@ export function AccountForm({
             aria-label="Your name"
             className="font-heading text-text w-full border-0 bg-transparent p-0 text-[21px] focus:outline-none"
           />
-          <div className="text-muted mt-0.5 text-[12.5px]">{email}</div>
+          <div className="text-muted mt-0.5 text-[12.5px]">{email ?? "Guest account"}</div>
         </div>
       </div>
 

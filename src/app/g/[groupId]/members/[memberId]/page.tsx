@@ -41,7 +41,7 @@ export default async function MemberProfilePage({
       </div>
 
       <div className="flex items-center gap-4 pt-4.5">
-        <Avatar name={member.name} color={member.color} size={62} />
+        <Avatar name={member.name} color={member.color} seed={member.avatarSeed} size={62} />
         <div>
           <div className="font-heading text-[27px] leading-tight">
             {member.name}

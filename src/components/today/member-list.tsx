@@ -7,6 +7,7 @@ export type MemberListRow = {
   userId: string;
   name: string;
   color: string;
+  avatarSeed: string;
   isMe: boolean;
   streak: number;
   pct: number;
@@ -24,7 +25,7 @@ export function MemberList({ groupId, rows }: { groupId: string; rows: MemberLis
             row.isMe && "bg-surface",
           )}
         >
-          <Avatar name={row.name} color={row.color} size={32} />
+          <Avatar name={row.name} color={row.color} seed={row.avatarSeed} size={32} />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[14.5px] font-bold">
               {row.name}

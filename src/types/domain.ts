@@ -13,6 +13,7 @@ export type MemberSnapshot = {
   userId: string;
   name: string;
   color: string;
+  avatarSeed: string;
   role: MemberRole;
   isMe: boolean;
   /** Count of checklist items ticked, keyed by `YYYY-MM-DD`. */

@@ -38,6 +38,7 @@ export const getGroupSnapshot = cache(
           userId: users.id,
           name: users.name,
           color: users.color,
+          avatarSeed: users.avatarSeed,
           role: groupMembers.role,
         })
         .from(groupMembers)
@@ -53,6 +54,7 @@ export const getGroupSnapshot = cache(
       userId: m.userId,
       name: m.name,
       color: m.color,
+      avatarSeed: m.avatarSeed,
       role: m.role,
       isMe: m.userId === viewerUserId,
       countsByDate: {},

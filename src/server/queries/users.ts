@@ -25,6 +25,7 @@ export async function upsertUserFromIdentity(identity: {
         email: identity.email,
         name: identity.name,
         color: AVATAR_SWATCHES[0],
+        avatarSeed: crypto.randomUUID(),
       })
       .returning();
 
@@ -47,6 +48,27 @@ export async function upsertUserFromIdentity(identity: {
 
     return linked;
   }
+}
+
+/**
+ * Creates a brand-new guest user row for a Kahoot-style "pick a name" join.
+ * Unlike `upsertUserFromIdentity` there's no stable external identity to
+ * key on - every guest sign-in is a fresh participant, even if two people
+ * (or the same person on two devices) type the same name.
+ */
+export async function createGuestUser(input: { name: string }): Promise<User> {
+  const [created] = await db
+    .insert(users)
+    .values({
+      id: crypto.randomUUID(),
+      name: input.name,
+      color: AVATAR_SWATCHES[0],
+      avatarSeed: crypto.randomUUID(),
+      isGuest: true,
+    })
+    .returning();
+
+  return created;
 }
 
 /** Per-request memoized lookup of a user by internal id. */

@@ -27,3 +27,13 @@ export async function updatePreferences(input: unknown): Promise<ActionResult> {
   revalidatePath("/account");
   return { ok: true };
 }
+
+/** Rerolls the identicon pattern only - the chosen color is untouched. */
+export async function randomizeAvatar(): Promise<ActionResult & { avatarSeed?: string }> {
+  const userId = await requireUserId();
+  const avatarSeed = crypto.randomUUID();
+
+  await db.update(users).set({ avatarSeed }).where(eq(users.id, userId));
+  revalidatePath("/", "layout");
+  return { ok: true, avatarSeed };
+}

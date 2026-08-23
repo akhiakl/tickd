@@ -21,7 +21,7 @@ export default async function JoinGroupPage({ searchParams }: PageProps<"/join">
       </div>
 
       <div className="bg-surface mb-6 flex items-center gap-3.5 rounded-[26px] px-4.5 py-4">
-        <Avatar name={user.name} color={user.color} size={44} />
+        <Avatar name={user.name} color={user.color} seed={user.avatarSeed} size={44} />
         <div>
           <div className="text-[15.5px] font-bold">{user.name}</div>
           <div className="text-muted text-[12.5px]">joining as this account</div>

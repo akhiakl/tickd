@@ -119,6 +119,12 @@ test.describe("Today dashboard", () => {
   });
 
   test("share sheet opens with a loadable card image", async ({ page, context, baseURL }) => {
+    // The share-card route (Satori-rendered PNG) compiles on its first hit
+    // under `next dev`'s on-demand compilation - confirmed by direct
+    // reproduction to take several seconds beyond the default budget, not
+    // a broken request. `test.slow()` triples this test's timeout rather
+    // than loosening every other test's failure-detection sensitivity.
+    test.slow();
     const group = await seedFreshGroup({ historyDays: 4 });
     await signInAs(context, group.admin, baseURL!);
     await page.goto(`/g/${group.groupId}`);
@@ -127,7 +133,12 @@ test.describe("Today dashboard", () => {
     await expect(page.getByText("Share this")).toBeVisible();
 
     const image = page.getByAltText("Your daily streak card");
-    await expect(image).toBeVisible();
+    // The share-card route (next/og + Satori) is the heaviest route in the
+    // app to cold-compile under `next dev` - reproduced directly taking
+    // longer than the suite's general 15s bump on its first hit. Give this
+    // one assertion explicit extra room rather than raising the bar
+    // suite-wide again.
+    await expect(image).toBeVisible({ timeout: 30_000 });
     const src = await image.getAttribute("src");
     const response = await page.request.get(new URL(src!, page.url()).toString());
     expect(response.status()).toBe(200);
@@ -135,6 +146,13 @@ test.describe("Today dashboard", () => {
   });
 
   test("bottom nav switches between Today, Wall, and Ranks", async ({ page, context, baseURL }) => {
+    // /wall and /ranks compile on their first hit under `next dev` -
+    // reproduced directly: the click-triggered navigation does complete,
+    // it just takes several seconds the first time (Turbopack compiling
+    // the route), not a broken link. test.slow() triples this test's
+    // timeout rather than loosening every other test's failure-detection
+    // sensitivity.
+    test.slow();
     const group = await seedFreshGroup();
     await signInAs(context, group.admin, baseURL!);
     await page.goto(`/g/${group.groupId}`);

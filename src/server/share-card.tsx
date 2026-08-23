@@ -1,4 +1,5 @@
 import type { ChecklistItemView } from "@/types/domain";
+import { identiconCells } from "@/lib/identicon";
 
 const CARD_WIDTH = 600;
 const CARD_HEIGHT = 750;
@@ -12,8 +13,8 @@ const CARD_HEIGHT = 750;
  */
 export function ShareCard({
   name,
-  initial,
   color,
+  avatarSeed,
   dayIndex,
   durationDays,
   doneToday,
@@ -23,8 +24,8 @@ export function ShareCard({
   checkedItemIds,
 }: {
   name: string;
-  initial: string;
   color: string;
+  avatarSeed: string;
   dayIndex: number;
   durationDays: number;
   doneToday: number;
@@ -33,6 +34,8 @@ export function ShareCard({
   items: ChecklistItemView[];
   checkedItemIds: Set<string>;
 }) {
+  const cells = identiconCells(avatarSeed);
+
   return (
     <div
       style={{
@@ -53,17 +56,29 @@ export function ShareCard({
               width: 40,
               height: 40,
               borderRadius: 999,
-              background: color,
-              color: "#0d0e0b",
+              background: "#f4f1e6",
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 18,
-              fontWeight: 700,
               marginRight: 12,
+              overflow: "hidden",
             }}
           >
-            {initial}
+            <svg viewBox="0 0 5 5" width={40} height={40}>
+              {cells.map((row, rowIndex) =>
+                row.map(
+                  (filled, colIndex) =>
+                    filled && (
+                      <rect
+                        key={`${rowIndex}-${colIndex}`}
+                        x={colIndex}
+                        y={rowIndex}
+                        width={1}
+                        height={1}
+                        fill={color}
+                      />
+                    ),
+                ),
+              )}
+            </svg>
           </div>
           <span
             style={{ fontSize: 18, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase" }}

@@ -27,6 +27,7 @@ export default async function AccountPage() {
         initialName={user.name}
         email={user.email}
         initialColor={user.color}
+        initialAvatarSeed={user.avatarSeed}
         initialPrefs={{
           reminderEnabled: user.reminderEnabled,
           weeklyRecapEnabled: user.weeklyRecapEnabled,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  guestNameSchema,
   createGroupSchema,
   joinGroupSchema,
   avatarColorSchema,
@@ -8,6 +9,27 @@ import {
   checklistItemLabelSchema,
   reorderSchema,
 } from "./schemas";
+
+describe("guestNameSchema", () => {
+  it("accepts a normal name", () => {
+    expect(guestNameSchema.safeParse("Ada").success).toBe(true);
+  });
+
+  it("trims whitespace", () => {
+    const result = guestNameSchema.safeParse("  Ada  ");
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toBe("Ada");
+  });
+
+  it("rejects an empty or whitespace-only name", () => {
+    expect(guestNameSchema.safeParse("").success).toBe(false);
+    expect(guestNameSchema.safeParse("   ").success).toBe(false);
+  });
+
+  it("rejects a name over 40 characters", () => {
+    expect(guestNameSchema.safeParse("a".repeat(41)).success).toBe(false);
+  });
+});
 
 describe("createGroupSchema", () => {
   const valid = {

@@ -36,6 +36,7 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
         userId: m.userId,
         name: m.name,
         color: m.color,
+        avatarSeed: m.avatarSeed,
         isMe: m.isMe,
         streak: currentStreakWithToday(counts),
         pct,
@@ -54,6 +55,7 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
         durationDays={durationDays}
         myName={me.name}
         myColor={me.color}
+        myAvatarSeed={me.avatarSeed}
         isAdmin={snapshot.myRole === "admin"}
         groups={groups}
       />
