@@ -12,9 +12,8 @@ reference; nothing in that folder ships in the app.
 - **Next.js 16** (App Router, Turbopack, typed routes) on **React 19**
 - **Postgres** via **Drizzle ORM** (works with Neon, Supabase, or Vercel's Postgres marketplace
   integration - anything that hands you a connection string)
-- **Auth.js v5** with an **Auth0** application: Google sign-in redirects through Auth0's real OAuth
-  flow, and email sign-in calls Auth0's Passwordless API directly so the app keeps its own
-  six-digit code screen instead of Auth0's hosted widget
+- **Auth.js v5** with an **Auth0** application: any unauthenticated visit to a protected route
+  redirects straight to Auth0's hosted Universal Login - no in-app sign-in screen
 - **Tailwind CSS v4**, with the prototype's color/spacing/font tokens ported into `globals.css`
 - **@dnd-kit** for the checklist drag-to-reorder interaction
 - **next/og** (`ImageResponse`) for the personal share card, generated server-side as a PNG
@@ -34,18 +33,19 @@ npm run dev
 
 ### Auth0 setup
 
-Create a Regular Web Application in Auth0 and enable:
+Create a Regular Web Application in Auth0 and enable whichever connections you want offered on its
+hosted Universal Login page (Google, email/password, passwordless, etc.) - the app itself renders
+no sign-in UI, so there's no `connection` field to wire up on our side.
 
-1. **Google** as a social connection (this is what "Continue with Google" uses).
-2. The **Email** passwordless connection, with OTP delivery.
+Set:
 
-Set the callback URL to `http://localhost:3000/api/auth/callback/auth0` (and your production URL
-once deployed), then copy the domain, client ID, and client secret into `.env.local`.
+- **Allowed Callback URLs**: `http://localhost:3000/api/auth/callback/auth0`
+- **Allowed Logout URLs**: `http://localhost:3000`
 
-Apple and WhatsApp sign-in are shown in the UI for parity with the design but are disabled - this
-tenant has no Apple developer account or WhatsApp Business connection configured. Wiring either up
-is a matter of adding the connection in Auth0 and flipping the `connection` field in
-`src/components/auth/provider-buttons.tsx`.
+(plus your production URL once deployed), then copy the domain, client ID, and client secret into
+`.env.local`. Signing out ([sign-out-button.tsx](src/components/account/sign-out-button.tsx)) ends
+both the app's session and the Auth0 hosted session via `/v2/logout`, so the logout URL has to be
+allow-listed too or Auth0 will refuse the redirect back.
 
 ## Project structure
 
@@ -54,12 +54,12 @@ src/
   app/                  Routes (App Router). Thin: data fetching + composing components.
     g/[groupId]/        Everything scoped to one group (Today, Wall, Ranks, settings, profiles).
     api/                Auth.js handler and the share-card image route.
-  components/           UI, grouped by feature (today/, wall/, settings/, auth/, ...).
+  components/           UI, grouped by feature (today/, wall/, settings/, account/, ...).
   server/
     db/                 Drizzle client, schema, migration runner.
     actions/            Server Actions - the only way the UI mutates data.
     queries/             Reads, memoized per request with React's `cache()`.
-    auth/               Auth0 passwordless REST calls, session helpers.
+    auth/               Session helpers (require-user.ts).
     validation/         Zod schemas shared by every action's input.
   lib/                  Pure, framework-free helpers (date math, streaks, class names).
   types/                Shared TypeScript types for domain data.
@@ -142,22 +142,20 @@ services this app doesn't own outright:
   Each spec then seeds its own fresh group and users directly via Drizzle
   (`tests/e2e/fixtures/db.ts`), so specs are isolated from each other and safe to run in parallel.
 - **A fake Auth0 server** (`tests/e2e/fixtures/fake-auth0-server.ts`), started automatically by
-  Playwright alongside the app. It implements the OIDC discovery document (so the real "Continue
-  with Google" button really redirects somewhere and the suite can assert on that redirect) and
-  the Passwordless REST endpoints our own code calls for email sign-in, with a fixed test code
-  (`424242`) - so the full email sign-in flow runs for real, end to end, without emailing anyone.
-  For every other authenticated screen, tests skip the UI sign-in entirely and mint a valid
-  Auth.js session cookie directly (`tests/e2e/fixtures/auth-session.ts`), the way the Auth.js docs
-  themselves recommend testing authenticated routes.
+  Playwright alongside the app. It implements the OIDC discovery document and a stub `/authorize`
+  and `/v2/logout`, so the suite can assert that unauthenticated visits and sign-out both really
+  redirect to Auth0's hosted login/logout endpoints - without a real Auth0 tenant. For every
+  authenticated screen, tests skip that redirect and mint a valid Auth.js session cookie directly
+  (`tests/e2e/fixtures/auth-session.ts`), the way the Auth.js docs themselves recommend testing
+  authenticated routes.
 
-Coverage: the landing page (signed in and out), the full email sign-in flow (happy path, wrong
-code, resend, callback-URL preservation) plus the disabled Apple/WhatsApp buttons and the Google
-redirect, account settings, creating a group (including checklist editing and keyboard-driven
-drag-to-reorder), joining a group, the Today dashboard (ticking, the streak ring, group/personal
-totals, the member list, the group switcher, the share-card image, the bottom nav, the theme
-toggle), the wall, standings and its filters, member profiles, and group settings (invite code,
-checklist CRUD and reordering, removing a member, and archiving/deleting with its confirmation
-step).
+Coverage: the landing page (signed in and out), unauthenticated routes redirecting straight to
+Auth0's hosted login, account settings, sign-out ending the Auth0 session too, creating a group
+(including checklist editing and keyboard-driven drag-to-reorder), joining a group, the Today
+dashboard (ticking, the streak ring, group/personal totals, the member list, the group switcher,
+the share-card image, the bottom nav, the theme toggle), the wall, standings and its filters,
+member profiles, and group settings (invite code, checklist CRUD and reordering, removing a
+member, and archiving/deleting with its confirmation step).
 
 Run `npx playwright show-report` after a run to open the HTML report, or `npm run test:e2e:ui` for
 Playwright's interactive UI mode while writing new tests.

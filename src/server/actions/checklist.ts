@@ -7,7 +7,7 @@ import { checklistItems, dailyChecks, groupMembers } from "@/server/db/schema";
 import { requireUserId } from "@/server/auth/require-user";
 import { checklistItemLabelSchema, reorderSchema } from "@/server/validation/schemas";
 import { todayISODate } from "@/lib/challenge-stats";
-import type { ActionResult } from "./auth";
+import type { ActionResult } from "./result";
 
 function refreshGroup(groupId: string) {
   revalidatePath(`/g/${groupId}`, "layout");

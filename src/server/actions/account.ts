@@ -6,7 +6,7 @@ import { db } from "@/server/db";
 import { users } from "@/server/db/schema";
 import { requireUserId } from "@/server/auth/require-user";
 import { updatePrefsSchema, updateProfileSchema } from "@/server/validation/schemas";
-import type { ActionResult } from "./auth";
+import type { ActionResult } from "./result";
 
 export async function updateProfile(input: unknown): Promise<ActionResult> {
   const parsed = updateProfileSchema.safeParse(input);

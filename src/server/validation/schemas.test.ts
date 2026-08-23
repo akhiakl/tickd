@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  emailSchema,
-  otpCodeSchema,
   createGroupSchema,
   joinGroupSchema,
   avatarColorSchema,
@@ -10,26 +8,6 @@ import {
   checklistItemLabelSchema,
   reorderSchema,
 } from "./schemas";
-
-describe("emailSchema", () => {
-  it("accepts a well-formed address", () => {
-    expect(emailSchema.safeParse("a@b.com").success).toBe(true);
-  });
-
-  it("rejects a string with no @", () => {
-    expect(emailSchema.safeParse("not-an-email").success).toBe(false);
-  });
-});
-
-describe("otpCodeSchema", () => {
-  it("accepts exactly six digits", () => {
-    expect(otpCodeSchema.safeParse("123456").success).toBe(true);
-  });
-
-  it.each(["12345", "1234567", "12345a", ""])("rejects %j", (value) => {
-    expect(otpCodeSchema.safeParse(value).success).toBe(false);
-  });
-});
 
 describe("createGroupSchema", () => {
   const valid = {

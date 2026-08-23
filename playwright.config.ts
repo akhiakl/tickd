@@ -28,7 +28,6 @@ const appEnv = {
   AUTH0_CLIENT_ID: "e2e-test-client",
   AUTH0_CLIENT_SECRET: "e2e-test-client-secret",
   AUTH0_ISSUER: fakeAuth0Url,
-  AUTH0_BASE_URL: fakeAuth0Url,
   PORT: String(PORT),
 };
 
