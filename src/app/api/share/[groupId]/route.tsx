@@ -7,9 +7,9 @@ import { ShareCard, SHARE_CARD_SIZE } from "@/server/share-card";
 import { ShareCardBold, SHARE_CARD_BOLD_SIZE } from "@/server/share-card-bold";
 
 // Needs a real TCP connection to Postgres (via the `postgres` driver), which
-// the edge runtime doesn't support - this route runs on Node.js.
-export const runtime = "nodejs";
-
+// the edge runtime doesn't support. No `runtime = "nodejs"` export needed
+// (or allowed) under Cache Components - it requires the Node.js runtime
+// everywhere, so this is already guaranteed.
 export async function GET(request: Request, { params }: { params: Promise<{ groupId: string }> }) {
   const { groupId } = await params;
   const session = await auth();

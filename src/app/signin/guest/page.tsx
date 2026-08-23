@@ -2,6 +2,10 @@ import { Screen } from "@/components/layout/screen";
 import { BackButton } from "@/components/ui/back-button";
 import { GuestSignInForm } from "@/components/signin/guest-sign-in-form";
 
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 export const metadata = { title: "What should we call you?" };
 
 export default async function GuestSignInPage({ searchParams }: PageProps<"/signin/guest">) {
