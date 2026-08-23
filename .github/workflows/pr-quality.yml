@@ -25,16 +25,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm run typecheck
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run format:check
+      - run: pnpm run lint
+      - run: pnpm run typecheck
       - name: Run unit tests with coverage
-        run: npx vitest run --coverage --reporter=default --reporter=json --outputFile=vitest-results.json
+        run: pnpm exec vitest run --coverage --reporter=default --reporter=json --outputFile=vitest-results.json
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -64,16 +65,17 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
       - name: Run e2e tests
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: e2e-results.json
-        run: npx playwright test --project=e2e
+        run: pnpm exec playwright test --project=e2e
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -103,16 +105,17 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
       - name: Run accessibility tests
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: a11y-results.json
-        run: npx playwright test --project=a11y
+        run: pnpm exec playwright test --project=a11y
       - if: always()
         uses: actions/upload-artifact@v4
         with:
