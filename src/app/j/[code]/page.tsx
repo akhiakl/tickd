@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+// A bare redirect - no UI, nothing to prerender as a shell or stream in, so
+// there's no benefit to chasing instant navigation validation here.
 export const instant = false;
 
 /**
