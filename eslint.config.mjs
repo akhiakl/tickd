@@ -38,6 +38,10 @@ const eslintConfig = defineConfig([
     "design/**",
     "drizzle/**",
     "coverage/**",
+    // Cache handlers are loaded directly by Next's config loader outside
+    // the app's bundle, so they're plain CommonJS (see the file's own
+    // comment) rather than app source.
+    "cache-handlers/**",
   ]),
 ]);
 
