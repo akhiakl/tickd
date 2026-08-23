@@ -2,10 +2,32 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { getMyGroups } from "@/server/queries/my-groups";
+import { getUserById } from "@/server/queries/users";
 import { Screen } from "@/components/layout/screen";
 import { Logo } from "@/components/ui/logo";
 import { LinkButton } from "@/components/ui/link-button";
+import { Avatar } from "@/components/ui/avatar";
 import { ChevronRight } from "lucide-react";
+
+/**
+ * Signed-in indicator, doubling as the way back into /account from the
+ * landing page - previously only reachable from inside a group
+ * (TodayHeader). Reads the session, so it's isolated behind Suspense for
+ * the same reason MyGroups below is.
+ */
+async function AccountLink() {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  const user = await getUserById(session.user.id);
+  if (!user) return null;
+
+  return (
+    <Link href="/account" aria-label="Your account" className="flex-none">
+      <Avatar name={user.name} color={user.color} seed={user.avatarSeed} size={34} />
+    </Link>
+  );
+}
 
 /**
  * The only part of this page that needs the session (`auth()`) is the
@@ -72,9 +94,14 @@ function MyGroupsSkeleton() {
 export default function LandingPage() {
   return (
     <Screen className="flex min-h-dvh flex-col px-6 pt-6 pb-10">
-      <div className="flex items-center gap-2.5">
-        <Logo size={34} />
-        <span className="font-heading text-[22px] tracking-tight">Tickd</span>
+      <div className="flex items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2.5">
+          <Logo size={34} />
+          <span className="font-heading text-[22px] tracking-tight">Tickd</span>
+        </div>
+        <Suspense fallback={<div className="skeleton h-[34px] w-[34px] rounded-full" />}>
+          <AccountLink />
+        </Suspense>
       </div>
 
       <h1 className="font-heading mt-11 text-[52px] leading-[0.96] tracking-tight text-balance">
