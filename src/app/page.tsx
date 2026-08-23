@@ -7,6 +7,7 @@ import { Screen } from "@/components/layout/screen";
 import { Logo } from "@/components/ui/logo";
 import { LinkButton } from "@/components/ui/link-button";
 import { Avatar } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/nav/theme-toggle";
 import { ChevronRight } from "lucide-react";
 
 /**
@@ -99,9 +100,12 @@ export default function LandingPage() {
           <Logo size={34} />
           <span className="font-heading text-[22px] tracking-tight">Tickd</span>
         </div>
-        <Suspense fallback={<div className="skeleton h-[34px] w-[34px] rounded-full" />}>
-          <AccountLink />
-        </Suspense>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Suspense fallback={<div className="skeleton h-[34px] w-[34px] rounded-full" />}>
+            <AccountLink />
+          </Suspense>
+        </div>
       </div>
 
       <h1 className="font-heading mt-11 text-[52px] leading-[0.96] tracking-tight text-balance">
