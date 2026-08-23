@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { AVATAR_SWATCHES } from "@/lib/constants";
 
+export const guestNameSchema = z.string().trim().min(1, "Enter a name.").max(40);
+
 export const createGroupSchema = z.object({
   name: z.string().trim().min(1, "Give the group a name.").max(60),
   durationDays: z.union([z.literal(21), z.literal(31)]),

@@ -60,6 +60,7 @@ async function main() {
         email: `${name.toLowerCase()}@example.com`,
         name,
         color: AVATAR_SWATCHES[i % AVATAR_SWATCHES.length],
+        avatarSeed: crypto.randomUUID(),
       });
       return id;
     }),

@@ -72,10 +72,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - name: Run e2e tests
+      - name: Run e2e tests (guest mode - production default)
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: e2e-results.json
         run: pnpm exec playwright test --project=e2e
+      - name: Run e2e tests (Auth0 mode, opt-in)
+        run: pnpm run test:e2e:auth0
       - if: always()
         uses: actions/upload-artifact@v4
         with:

@@ -35,6 +35,7 @@ export type SeededUser = {
   email: string;
   name: string;
   color: string;
+  avatarSeed: string;
 };
 
 /** Creates a standalone user with no group membership - for join-flow tests. */
@@ -42,14 +43,16 @@ export async function seedLoneUser(name = "Nora"): Promise<SeededUser> {
   const suffix = uniqueSuffix();
   const id = crypto.randomUUID();
   const email = `${name.toLowerCase()}-${suffix}@example.com`;
+  const avatarSeed = crypto.randomUUID();
   await testDb.insert(schema.users).values({
     id,
     authSub: `seed|${id}`,
     email,
     name,
     color: AVATAR_SWATCHES[0],
+    avatarSeed,
   });
-  return { id, email, name, color: AVATAR_SWATCHES[0] };
+  return { id, email, name, color: AVATAR_SWATCHES[0], avatarSeed };
 }
 
 export type SeededGroup = {
@@ -83,14 +86,16 @@ export async function seedFreshGroup(options?: { historyDays?: number }): Promis
   const makeUser = async (name: string): Promise<SeededUser> => {
     const id = crypto.randomUUID();
     const email = `${name.toLowerCase()}-${suffix}@example.com`;
+    const avatarSeed = crypto.randomUUID();
     await testDb.insert(schema.users).values({
       id,
       authSub: `seed|${id}`,
       email,
       name,
       color: AVATAR_SWATCHES[0],
+      avatarSeed,
     });
-    return { id, email, name, color: AVATAR_SWATCHES[0] };
+    return { id, email, name, color: AVATAR_SWATCHES[0], avatarSeed };
   };
 
   const admin = await makeUser("Ada");

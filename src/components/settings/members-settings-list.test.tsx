@@ -6,8 +6,8 @@ const { removeMember } = vi.hoisted(() => ({ removeMember: vi.fn().mockResolvedV
 vi.mock("@/server/actions/groups", () => ({ removeMember }));
 
 const members = [
-  { userId: "u1", name: "Ada", color: "#55743f", isMe: true },
-  { userId: "u2", name: "Marcus", color: "#7a8a5e", isMe: false },
+  { userId: "u1", name: "Ada", color: "#55743f", avatarSeed: "seed-1", isMe: true },
+  { userId: "u2", name: "Marcus", color: "#7a8a5e", avatarSeed: "seed-2", isMe: false },
 ];
 
 describe("MembersSettingsList", () => {

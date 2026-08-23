@@ -1,7 +1,6 @@
 import { test, expect } from "./fixtures/test";
 import { seedFreshGroup } from "./fixtures/db";
 import { signInAs } from "./fixtures/auth-session";
-import { FAKE_AUTH0_URL } from "./fixtures/constants";
 
 test.describe("landing page", () => {
   test.describe("signed out", () => {
@@ -13,23 +12,21 @@ test.describe("landing page", () => {
       await expect(page.getByText("Your groups")).toHaveCount(0);
     });
 
-    test("redirects straight to Auth0's hosted login when starting a group", async ({ page }) => {
+    test("redirects to the guest name screen when starting a group", async ({ page }) => {
       await page.goto("/");
       await page.getByRole("link", { name: "Start a group" }).click();
-      await expect(page).toHaveURL(new RegExp(`^${FAKE_AUTH0_URL}/authorize`));
+      await expect(page).toHaveURL(/\/signin\/guest\?callbackUrl=%2Fcreate/);
     });
 
-    test("redirects straight to Auth0's hosted login when joining with a code", async ({
-      page,
-    }) => {
+    test("redirects to the guest name screen when joining with a code", async ({ page }) => {
       await page.goto("/");
       await page.getByRole("link", { name: "Join with a code" }).click();
-      await expect(page).toHaveURL(new RegExp(`^${FAKE_AUTH0_URL}/authorize`));
+      await expect(page).toHaveURL(/\/signin\/guest\?callbackUrl=%2Fjoin/);
     });
 
-    test("protected group routes also redirect to Auth0's hosted login", async ({ page }) => {
+    test("protected group routes also redirect to the guest name screen", async ({ page }) => {
       await page.goto("/g/some-group-id");
-      await expect(page).toHaveURL(new RegExp(`^${FAKE_AUTH0_URL}/authorize`));
+      await expect(page).toHaveURL(/\/signin\/guest\?callbackUrl=/);
     });
   });
 

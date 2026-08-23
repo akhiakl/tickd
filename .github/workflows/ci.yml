@@ -58,6 +58,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm exec playwright test --project=e2e --project=a11y
+      - run: pnpm run test:e2e:auth0
       - if: always()
         uses: actions/upload-artifact@v4
         with:

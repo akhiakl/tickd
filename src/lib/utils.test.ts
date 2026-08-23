@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clamp, cn, initialOf } from "./utils";
+import { clamp, cn } from "./utils";
 
 describe("cn", () => {
   it("joins plain class names", () => {
@@ -12,21 +12,6 @@ describe("cn", () => {
 
   it("resolves conflicting Tailwind utilities in favor of the last one", () => {
     expect(cn("px-2", "px-4")).toBe("px-4");
-  });
-});
-
-describe("initialOf", () => {
-  it("upper-cases the first letter", () => {
-    expect(initialOf("ada")).toBe("A");
-  });
-
-  it("trims leading whitespace first", () => {
-    expect(initialOf("  priya")).toBe("P");
-  });
-
-  it("falls back to '?' for an empty name", () => {
-    expect(initialOf("")).toBe("?");
-    expect(initialOf("   ")).toBe("?");
   });
 });
 

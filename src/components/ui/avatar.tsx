@@ -1,29 +1,50 @@
 import { cn } from "@/lib/utils";
-import { initialOf } from "@/lib/utils";
+import { identiconCells } from "@/lib/identicon";
 
 type AvatarProps = {
   name: string;
   color: string;
+  seed: string;
   size?: number;
   className?: string;
 };
 
-/** A solid-color circle with the member's initial, sized in pixels. */
-export function Avatar({ name, color, size = 36, className }: AvatarProps) {
+/**
+ * A circular identicon: a symmetric pattern (from `seed`) in `color` on a
+ * neutral background. Random per person on join, not derived from `name` -
+ * two members can share a name (or initial) and still look different at a
+ * glance, which a color+initial avatar couldn't guarantee.
+ */
+export function Avatar({ name, color, seed, size = 36, className }: AvatarProps) {
+  const cells = identiconCells(seed);
+
   return (
     <span
       className={cn(
-        "font-heading text-on-panel flex flex-none items-center justify-center rounded-full",
+        "bg-surface-2 flex flex-none items-center justify-center overflow-hidden rounded-full",
         className,
       )}
-      style={{
-        width: size,
-        height: size,
-        background: color,
-        fontSize: Math.round(size * 0.42),
-      }}
+      style={{ width: size, height: size }}
+      role="img"
+      aria-label={name}
     >
-      {initialOf(name)}
+      <svg viewBox="0 0 5 5" width={size} height={size} aria-hidden="true">
+        {cells.map((row, rowIndex) =>
+          row.map(
+            (filled, colIndex) =>
+              filled && (
+                <rect
+                  key={`${rowIndex}-${colIndex}`}
+                  x={colIndex}
+                  y={rowIndex}
+                  width={1}
+                  height={1}
+                  fill={color}
+                />
+              ),
+          ),
+        )}
+      </svg>
     </span>
   );
 }

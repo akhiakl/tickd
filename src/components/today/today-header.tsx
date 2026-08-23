@@ -12,6 +12,7 @@ export function TodayHeader({
   durationDays,
   myName,
   myColor,
+  myAvatarSeed,
   isAdmin,
   groups,
 }: {
@@ -21,6 +22,7 @@ export function TodayHeader({
   durationDays: number;
   myName: string;
   myColor: string;
+  myAvatarSeed: string;
   isAdmin: boolean;
   groups: MyGroupCard[];
 }) {
@@ -40,7 +42,7 @@ export function TodayHeader({
       </div>
       <ThemeToggle />
       <Link href="/account" aria-label="Your account" className="flex-none">
-        <Avatar name={myName} color={myColor} size={36} />
+        <Avatar name={myName} color={myColor} seed={myAvatarSeed} size={36} />
       </Link>
       {isAdmin && (
         <Link
