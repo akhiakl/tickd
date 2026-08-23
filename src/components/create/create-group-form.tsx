@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { createGroup } from "@/server/actions/groups";
 import { Pill } from "@/components/ui/pill";
@@ -24,7 +24,15 @@ const ChecklistDraftEditor = dynamic(
 export function CreateGroupForm() {
   const [name, setName] = useState("");
   const [duration, setDuration] = useState<21 | 31>(31);
-  const [startDate, setStartDate] = useState(todayISODate());
+  // `todayISODate()` reads the real clock, so it can't run during
+  // prerendering (Cache Components would freeze it at build time and serve
+  // that same stale date to every visitor). Start empty and fill it in
+  // once mounted, which only ever happens at request/client time.
+  const [startDate, setStartDate] = useState("");
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: today's date can only be read once mounted (see the comment above), not derived from props/state.
+    setStartDate(todayISODate());
+  }, []);
   const [items, setItems] = useState(DEFAULT_CHECKLIST_ITEMS);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();

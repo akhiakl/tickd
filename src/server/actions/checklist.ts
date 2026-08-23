@@ -1,7 +1,7 @@
 "use server";
 
 import { and, desc, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { db } from "@/server/db";
 import { checklistItems, dailyChecks, groupMembers } from "@/server/db/schema";
 import { requireUserId } from "@/server/auth/require-user";
@@ -9,8 +9,15 @@ import { checklistItemLabelSchema, reorderSchema } from "@/server/validation/sch
 import { todayISODate } from "@/lib/challenge-stats";
 import type { ActionResult } from "./result";
 
+/** Invalidates both the route cache and `getGroupCore`'s cross-request
+ * cache (tagged `group:<id>` in src/server/queries/group-snapshot.ts) so a
+ * write is visible immediately instead of waiting out its short TTL.
+ * `updateTag`, not `revalidateTag`: every caller here is a Server Action,
+ * and this is a read-your-own-writes case (the person who just ticked an
+ * item should see it ticked, not stale-while-revalidate). */
 function refreshGroup(groupId: string) {
   revalidatePath(`/g/${groupId}`, "layout");
+  updateTag(`group:${groupId}`);
 }
 
 async function requireMembership(groupId: string, userId: string) {

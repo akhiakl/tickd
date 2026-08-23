@@ -8,6 +8,10 @@ import { BackButton } from "@/components/ui/back-button";
 import { AccountForm } from "@/components/account/account-form";
 import { SignOutButton } from "@/components/account/sign-out-button";
 
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 export const metadata = { title: "Your account" };
 
 export default async function AccountPage() {

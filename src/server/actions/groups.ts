@@ -3,7 +3,7 @@
 import { randomInt } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { db } from "@/server/db";
 import { checklistItems, groupMembers, groups } from "@/server/db/schema";
 import { requireUserId } from "@/server/auth/require-user";
@@ -70,6 +70,7 @@ export async function joinGroup(input: unknown): Promise<ActionResult & { groupI
   }
 
   revalidatePath("/");
+  updateTag(`group:${group.id}`);
   redirect(`/g/${group.id}`);
 }
 
@@ -88,6 +89,7 @@ export async function regenerateInvite(groupId: string): Promise<ActionResult & 
   const code = randomInviteCode();
   await db.update(groups).set({ inviteCode: code }).where(eq(groups.id, groupId));
   revalidatePath(`/g/${groupId}/settings`);
+  updateTag(`group:${groupId}`);
   return { ok: true, code };
 }
 
@@ -96,6 +98,7 @@ export async function archiveGroup(groupId: string): Promise<ActionResult> {
   await requireAdmin(groupId, userId);
   await db.update(groups).set({ archivedAt: new Date() }).where(eq(groups.id, groupId));
   revalidatePath(`/g/${groupId}`);
+  updateTag(`group:${groupId}`);
   return { ok: true };
 }
 
@@ -104,6 +107,7 @@ export async function deleteGroup(groupId: string): Promise<ActionResult> {
   await requireAdmin(groupId, userId);
   await db.delete(groups).where(eq(groups.id, groupId));
   revalidatePath("/");
+  updateTag(`group:${groupId}`);
   redirect("/");
 }
 
@@ -115,5 +119,6 @@ export async function removeMember(groupId: string, memberUserId: string): Promi
     .delete(groupMembers)
     .where(and(eq(groupMembers.groupId, groupId), eq(groupMembers.userId, memberUserId)));
   revalidatePath(`/g/${groupId}/settings`);
+  updateTag(`group:${groupId}`);
   return { ok: true };
 }

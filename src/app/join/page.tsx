@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { auth } from "@/auth";
 import { getUserById } from "@/server/queries/users";
 import { Screen } from "@/components/layout/screen";
@@ -7,19 +8,20 @@ import { JoinGroupForm } from "@/components/join/join-group-form";
 
 export const metadata = { title: "Join a group" };
 
-export default async function JoinGroupPage({ searchParams }: PageProps<"/join">) {
+/**
+ * Everything here reads the session (`auth()`) or `searchParams`, both
+ * request-time-only under Cache Components - awaiting them here, rather
+ * than in the page itself, is what keeps that dynamic work inside the
+ * Suspense boundary below instead of forcing the whole route dynamic.
+ */
+async function JoinContent({ searchParams }: { searchParams: PageProps<"/join">["searchParams"] }) {
   const { code } = await searchParams;
   const session = await auth();
   const user = await getUserById(session!.user!.id);
   if (!user) return null;
 
   return (
-    <Screen className="pt-2 pb-10">
-      <div className="flex items-center gap-3 py-1.5 pb-5.5">
-        <BackButton href="/" />
-        <span className="font-heading text-[21px]">Join a group</span>
-      </div>
-
+    <>
       <div className="bg-surface mb-6 flex items-center gap-3.5 rounded-[26px] px-4.5 py-4">
         <Avatar name={user.name} color={user.color} seed={user.avatarSeed} size={44} />
         <div>
@@ -29,6 +31,30 @@ export default async function JoinGroupPage({ searchParams }: PageProps<"/join">
       </div>
 
       <JoinGroupForm initialCode={typeof code === "string" ? code.toUpperCase() : ""} />
+    </>
+  );
+}
+
+function JoinContentSkeleton() {
+  return (
+    <>
+      <div className="bg-surface mb-6 h-[68px] animate-pulse rounded-[26px]" />
+      <div className="bg-surface h-[186px] animate-pulse rounded-3xl" />
+    </>
+  );
+}
+
+export default function JoinGroupPage({ searchParams }: PageProps<"/join">) {
+  return (
+    <Screen className="pt-2 pb-10">
+      <div className="flex items-center gap-3 py-1.5 pb-5.5">
+        <BackButton href="/" />
+        <span className="font-heading text-[21px]">Join a group</span>
+      </div>
+
+      <Suspense fallback={<JoinContentSkeleton />}>
+        <JoinContent searchParams={searchParams} />
+      </Suspense>
     </Screen>
   );
 }

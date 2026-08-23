@@ -6,11 +6,39 @@ import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
+import { cn } from "@/lib/utils";
+
+type CardStyle = "classic" | "bold";
+
+const CARD_STYLES: { id: CardStyle; label: string; aspectRatio: string }[] = [
+  { id: "classic", label: "Classic", aspectRatio: "600 / 750" },
+  { id: "bold", label: "Bold", aspectRatio: "600 / 880" },
+];
 
 export function ShareButton({ groupId }: { groupId: string }) {
   const [open, setOpen] = useState(false);
+  const [cardStyle, setCardStyle] = useState<CardStyle>("classic");
+  const [loaded, setLoaded] = useState(false);
   const { message, showToast } = useToast();
-  const imageUrl = `/api/share/${groupId}`;
+
+  const activeStyle = CARD_STYLES.find((style) => style.id === cardStyle)!;
+  const imageUrl = `/api/share/${groupId}?style=${cardStyle}`;
+
+  // The Sheet unmounts its children on close, so the <img> below is a fresh
+  // element every time it opens and needs to load again - the skeleton is
+  // reset explicitly wherever `open` or `cardStyle` changes below, rather
+  // than in an effect, so there's no extra render between the state change
+  // and the skeleton reappearing.
+  function openSheet() {
+    setLoaded(false);
+    setOpen(true);
+  }
+
+  function selectStyle(style: CardStyle) {
+    if (style === cardStyle) return;
+    setLoaded(false);
+    setCardStyle(style);
+  }
 
   async function handleShare() {
     try {
@@ -41,7 +69,7 @@ export function ShareButton({ groupId }: { groupId: string }) {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={openSheet}
         className="bg-accent font-heading text-on-panel absolute right-4.5 bottom-24 z-10 flex cursor-pointer items-center gap-2 rounded-full py-3.5 pr-5 pl-4.5 text-[15px] shadow-lg"
       >
         <ArrowUpFromLine size={19} strokeWidth={2.4} />
@@ -54,8 +82,43 @@ export function ShareButton({ groupId }: { groupId: string }) {
         title="Share this"
         subtitle="preview before you post it"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered PNG, not an optimizable asset */}
-        <img src={imageUrl} alt="Your daily streak card" className="w-full rounded-3xl shadow-lg" />
+        <div
+          className="bg-surface relative w-full overflow-hidden rounded-3xl shadow-lg"
+          style={{ aspectRatio: activeStyle.aspectRatio }}
+        >
+          {!loaded && <div className="bg-surface-2 absolute inset-0 animate-pulse" />}
+          {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered PNG, not an optimizable asset */}
+          <img
+            key={imageUrl}
+            src={imageUrl}
+            alt="Your daily streak card"
+            onLoad={() => setLoaded(true)}
+            onError={() => setLoaded(true)}
+            className={cn(
+              "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
+              loaded ? "opacity-100" : "opacity-0",
+            )}
+          />
+        </div>
+
+        <div className="mt-3 flex justify-center gap-1.5">
+          {CARD_STYLES.map((style) => (
+            <button
+              key={style.id}
+              type="button"
+              onClick={() => selectStyle(style.id)}
+              className={cn(
+                "cursor-pointer rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-colors",
+                cardStyle === style.id
+                  ? "bg-accent text-on-panel"
+                  : "bg-surface text-muted hover:bg-surface-2",
+              )}
+            >
+              {style.label}
+            </button>
+          ))}
+        </div>
+
         <div className="mt-4 flex gap-2">
           <Button onClick={handleShare} className="flex-1">
             Share

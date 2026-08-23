@@ -3,6 +3,10 @@ import { getGroupSnapshot } from "@/server/queries/group-snapshot";
 import { dateRange } from "@/lib/challenge-stats";
 import { WallGrid } from "@/components/wall/wall-grid";
 
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 export const metadata = { title: "The wall" };
 
 export default async function WallPage({ params }: PageProps<"/g/[groupId]/wall">) {
