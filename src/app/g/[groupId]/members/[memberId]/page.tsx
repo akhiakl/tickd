@@ -10,6 +10,7 @@ import {
 import { Screen } from "@/components/layout/screen";
 import { BackButton } from "@/components/ui/back-button";
 import { Avatar } from "@/components/ui/avatar";
+import { LocalTimeBadge } from "@/components/ui/local-time-badge";
 import { cn } from "@/lib/utils";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -27,13 +28,19 @@ export default async function MemberProfilePage({
   const member = snapshot.members.find((m) => m.userId === memberId);
   if (!member) notFound();
 
-  const { items, dayIndex, durationDays } = snapshot;
+  const { items, durationDays } = snapshot;
+  // This member's own profile - everything here is walked over *their own*
+  // elected timezone (localDayIndex/localCountsByDate/localItemsByDate),
+  // not the viewer's, per src/types/domain.ts's MemberSnapshot comments.
+  const { localDayIndex: dayIndex, localToday } = member;
   const dates = dateRange(snapshot.startDate, dayIndex);
-  const counts = dates.map((d) => member.countsByDate[d] ?? 0);
+  const counts = dates.map((d) => member.localCountsByDate[d] ?? 0);
   const allDates = dateRange(snapshot.startDate, durationDays);
 
   const perItem = items.map((item) => {
-    const doneDays = dates.filter((d) => (member.itemsByDate[d] ?? []).includes(item.id)).length;
+    const doneDays = dates.filter((d) =>
+      (member.localItemsByDate[d] ?? []).includes(item.id),
+    ).length;
     return { ...item, pct: dayIndex > 0 ? Math.round((doneDays / dayIndex) * 100) : 0 };
   });
 
@@ -51,9 +58,12 @@ export default async function MemberProfilePage({
             {member.name}
             {member.isMe && " (you)"}
           </div>
-          <div className="text-muted text-[13px]">
-            joined day 1 - {Math.round((computeTotal(counts) / (dayIndex * items.length)) * 100)}%
-            of the challenge
+          <div className="text-muted flex items-center gap-1.5 text-[13px]">
+            <span>
+              joined day 1 - {Math.round((computeTotal(counts) / (dayIndex * items.length)) * 100)}%
+              of the challenge
+            </span>
+            <LocalTimeBadge timezone={member.timezone} />
           </div>
         </div>
       </div>
@@ -101,8 +111,8 @@ export default async function MemberProfilePage({
       </div>
       <div className="flex max-w-[340px] flex-wrap gap-1.5">
         {allDates.map((date, i) => {
-          const future = date > snapshot.today;
-          const count = future ? null : (member.countsByDate[date] ?? 0);
+          const future = date > localToday;
+          const count = future ? null : (member.localCountsByDate[date] ?? 0);
           const full = count === items.length;
           const partial = count !== null && count > 0 && !full;
           return (

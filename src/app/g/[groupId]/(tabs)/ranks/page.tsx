@@ -10,6 +10,7 @@ import {
   type RankWindow,
 } from "@/lib/challenge-stats";
 import { Avatar } from "@/components/ui/avatar";
+import { LocalTimeBadge } from "@/components/ui/local-time-badge";
 import { cn } from "@/lib/utils";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -33,10 +34,13 @@ export default async function RanksPage({ params, searchParams }: PageProps<"/g/
   const snapshot = await getGroupSnapshot(groupId, session!.user!.id);
   if (!snapshot) return null;
 
-  const dates = dateRange(snapshot.startDate, snapshot.dayIndex);
+  // Each member's score/streak is walked over *their own* elected timezone
+  // - localDayIndex/localCountsByDate - not the viewer's, so two people can
+  // legitimately be a day apart in how far their own count goes back.
   const ranked = snapshot.members
     .map((m) => {
-      const counts = dates.map((d) => m.countsByDate[d] ?? 0);
+      const dates = dateRange(snapshot.startDate, m.localDayIndex);
+      const counts = dates.map((d) => m.localCountsByDate[d] ?? 0);
       return { ...m, score: rankScore(counts, window), streak: currentStreakWithToday(counts) };
     })
     .sort((a, b) => b.score - a.score);
@@ -91,9 +95,26 @@ export default async function RanksPage({ params, searchParams }: PageProps<"/g/
               {i + 1}
             </span>
             <Avatar name={m.name} color={m.color} seed={m.avatarSeed} size={34} />
-            <span className="min-w-0 flex-1 truncate text-[15px] font-bold">
-              {m.name}
-              {m.isMe && " (you)"}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[15px] font-bold">
+                {m.name}
+                {m.isMe && " (you)"}
+              </span>
+              {(m.username || m.timezone) && (
+                <span
+                  className={cn(
+                    "flex items-center gap-1 truncate text-[11.5px]",
+                    m.isMe ? "text-panel-soft" : "text-muted",
+                  )}
+                >
+                  {m.username && <span className="truncate">@{m.username}</span>}
+                  {m.username && m.timezone && <span aria-hidden>·</span>}
+                  <LocalTimeBadge
+                    timezone={m.timezone}
+                    className={cn("flex-none", m.isMe ? "text-panel-soft" : "text-muted")}
+                  />
+                </span>
+              )}
             </span>
             <span className="flex flex-none items-center gap-0.5">
               <Flame size={12} className="fill-flame text-flame" />

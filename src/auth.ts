@@ -1,8 +1,9 @@
 import NextAuth from "next-auth";
 import { authConfig } from "@/auth.config";
 import { auth0Enabled } from "@/lib/flags";
-import { upsertUserFromIdentity, createGuestUser } from "@/server/queries/users";
-import { guestNameSchema } from "@/server/validation/schemas";
+import { upsertUserFromIdentity, createGuestUser, getUserByUsername } from "@/server/queries/users";
+import { verifyPassword } from "@/server/auth/password";
+import { guestNameSchema, credentialsSignInSchema } from "@/server/validation/schemas";
 
 // The full Auth.js instance: real providers, DB-backed callbacks. Used by
 // the /api/auth/[...nextauth] route, Server Actions, and Server
@@ -40,6 +41,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async (request) => {
             return { id: dbUser.id, name: dbUser.name };
           },
         }),
+        // Optional upgrade on top of a guest row (see `setCredentials` in
+        // src/server/actions/auth.ts) - lets someone who's already set a
+        // username/password log back into that same row from another
+        // device. Not a replacement for the guest flow above, which stays
+        // the frictionless default.
+        (await import("next-auth/providers/credentials")).default({
+          id: "password",
+          name: "Username and password",
+          credentials: {
+            username: { label: "Username", type: "text" },
+            password: { label: "Password", type: "password" },
+          },
+          async authorize(credentials) {
+            const parsed = credentialsSignInSchema.safeParse(credentials);
+            if (!parsed.success) return null;
+
+            const dbUser = await getUserByUsername(parsed.data.username);
+            if (!dbUser?.passwordHash) return null;
+
+            const valid = await verifyPassword(parsed.data.password, dbUser.passwordHash);
+            if (!valid) return null;
+
+            return { id: dbUser.id, name: dbUser.name };
+          },
+        }),
       ];
 
   return {
@@ -60,8 +86,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async (request) => {
           };
           const dbUser = await upsertUserFromIdentity(identity);
           token.appUserId = dbUser.id;
-        } else if (account?.provider === "guest" && user?.id) {
-          // authorize() already created the row and returned its id.
+        } else if (
+          (account?.provider === "guest" || account?.provider === "password") &&
+          user?.id
+        ) {
+          // authorize() already resolved (or created) the row and returned
+          // its id, for either provider.
           token.appUserId = user.id;
         }
 

@@ -4,13 +4,12 @@ import { auth } from "@/auth";
 import { getGroupSnapshot } from "@/server/queries/group-snapshot";
 import { currentStreakWithToday, dateRange } from "@/lib/challenge-stats";
 import { ShareCard, SHARE_CARD_SIZE } from "@/server/share-card";
-import { ShareCardBold, SHARE_CARD_BOLD_SIZE } from "@/server/share-card-bold";
 
 // Needs a real TCP connection to Postgres (via the `postgres` driver), which
 // the edge runtime doesn't support. No `runtime = "nodejs"` export needed
 // (or allowed) under Cache Components - it requires the Node.js runtime
 // everywhere, so this is already guaranteed.
-export async function GET(request: Request, { params }: { params: Promise<{ groupId: string }> }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ groupId: string }> }) {
   const { groupId } = await params;
   const session = await auth();
   if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
@@ -21,31 +20,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ grou
   const me = snapshot.members.find((m) => m.isMe);
   if (!me) return new NextResponse("Not found", { status: 404 });
 
+  // snapshot.today/dayIndex are already "me"'s own (getGroupSnapshot builds
+  // them from the viewer's own localToday/localDayIndex) - use the matching
+  // local* maps rather than the UTC-keyed ones so this share card agrees
+  // with what "me" sees on their own Today page.
   const dates = dateRange(snapshot.startDate, snapshot.dayIndex);
-  const counts = dates.map((date) => me.countsByDate[date] ?? 0);
+  const counts = dates.map((date) => me.localCountsByDate[date] ?? 0);
   const streak = currentStreakWithToday(counts);
-  const doneToday = me.countsByDate[snapshot.today] ?? 0;
-  const checkedItemIds = new Set(me.itemsByDate[snapshot.today] ?? []);
-
-  const style = new URL(request.url).searchParams.get("style") === "bold" ? "bold" : "classic";
-
-  if (style === "bold") {
-    const totalDone = counts.reduce((sum, count) => sum + count, 0);
-    const totalPossible = snapshot.dayIndex * snapshot.items.length;
-    return new ImageResponse(
-      <ShareCardBold
-        dayIndex={snapshot.dayIndex}
-        durationDays={snapshot.durationDays}
-        doneToday={doneToday}
-        itemCount={snapshot.items.length}
-        totalDone={totalDone}
-        totalPossible={totalPossible}
-        items={snapshot.items}
-        checkedItemIds={checkedItemIds}
-      />,
-      SHARE_CARD_BOLD_SIZE,
-    );
-  }
+  const doneToday = me.localCountsByDate[snapshot.today] ?? 0;
+  const checkedItemIds = new Set(me.localItemsByDate[snapshot.today] ?? []);
 
   return new ImageResponse(
     <ShareCard

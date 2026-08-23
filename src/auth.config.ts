@@ -13,5 +13,14 @@ import type { NextAuthConfig } from "next-auth";
  * middleware's bundle at all.
  */
 export const authConfig = {
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    // updateAge: the token gets re-signed with a fresh maxAge window on any
+    // request older than this - acts like an access token's short lifetime.
+    // maxAge: the outer bound since the last time that happened - acts like
+    // a refresh token's lifetime. Net effect: an active user never notices
+    // any of this; someone idle for 30 days gets signed out.
+    updateAge: 60 * 60 * 24, // 1 day
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+  },
 } satisfies Omit<NextAuthConfig, "providers">;

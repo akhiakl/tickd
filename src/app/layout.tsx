@@ -4,6 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { caprasimo, figtree } from "@/lib/fonts";
 import { ThemeProvider } from "@/components/theme-provider";
 import { HydrationMarker } from "@/components/hydration-marker";
+import { TimezoneSync } from "@/components/timezone-sync";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </ThemeProvider>
         <HydrationMarker />
+        <TimezoneSync />
         <Analytics />
         <SpeedInsights />
       </body>

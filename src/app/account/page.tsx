@@ -6,6 +6,7 @@ import { getMyGroups } from "@/server/queries/my-groups";
 import { Screen } from "@/components/layout/screen";
 import { BackButton } from "@/components/ui/back-button";
 import { AccountForm } from "@/components/account/account-form";
+import { SaveAccountForm } from "@/components/account/save-account-form";
 import { SignOutButton } from "@/components/account/sign-out-button";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -32,6 +33,7 @@ export default async function AccountPage() {
         email={user.email}
         initialColor={user.color}
         initialAvatarSeed={user.avatarSeed}
+        initialTimezone={user.timezone}
         initialPrefs={{
           reminderEnabled: user.reminderEnabled,
           weeklyRecapEnabled: user.weeklyRecapEnabled,
@@ -39,6 +41,20 @@ export default async function AccountPage() {
           hideFromRanks: user.hideFromRanks,
         }}
       />
+
+      {!user.authSub && !user.username && (
+        <div className="pt-6.5">
+          <SaveAccountForm />
+        </div>
+      )}
+      {!user.authSub && user.username && (
+        <div className="bg-surface mx-4 mt-6.5 rounded-[22px] px-4.5 py-4">
+          <div className="text-[15px] font-bold">Account saved</div>
+          <div className="text-muted mt-0.5 text-[12.5px]">
+            Log in as @{user.username} from any device to get back to this account.
+          </div>
+        </div>
+      )}
 
       {groups.length > 0 && (
         <>

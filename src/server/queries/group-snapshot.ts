@@ -4,7 +4,8 @@ import { cacheLife, cacheTag } from "next/cache";
 import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { checklistItems, dailyChecks, groupMembers, groups, users } from "@/server/db/schema";
-import { challengeDayIndex, todayISODate } from "@/lib/challenge-stats";
+import { challengeDayIndex } from "@/lib/challenge-stats";
+import { localISODate } from "@/lib/timezone";
 import { SIDE_QUEST_PATTERN } from "@/lib/constants";
 import type { GroupSnapshot, MemberSnapshot } from "@/types/domain";
 
@@ -16,7 +17,13 @@ type GroupCore = {
   durationDays: number;
   archived: boolean;
   items: GroupSnapshot["items"];
-  members: Omit<MemberSnapshot, "isMe">[];
+  // localToday/localDayIndex aren't here - they read Date.now(), so like
+  // the group's own today/dayIndex they're computed fresh per request in
+  // getGroupSnapshot below, never cached. localCountsByDate/localItemsByDate
+  // ARE cacheable: they're a deterministic reinterpretation of each check's
+  // fixed checkedAt instant in the member's own (also stored, so also
+  // stable within the cache's lifetime) timezone.
+  members: Omit<MemberSnapshot, "isMe" | "localToday" | "localDayIndex">[];
 };
 
 /**
@@ -59,9 +66,11 @@ async function getGroupCore(groupId: string): Promise<GroupCore | null> {
       .select({
         userId: users.id,
         name: users.name,
+        username: users.username,
         color: users.color,
         avatarSeed: users.avatarSeed,
         role: groupMembers.role,
+        timezone: users.timezone,
       })
       .from(groupMembers)
       .innerJoin(users, eq(users.id, groupMembers.userId))
@@ -69,15 +78,21 @@ async function getGroupCore(groupId: string): Promise<GroupCore | null> {
     db.query.dailyChecks.findMany({ where: eq(dailyChecks.groupId, groupId) }),
   ]);
 
-  const members: Omit<MemberSnapshot, "isMe">[] = memberRows.map((m) => ({
-    userId: m.userId,
-    name: m.name,
-    color: m.color,
-    avatarSeed: m.avatarSeed,
-    role: m.role,
-    countsByDate: {},
-    itemsByDate: {},
-  }));
+  const members: Omit<MemberSnapshot, "isMe" | "localToday" | "localDayIndex">[] = memberRows.map(
+    (m) => ({
+      userId: m.userId,
+      name: m.name,
+      username: m.username,
+      color: m.color,
+      avatarSeed: m.avatarSeed,
+      role: m.role,
+      timezone: m.timezone,
+      countsByDate: {},
+      itemsByDate: {},
+      localCountsByDate: {},
+      localItemsByDate: {},
+    }),
+  );
   const memberById = new Map(members.map((m) => [m.userId, m]));
 
   for (const check of checks) {
@@ -85,6 +100,10 @@ async function getGroupCore(groupId: string): Promise<GroupCore | null> {
     if (!member) continue;
     member.countsByDate[check.date] = (member.countsByDate[check.date] ?? 0) + 1;
     (member.itemsByDate[check.date] ??= []).push(check.checklistItemId);
+
+    const localDate = localISODate(check.checkedAt, member.timezone);
+    member.localCountsByDate[localDate] = (member.localCountsByDate[localDate] ?? 0) + 1;
+    (member.localItemsByDate[localDate] ??= []).push(check.checklistItemId);
   }
 
   return {
@@ -119,8 +138,22 @@ export const getGroupSnapshot = cache(
     const membership = core.members.find((m) => m.userId === viewerUserId);
     if (!membership) return null;
 
-    const today = todayISODate();
-    const dayIndex = challengeDayIndex(core.startDate, core.durationDays, today);
+    // Each member's own "today", read fresh (not cached in getGroupCore -
+    // see its comment) in their own elected timezone. The viewer's own
+    // entry becomes the snapshot's today/dayIndex below, so the Today
+    // page's "Day X of Y" and checklist frame around *their* day; every
+    // other member carries their own alongside for their streak/profile.
+    const now = new Date();
+    const members: MemberSnapshot[] = core.members.map((m) => {
+      const localToday = localISODate(now, m.timezone);
+      return {
+        ...m,
+        isMe: m.userId === viewerUserId,
+        localToday,
+        localDayIndex: challengeDayIndex(core.startDate, core.durationDays, localToday),
+      };
+    });
+    const me = members.find((m) => m.isMe)!;
 
     return {
       id: core.id,
@@ -129,10 +162,10 @@ export const getGroupSnapshot = cache(
       startDate: core.startDate,
       durationDays: core.durationDays,
       archived: core.archived,
-      today,
-      dayIndex,
+      today: me.localToday,
+      dayIndex: me.localDayIndex,
       items: core.items,
-      members: core.members.map((m) => ({ ...m, isMe: m.userId === viewerUserId })),
+      members,
       myRole: membership.role,
     };
   },
