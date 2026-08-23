@@ -210,6 +210,41 @@ there's no separate manual step. (This only changes Vercel's own build command; 
 when there's nothing new to run.) Deploying elsewhere (not Vercel), run `pnpm run db:migrate`
 against the target database as part of your own release step.
 
+### Notification cron
+
+`src/app/api/cron/evening-nudge` and `.../weekly-recap` need to run **hourly** (each request
+filters to whoever's own local hour matches its target - see the routes' own comments), which
+rules out Vercel's own Cron feature on the Hobby plan (once-a-day only there) and GitHub Actions
+(kept free for CI). Instead, both routes are triggered by an [Upstash
+QStash](https://upstash.com/docs/qstash) schedule - you likely already have an Upstash account for
+`KV_REST_API_URL`/`KV_REST_API_TOKEN`; QStash is a separate free-tier product under the same
+account.
+
+One-time setup, once the app is deployed and `CRON_SECRET` is set on the Vercel project:
+
+1. Grab a QStash token from the [Upstash console](https://console.upstash.com/qstash) (`QSTASH_TOKEN`).
+2. Create a schedule for each route. QStash forwards any header prefixed `Upstash-Forward-` to the
+   destination with that prefix stripped, which is how `CRON_SECRET` reaches the route's own
+   `Authorization: Bearer` check unchanged:
+
+   ```bash
+   curl -X POST "https://qstash.upstash.io/v2/schedules/https://YOUR_APP_URL/api/cron/evening-nudge" \
+     -H "Authorization: Bearer $QSTASH_TOKEN" \
+     -H "Upstash-Cron: 0 * * * *" \
+     -H "Upstash-Forward-Authorization: Bearer $CRON_SECRET"
+
+   curl -X POST "https://qstash.upstash.io/v2/schedules/https://YOUR_APP_URL/api/cron/weekly-recap" \
+     -H "Authorization: Bearer $QSTASH_TOKEN" \
+     -H "Upstash-Cron: 0 * * * *" \
+     -H "Upstash-Forward-Authorization: Bearer $CRON_SECRET"
+   ```
+
+3. Confirm both show up under Schedules in the QStash console, and check the Logs tab there after
+   the next run for a 200 from each.
+
+No app code depends on QStash specifically - the routes just read a standard bearer token, so
+swapping to any other external scheduler later is a config change, not a code change.
+
 ## Product notes and intentional deviations from the prototype
 
 - **Accounts are real**, so the join flow no longer re-asks for a name and color the way the

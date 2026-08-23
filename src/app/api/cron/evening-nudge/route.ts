@@ -16,12 +16,13 @@ const TARGET_HOUR = 20; // 8pm, in each recipient's own local time.
  * Runs hourly rather than once a day at a fixed UTC time: every run, each
  * candidate's *own* local hour is checked against TARGET_HOUR, so someone
  * in Tokyo and someone in Denver each get nudged at their own 8pm, not
- * UTC 8pm for everyone. The hourly beat itself comes from
- * .github/workflows/notifications-cron.yml, not Vercel's own Cron feature
- * - that's once-a-day-only on the Hobby plan, too coarse for this. A
- * candidate with no elected timezone yet (see src/components/
- * timezone-sync.tsx) falls back to matching on UTC 8pm - still works,
- * just not personalized until they get one.
+ * UTC 8pm for everyone. The hourly beat itself comes from an Upstash
+ * QStash schedule calling this route directly (see README's "Notification
+ * cron" section for how it's set up) - not Vercel's own Cron feature,
+ * that's once-a-day-only on the Hobby plan, and not GitHub Actions either,
+ * to leave that usage for CI. A candidate with no elected timezone yet
+ * (see src/components/timezone-sync.tsx) falls back to matching on UTC
+ * 8pm - still works, just not personalized until they get one.
  *
  * Known imprecision, accepted rather than engineered around: hourly
  * granularity means a half-hour-offset zone (India, Newfoundland, ...)
