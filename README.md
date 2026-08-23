@@ -195,15 +195,20 @@ Two workflows run in GitHub Actions:
 
 ## Deploying
 
-The app is a standard Next.js project, deployable to Vercel with no extra configuration beyond
-environment variables:
+The app is a standard Next.js project, deployable to Vercel with the following environment
+variables:
 
 - `DATABASE_URL`
 - `AUTH_SECRET` (generate with `npx auth secret`)
 - `NEXT_PUBLIC_APP_URL` (your production origin)
 - `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_ISSUER`
 
-Run `pnpm run db:migrate` against the production database once before the first deploy.
+`vercel.json` overrides the Vercel build command to `pnpm run db:migrate && pnpm run build`, so
+every deploy applies any pending `drizzle/*.sql` migrations to `DATABASE_URL` before building -
+there's no separate manual step. (This only changes Vercel's own build command; CI and local
+`pnpm run build` are unaffected, since drizzle's migrator tracks applied migrations and no-ops
+when there's nothing new to run.) Deploying elsewhere (not Vercel), run `pnpm run db:migrate`
+against the target database as part of your own release step.
 
 ## Product notes and intentional deviations from the prototype
 
