@@ -1,5 +1,19 @@
 # Local-first sync engine for Tickd — design plan
 
+## Status
+
+- **Phase 1 (durable transaction queue) — implemented**, scoped to
+  `setChecked` as planned. See `src/lib/sync/tx-queue.ts` (IndexedDB store,
+  in-memory fallback, validation, coalescing), `src/lib/sync/drain.ts`
+  (retry/backoff/circuit-breaker drain loop, error classification), and
+  `src/lib/sync/use-tx-queue-status.ts` (the status hook backing
+  `today-header.tsx`'s "syncing…" / "couldn't sync - Retry" affordance).
+  `today-live.tsx` now enqueues through this instead of the old in-memory
+  `queueRef` chain. Covered by `tx-queue.test.ts`, `drain.test.ts`, and the
+  updated `today-live.test.tsx`.
+- Phases 2 (local snapshot store) and 3 (live sync resolver) are still design
+  only - not started.
+
 ## Why, and why carefully
 
 Tickd's write path today (`src/server/actions/checklist.ts` + `TodayLive`) is already
@@ -14,9 +28,9 @@ architecture in the brief adds, is:
   rejects; nothing is queued to retry, and a reload loses it.
 - **No local persistence.** Every reload re-fetches `getGroupCore` from Postgres;
   there's no IndexedDB layer, so first paint always waits on the network.
-- **No live cross-member sync.** Other members only see your tick after *they*
+- **No live cross-member sync.** Other members only see your tick after _they_
   navigate and `getGroupCore` re-runs — there's no push from server to other
-  open clients. (`src/server/push/send.ts` sends *Web Push notifications*,
+  open clients. (`src/server/push/send.ts` sends _Web Push notifications_,
   which wake a device, not an in-page WebSocket sync channel.)
 
 This plan proposes bringing in the queue + local-store pieces of the
@@ -80,7 +94,7 @@ automatically once connectivity returns, without changing what the user sees
 
 - New module `src/lib/sync/tx-queue.ts` (client-only): a thin wrapper over
   IndexedDB (via the native API or `idb`) storing `{ id, groupId, kind,
-  payload, createdAt, attempts }` rows in an append-only `tx_queue` object
+payload, createdAt, attempts }` rows in an append-only `tx_queue` object
   store, one DB per origin (`tickd-sync`).
 - Replace `TodayLive`'s `queueRef` promise chain with a call into this queue:
   `enqueue({ kind: "setChecked", groupId, checklistItemId, checked })`.
@@ -123,10 +137,10 @@ the network — instead of every navigation waiting on `getGroupCore`.
   paint, then the existing server-rendered fetch reconciles it — effectively
   stale-while-revalidate, but the "stale" copy is the member's own last-known
   state rather than a loading spinner.
-- This is the one piece that benefits from *some* client-side store
+- This is the one piece that benefits from _some_ client-side store
   abstraction; given the domain is one snapshot object per group rather than
   a graph of independently-mutable entities, a plain `Map<groupId,
-  GroupSnapshot>` behind `useSyncExternalStore` is enough — no need for
+GroupSnapshot>` behind `useSyncExternalStore` is enough — no need for
   MobX/Zustand/Valtio.
 
 ## Phase 3 — Live sync resolver (cross-member push)
@@ -136,7 +150,7 @@ without a manual reload.
 
 - Lowest-lift option given the stack (Vercel + no existing WS
   infrastructure): Server-Sent Events. Add `src/app/api/g/[groupId]/events/
-  route.ts` streaming a `group:<id>` channel; `setChecked` et al. publish an
+route.ts` streaming a `group:<id>` channel; `setChecked` et al. publish an
   "invalidate group X" message after their existing `updateTag` call (reuse
   `@upstash/redis`, already a dependency, as the pub/sub backbone — no new
   infra to provision).
@@ -170,6 +184,120 @@ without a manual reload.
   scope LWW specifically to that action (compare a `updatedAt` the queue
   carries against the row's current value) rather than building a generic
   conflict-resolution layer up front.
+
+## Error handling, failsafes, validation, security
+
+These apply to every phase, but Phase 1 (the tx queue) is where most of them
+land first since it's what actually holds durable, replayable state.
+
+### Error classification (what gets retried vs. what doesn't)
+
+A queued write can fail two structurally different ways, and conflating them
+is how you end up either retrying something that will never succeed or
+silently dropping something that would have:
+
+- **Transport failure** — the request never reached the server (offline, DNS,
+  TLS, a dropped connection mid-flight). Heuristic: `navigator.onLine ===
+false` at call time, or the rejection is a `TypeError` (what a `fetch`
+  failure surfaces as in every browser). **Retried**, with backoff.
+- **Terminal failure** — the server ran the action and said no: an
+  `ActionResult` with `ok: false` (bad input, "challenge hasn't started
+  yet"), or a thrown authorization error (`requireMembership` /
+  `requireAdminMembership`). Retrying changes nothing about _why_ it failed.
+  **Not retried** — removed from the queue immediately and surfaced as the
+  existing toast, exactly like today's inline failure.
+
+Getting this wrong in either direction is a real failure mode: retrying a
+terminal failure spins forever burning battery/requests for a write that can
+never land; retrying nothing on a transport blip silently loses the write,
+which is the exact bug this whole plan exists to fix.
+
+### Backoff, circuit breaker, and not spinning forever
+
+- Exponential backoff with jitter, capped (e.g. 1s → 30s ceiling), not a
+  tight retry loop — a real offline period can last hours, and an
+  uncapped/unjittered retry storm from every open tab reconnecting at once
+  is its own small DoS against the app's own API.
+- A per-row attempt ceiling that doesn't discard the write, only pauses
+  _auto_-retry and marks the row "stuck" once transport retries have
+  clearly stopped being transient (network's up but this specific request
+  keeps failing). Surfaced in the UI with a manual "retry" affordance
+  rather than infinite silent background retries.
+- **Coalescing**: repeated toggles of the _same_ item while offline collapse
+  into one queued row (keyed by `kind:groupId:checklistItemId`), keeping
+  only the latest desired state. This is both a UX correctness property
+  (only the final state should ever reach the server, not a replay of every
+  intermediate tap) and a bound on queue growth — a person fidgeting with
+  one checkbox offline can't grow the queue unboundedly.
+- Draining is serialized to one in-flight request at a time (continuing the
+  existing `queueRef` invariant), and cross-tab drains coordinate through
+  the Web Locks API where available, so two tabs open on the same account
+  don't both fire the same request concurrently. Not load-bearing for
+  correctness (see idempotency below) — it's a courtesy that halves
+  redundant traffic, not a thing correctness depends on.
+
+### Validation (defense in depth, not just UX)
+
+- Every queued row's payload is `zod`-validated **twice**: once when it's
+  enqueued (client-side, same rejection UX as today - reuses the existing
+  schemas like `checklistItemLabelSchema`), and again when it's read back
+  out of IndexedDB immediately before being sent. The second pass exists
+  because IndexedDB is mutable, same-origin storage: a corrupted write from
+  an app-version schema drift, or a malicious browser extension with
+  storage access, could otherwise hand a server action attacker-shaped
+  input that the UI layer never actually vetted. A row that fails the
+  second check is dropped and logged, never sent.
+- The **server remains the sole source of truth for validation and
+  authorization** — nothing here changes what `setChecked` /
+  `reorderChecklistItems` etc. already re-check server-side
+  (`requireUserId`, `requireMembership`, `requireAdminMembership`, the
+  Zod schemas in `src/server/validation/schemas.ts`, the
+  `date < group.startDate` guard). The queue is a delivery mechanism for a
+  call the server was always going to re-validate independently, not a
+  trust boundary of its own.
+
+### Security
+
+- **No secrets in the queue.** Rows carry only domain identifiers already
+  visible to the signed-in user (`groupId`, `checklistItemId`, a boolean) -
+  never a session token, credential, or anything an attacker could reuse
+  outside this browser profile. Auth stays exactly where it is today:
+  server-side, per-request, via the existing session (`requireUserId`).
+- **The queue can't grant authority the server wouldn't.** A compromised or
+  buggy client can enqueue whatever it wants, but every row still runs
+  through the _unmodified_ server action and its membership/role checks
+  when drained - queuing a `reorderChecklistItems` call as a non-admin
+  fails exactly as it does today, just after a network round trip instead
+  of before one.
+- **Idempotency is what makes retry-without-double-effect safe.**
+  `setChecked` already only reaches its intended state
+  (`onConflictDoNothing` / delete-by-key) - a transport failure that
+  actually succeeded server-side before the response was lost, then gets
+  retried, is a no-op the second time, not a duplicate write. This
+  property is _required_ before any action is added to the retryable
+  queue; `addChecklistItem` in particular needs an idempotency key (e.g.
+  the queued row's own `id` reused as the inserted row's `id`, matching
+  the pattern `onConflictDoNothing` already uses) before it's safe to
+  queue, since naively retried it would insert the item twice.
+- **IndexedDB open failures fail closed, not open.** Safari private
+  browsing and some locked-down enterprise policies throw on `indexedDB.
+open` rather than just being slow. The queue feature-detects and falls
+  back to an in-memory (non-durable) queue in that case - the app keeps
+  working exactly as it does today (in-tab optimistic + serialized writes,
+  no offline durability), rather than throwing and breaking the checklist
+  entirely.
+- **Rate/backoff ceiling doubles as self-protection against the client's
+  own bugs** - a runaway enqueue loop (a bug, not malice) is still bounded
+  by the same coalescing + backoff, so it can't turn into an accidental
+  self-inflicted flood of the server action.
+
+### Observability / user-facing failure states
+
+- Pending-row count surfaced in the UI (`today-header.tsx`) so offline
+  usage is visible, not silently "look done, might not be."
+- A row marked "stuck" (exhausted auto-retries) is distinguishable from
+  "pending" - the user gets a manual retry action instead of the app
+  quietly giving up in the background forever.
 
 ## Suggested sequencing
 

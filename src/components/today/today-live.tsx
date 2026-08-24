@@ -1,7 +1,8 @@
 "use client";
 
-import { useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";
-import { setChecked } from "@/server/actions/checklist";
+import { useEffect, useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";
+import { txQueue } from "@/lib/sync/tx-queue";
+import { drainController } from "@/lib/sync/drain";
 import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
 import { Confetti } from "@/components/ui/confetti";
@@ -68,18 +69,16 @@ export function TodayLive({
   // it'd have to be reset back to false.
   const [celebration, setCelebration] = useState(0);
 
-  // Serializes the actual network writes, one at a time - the optimistic
-  // checkmark above still updates instantly per tap regardless. Without
-  // this, rapidly ticking several boxes fires that many *concurrent*
-  // setChecked calls, each independently invalidating and repopulating
-  // the group's shared server cache (getGroupCore's `use cache: remote`);
-  // whichever regeneration happens to land last wins the cache, which
-  // isn't guaranteed to be the one that started last. A reload shortly
-  // after a fast multi-tap could then show some of those taps as never
-  // having happened, even though every write itself succeeded. Running
-  // them strictly in order removes the race: each write's own cache
-  // invalidation only ever follows a write that's already committed.
-  const queueRef = useRef<Promise<unknown>>(Promise.resolve());
+  // Surfaces a terminal queue failure (bad input, "hasn't started yet", a
+  // membership check that failed server-side) the same way a direct
+  // rejected setChecked call used to - a transport failure never reaches
+  // here, it's retried by the drain controller instead. See
+  // docs/local-first-sync-engine-plan.md and src/lib/sync/drain.ts.
+  useEffect(() => {
+    drainController.setErrorHandler(showToast);
+    drainController.start();
+    return () => drainController.setErrorHandler(null);
+  }, [showToast]);
 
   // The running true count of checked items, mutated synchronously on
   // every tap - not derived from `optimisticChecked` (React state) at
@@ -145,11 +144,23 @@ export function TodayLive({
     startTransition(async () => {
       setOptimisticChecked(snapshot);
 
-      const write = () => setChecked(groupId, itemId, willBeDone);
-      // Chained onto both branches so a rejected write doesn't wedge every
-      // toggle after it - the queue keeps moving either way.
-      queueRef.current = queueRef.current.then(write, write);
-      await queueRef.current;
+      // Persisted (IndexedDB-backed, falling back to in-memory where
+      // IndexedDB isn't available) rather than sent directly - a tap made
+      // offline survives a reload and drains once connectivity returns,
+      // instead of silently reverting the next time this data refetches.
+      // Same-item taps coalesce onto one queued row (tx-queue.ts's
+      // coalesceKey), so rapid re-toggling doesn't grow the queue or
+      // replay intermediate states - only the final one is ever sent.
+      // Ordering is still strictly one write in flight at a time
+      // (drain.ts's drainLoop), which is what keeps each write's cache
+      // invalidation (setChecked's revalidatePath/updateTag) from racing
+      // a later one - the same invariant the old in-memory queue enforced.
+      await txQueue.enqueue("setChecked", {
+        groupId,
+        checklistItemId: itemId,
+        checked: willBeDone,
+      });
+      drainController.kick();
     });
   }
 

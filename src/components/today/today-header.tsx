@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
-import { Settings } from "lucide-react";
+import { Settings, RefreshCw, TriangleAlert } from "lucide-react";
 import { GroupSwitcher } from "@/components/group-switcher/group-switcher";
 import { ThemeToggle } from "@/components/nav/theme-toggle";
 import { Avatar } from "@/components/ui/avatar";
+import { useTxQueueStatus } from "@/lib/sync/use-tx-queue-status";
+import { drainController } from "@/lib/sync/drain";
 import type { MyGroupCard } from "@/server/queries/my-groups";
 
 export function TodayHeader({
@@ -31,6 +35,7 @@ export function TodayHeader({
     day: "numeric",
     month: "long",
   }).format(new Date());
+  const { pendingCount, stuckCount } = useTxQueueStatus();
 
   return (
     <div className="flex items-start justify-between gap-3 px-5.5 pt-1.5">
@@ -56,6 +61,29 @@ export function TodayHeader({
             </Link>
           )}
         </div>
+        {/* Only rendered once there's something to say - "all synced" is
+            the default, silent state; this only shows up mid-offline
+            (pending) or once auto-retry has given up on something
+            (stuck), matching the app's existing minimal-chrome style. See
+            docs/local-first-sync-engine-plan.md's "Observability" section. */}
+        {stuckCount > 0 ? (
+          <button
+            type="button"
+            onClick={() => void drainController.retryAllStuck()}
+            className="text-flame mt-1 flex items-center gap-1 text-[11.5px] font-bold"
+          >
+            <TriangleAlert size={12} strokeWidth={2.4} />
+            {stuckCount === 1 ? "1 change couldn't sync" : `${stuckCount} changes couldn't sync`} -
+            Retry
+          </button>
+        ) : (
+          pendingCount > 0 && (
+            <span className="text-muted mt-1 flex items-center gap-1 text-[11.5px] font-semibold">
+              <RefreshCw size={12} strokeWidth={2.4} className="animate-spin" />
+              Syncing{pendingCount > 1 ? ` ${pendingCount}` : ""}...
+            </span>
+          )
+        )}
       </div>
       <ThemeToggle />
       <Link href="/account" aria-label="Your account" className="flex-none">

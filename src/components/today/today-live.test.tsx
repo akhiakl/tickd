@@ -1,6 +1,8 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TodayLive } from "./today-live";
+import { txQueue, __resetStoreForTests } from "@/lib/sync/tx-queue";
+import { drainController } from "@/lib/sync/drain";
 import type { ChecklistItemView } from "@/types/domain";
 
 const setCheckedMock = vi.fn();
@@ -22,6 +24,12 @@ const baseProps = {
   priorStreak: 0,
 };
 
+beforeEach(async () => {
+  __resetStoreForTests();
+  await txQueue.clear();
+  drainController.__resetForTests();
+});
+
 afterEach(() => {
   vi.restoreAllMocks();
   setCheckedMock.mockReset();
@@ -40,7 +48,8 @@ describe("TodayLive", () => {
 
     fireEvent.click(screen.getByText("Wake early"));
     // The stat panel's status line flips the instant the optimistic
-    // checkmark lands - it doesn't wait for setChecked's own response.
+    // checkmark lands - it doesn't wait for the write to reach the queue,
+    // let alone the network.
     expect(await screen.findByText("1 left today")).toBeInTheDocument();
 
     resolveWrite();
@@ -63,9 +72,10 @@ describe("TodayLive", () => {
     // Both taps land optimistically together...
     await screen.findByText("Clean sweep. All 2 done.");
     // ...but the second write is only queued, not sent, until the first
-    // one actually resolves - this is the fix for rapid multi-taps
-    // racing each other's cache invalidation server-side (see
-    // TodayLive's own comment on queueRef).
+    // one actually resolves - the durable queue's drain loop keeps the
+    // same one-in-flight invariant the old in-memory queueRef had (see
+    // today-live.tsx's own comment on why that matters for cache
+    // invalidation ordering).
     await waitFor(() => expect(setCheckedMock).toHaveBeenCalledTimes(1));
 
     resolvers[0]();
@@ -73,16 +83,17 @@ describe("TodayLive", () => {
     resolvers[1]();
   });
 
-  it("keeps the queue moving even when a write rejects", async () => {
-    setCheckedMock.mockRejectedValueOnce(new Error("network blip")).mockResolvedValue({
-      ok: true,
-    });
+  it("surfaces a terminal failure as a toast and still processes the next queued item", async () => {
+    setCheckedMock
+      .mockResolvedValueOnce({ ok: false, error: "This challenge hasn't started yet." })
+      .mockResolvedValue({ ok: true });
 
     render(<TodayLive {...baseProps} checkedItemIds={[]} />);
 
     fireEvent.click(screen.getByText("Wake early"));
     fireEvent.click(screen.getByText("Side quest"));
 
+    expect(await screen.findByText("This challenge hasn't started yet.")).toBeInTheDocument();
     await waitFor(() => expect(setCheckedMock).toHaveBeenCalledTimes(2));
   });
 
