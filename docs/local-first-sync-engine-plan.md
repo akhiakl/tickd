@@ -67,6 +67,51 @@
   need the poll interval made test-controllable; noted here as a gap
   rather than silently skipped.
 
+## E2E coverage (`tests/e2e/`)
+
+- `offline-sync.spec.ts` - exercises Phases 1-2 end to end against a real
+  browser and Postgres: a checklist tick (and, separately, a Settings
+  rename) made while the write keeps failing shows correctly, survives a
+  real page reload, and lands in the database once the network recovers,
+  without ever being lost or duplicated. Uses `page.route()` to abort just
+  the Server Action's own POST (matched on the `next-action` header, the
+  same technique `fixtures/wait.ts`'s `waitForServerAction` already uses)
+  rather than `context.setOffline(true)` - a genuinely offline browser
+  context can't load a fresh document at all under this app's
+  architecture (no service worker), so `page.reload()` itself would fail
+  rather than exercise the thing under test. Closer to "degraded
+  connection" than "airplane mode," and the more common real failure mode
+  anyway.
+- `sync-status.spec.ts` - auth/membership gating on the Phase 3 endpoint,
+  and its documented "Redis not configured" fail-closed behavior (this
+  suite doesn't provision Redis). A genuine cross-session push test
+  ("does a groupmate's tick move the timestamp and get picked up by the
+  poll") needs a real Redis instance in the test environment - a CI/infra
+  decision out of scope here, so it isn't faked; this is the honest
+  boundary of what's e2e-verifiable without that.
+- **A real, reproducible race these tests found and fixed**, not a
+  theoretical one: `today-live.tsx`'s (and `checklist-settings-editor.tsx`'s)
+  mount-time reconciliation effect reads the durable queue asynchronously
+  (a real IndexedDB call in an actual browser - unlike the in-memory
+  fallback Vitest's jsdom environment exercises, which resolves near
+  -instantly). An e2e test tapping the checkbox immediately after page
+  load landed inside the real latency window of that read often enough to
+  reliably fail: the effect's async result would resolve _after_ the tap
+  and overwrite the fresh optimistic state back to what the queue looked
+  like before it. Fixed with an `epochRef` bumped synchronously by every
+  edit (`toggle()`/`rename()`/`remove()`/`addItem()`/`handleDragEnd()`);
+  the reconciliation effect captures the epoch when it starts reading the
+  queue and discards its own result if that epoch has moved by the time
+  it resolves - nothing is lost either way (the edit's own `enqueue()`
+  already persisted durably), this only decides what the _display_
+  briefly shows in that window.
+- Also caught via the e2e run's browser console (not visible to jsdom/
+  Vitest at all): `use-tx-queue-status.ts`'s `getServerSnapshot` was
+  returning a fresh object literal on every call, violating
+  `useSyncExternalStore`'s requirement that the server snapshot be
+  referentially stable when unchanged. Fixed by hoisting a single shared
+  constant instead of allocating inside the getter.
+
 ## Why, and why carefully
 
 Tickd's write path today (`src/server/actions/checklist.ts` + `TodayLive`) is already

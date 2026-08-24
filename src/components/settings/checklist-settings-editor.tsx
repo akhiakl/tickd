@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   DndContext,
   closestCenter,
@@ -50,6 +50,13 @@ export function ChecklistSettingsEditor({
     return () => drainController.setErrorHandler(null);
   }, [showToast]);
 
+  // Bumped synchronously by every edit (handleDragEnd/rename/remove/
+  // addItem below) - see today-live.tsx's epochRef for the full reasoning.
+  // Guards the reconciliation effect below against clobbering a fresher
+  // edit with a stale queue snapshot it started reading before that edit
+  // happened; confirmed reachable via e2e, not just theoretical.
+  const epochRef = useRef(0);
+
   // Phase 2 (docs/local-first-sync-engine-plan.md) - same mount-time
   // reconciliation as TodayLive's, so reopening Settings right after an
   // offline edit shows that edit immediately instead of the server's
@@ -58,9 +65,10 @@ export function ChecklistSettingsEditor({
   // needs to be called outside one to actually paint promptly.
   useEffect(() => {
     let cancelled = false;
+    const startEpoch = epochRef.current;
     void (async () => {
       const rows = (await txQueue.listPending()).filter((r) => r.payload.groupId === groupId);
-      if (cancelled || rows.length === 0) return;
+      if (cancelled || epochRef.current !== startEpoch || rows.length === 0) return;
       setOptimisticItems(applyPendingChecklistMutations(items, rows));
     })();
     return () => {
@@ -72,6 +80,7 @@ export function ChecklistSettingsEditor({
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
+    epochRef.current++;
     const from = optimisticItems.findIndex((i) => i.id === active.id);
     const to = optimisticItems.findIndex((i) => i.id === over.id);
     const next = arrayMove(optimisticItems, from, to);
@@ -87,6 +96,7 @@ export function ChecklistSettingsEditor({
   }
 
   function rename(itemId: string, label: string) {
+    epochRef.current++;
     // Plain state, not useOptimistic (see this component's earlier
     // comment on why), so the update has to be dispatched *outside*
     // startTransition to paint in the same tick as the keystroke - a
@@ -108,6 +118,7 @@ export function ChecklistSettingsEditor({
   }
 
   function remove(itemId: string) {
+    epochRef.current++;
     setOptimisticItems(optimisticItems.filter((i) => i.id !== itemId));
     startTransition(async () => {
       await txQueue.enqueue("removeChecklistItem", { groupId, itemId });
@@ -121,6 +132,7 @@ export function ChecklistSettingsEditor({
     // that's what makes a retried add idempotent instead of a duplicate
     // (see addChecklistItem's own doc in src/server/actions/checklist.ts).
     const itemId = crypto.randomUUID();
+    epochRef.current++;
     setOptimisticItems([
       ...optimisticItems,
       { id: itemId, label: "New item", position: optimisticItems.length, isSideQuest: false },

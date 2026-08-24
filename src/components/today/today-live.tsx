@@ -110,6 +110,18 @@ export function TodayLive({
   // of it for rendering, not the source of truth for this math anymore.
   const checkedRef = useRef(new Set(checkedItemIds));
 
+  // Bumped synchronously by every tap (toggle(), below) - lets the
+  // reconciliation effect notice a tap happened *while its own async
+  // queue read was in flight* and discard its now-stale result instead of
+  // clobbering a fresher optimistic update back to what the queue looked
+  // like before that tap. Confirmed reachable, not just theoretical: an
+  // e2e test tapping immediately after a fresh page load can land inside
+  // that same window, since IndexedDB's first-ever open for an origin has
+  // real (if small) latency. Nothing is lost either way - the tap's own
+  // enqueue already persisted the write durably; this only decides which
+  // value the *display* briefly shows before the next real reconciliation.
+  const epochRef = useRef(0);
+
   // Content signatures, not the raw arrays/objects - `checkedItemIds` and
   // `items` are new references on every server render regardless of
   // whether their content actually changed, and this effect should only
@@ -135,9 +147,14 @@ export function TodayLive({
   // promptly, now that this is a plain useState rather than useOptimistic.
   useEffect(() => {
     let cancelled = false;
+    const startEpoch = epochRef.current;
     void (async () => {
       const rows = (await txQueue.listPending()).filter((r) => r.payload.groupId === groupId);
-      if (cancelled) return;
+      // A tap landed while this read was in flight - see epochRef's own
+      // comment. Bail without touching state; the tap's own synchronous
+      // update already reflects the current truth better than this
+      // now-outdated snapshot would.
+      if (cancelled || epochRef.current !== startEpoch) return;
       const reconciledChecked = applyPendingChecks(new Set(checkedItemIds), rows);
       checkedRef.current = reconciledChecked;
       setOptimisticChecked(new Set(reconciledChecked));
@@ -151,6 +168,7 @@ export function TodayLive({
 
   function toggle(itemId: string) {
     if (disabled) return;
+    epochRef.current++;
     const willBeDone = !checkedRef.current.has(itemId);
     if (willBeDone) checkedRef.current.add(itemId);
     else checkedRef.current.delete(itemId);
