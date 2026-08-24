@@ -38,6 +38,29 @@ describe("txQueue (in-memory fallback - jsdom has no IndexedDB)", () => {
     expect(await txQueue.listPending()).toHaveLength(2);
   });
 
+  it("coalesces repeated renames of the same item into the latest label", async () => {
+    await txQueue.enqueue("renameChecklistItem", { groupId: "g1", itemId: "i1", label: "A" });
+    await txQueue.enqueue("renameChecklistItem", { groupId: "g1", itemId: "i1", label: "Ab" });
+    await txQueue.enqueue("renameChecklistItem", { groupId: "g1", itemId: "i1", label: "Abc" });
+    const rows = await txQueue.listPending();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].payload).toMatchObject({ label: "Abc" });
+  });
+
+  it("coalesces repeated reorders of the same group into the latest order", async () => {
+    await txQueue.enqueue("reorderChecklistItems", { groupId: "g1", orderedItemIds: ["i1", "i2"] });
+    await txQueue.enqueue("reorderChecklistItems", { groupId: "g1", orderedItemIds: ["i2", "i1"] });
+    const rows = await txQueue.listPending();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].payload).toMatchObject({ orderedItemIds: ["i2", "i1"] });
+  });
+
+  it("never coalesces addChecklistItem - each add is a genuinely distinct item", async () => {
+    await txQueue.enqueue("addChecklistItem", { groupId: "g1", itemId: "new1", label: "New item" });
+    await txQueue.enqueue("addChecklistItem", { groupId: "g1", itemId: "new2", label: "New item" });
+    expect(await txQueue.listPending()).toHaveLength(2);
+  });
+
   it("removes a row by id", async () => {
     const row = await txQueue.enqueue("setChecked", {
       groupId: "g1",
@@ -105,6 +128,38 @@ describe("validateRow", () => {
       id: "abc",
       kind: "setChecked",
       payload: { groupId: "g1", checklistItemId: "i1", checked: "yes" }, // not a boolean
+      createdAt: 0,
+      attempts: 0,
+    });
+    expect(row).toBeNull();
+  });
+
+  it("rejects an empty/too-long label for renameChecklistItem and addChecklistItem", () => {
+    expect(
+      validateRow({
+        id: "abc",
+        kind: "renameChecklistItem",
+        payload: { groupId: "g1", itemId: "i1", label: "" },
+        createdAt: 0,
+        attempts: 0,
+      }),
+    ).toBeNull();
+    expect(
+      validateRow({
+        id: "abc",
+        kind: "addChecklistItem",
+        payload: { groupId: "g1", itemId: "i1", label: "x".repeat(61) },
+        createdAt: 0,
+        attempts: 0,
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects an empty orderedItemIds for reorderChecklistItems", () => {
+    const row = validateRow({
+      id: "abc",
+      kind: "reorderChecklistItems",
+      payload: { groupId: "g1", orderedItemIds: [] },
       createdAt: 0,
       attempts: 0,
     });

@@ -2,15 +2,28 @@
 
 ## Status
 
-- **Phase 1 (durable transaction queue) — implemented**, scoped to
-  `setChecked` as planned. See `src/lib/sync/tx-queue.ts` (IndexedDB store,
-  in-memory fallback, validation, coalescing), `src/lib/sync/drain.ts`
-  (retry/backoff/circuit-breaker drain loop, error classification), and
-  `src/lib/sync/use-tx-queue-status.ts` (the status hook backing
-  `today-header.tsx`'s "syncing…" / "couldn't sync - Retry" affordance).
-  `today-live.tsx` now enqueues through this instead of the old in-memory
-  `queueRef` chain. Covered by `tx-queue.test.ts`, `drain.test.ts`, and the
-  updated `today-live.test.tsx`.
+- **Phase 1 (durable transaction queue) — implemented**, covering all five
+  checklist mutations: `setChecked`, `reorderChecklistItems`,
+  `renameChecklistItem`, `removeChecklistItem`, `addChecklistItem`. See
+  `src/lib/sync/tx-queue.ts` (IndexedDB store, in-memory fallback,
+  per-kind Zod validation reused from `src/server/validation/schemas.ts`,
+  per-kind coalescing), `src/lib/sync/drain.ts` (retry/backoff/
+  circuit-breaker drain loop, error classification, the kind→action
+  executor map), and `src/lib/sync/use-tx-queue-status.ts` (the status hook
+  backing `today-header.tsx`'s "syncing…" / "couldn't sync - Retry"
+  affordance). `today-live.tsx` and `checklist-settings-editor.tsx` both
+  enqueue through this instead of calling the server actions directly.
+  `addChecklistItem` gained an optional `clientId` param
+  (`src/server/actions/checklist.ts`) plus `onConflictDoNothing`, so a
+  retried add reuses the same row id instead of inserting the item twice -
+  the idempotency property the plan's Security section called out as a
+  precondition for queuing it. Covered by `tx-queue.test.ts`,
+  `drain.test.ts`, and the updated `today-live.test.tsx` /
+  `checklist-settings-editor.test.tsx`.
+- `reorderChecklistItems` is queued as a plain full-order overwrite, per
+  the plan's "What not to build" - no LWW/conflict-resolution layer yet.
+  Revisit only if concurrent-reorder conflicts turn out to be a real
+  problem in practice.
 - Phases 2 (local snapshot store) and 3 (live sync resolver) are still design
   only - not started.
 

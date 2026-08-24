@@ -1,4 +1,10 @@
-import { setChecked } from "@/server/actions/checklist";
+import {
+  setChecked,
+  reorderChecklistItems,
+  renameChecklistItem,
+  removeChecklistItem,
+  addChecklistItem,
+} from "@/server/actions/checklist";
 import { txQueue, validateRow, type TxKind, type TxPayload, type TxRow } from "@/lib/sync/tx-queue";
 import type { ActionResult } from "@/server/actions/result";
 
@@ -15,6 +21,10 @@ import type { ActionResult } from "@/server/actions/result";
 // called directly.
 const executors: { [K in TxKind]: (payload: TxPayload<K>) => Promise<ActionResult> } = {
   setChecked: (p) => setChecked(p.groupId, p.checklistItemId, p.checked),
+  reorderChecklistItems: (p) => reorderChecklistItems(p),
+  renameChecklistItem: (p) => renameChecklistItem(p.groupId, p.itemId, p.label),
+  removeChecklistItem: (p) => removeChecklistItem(p.groupId, p.itemId),
+  addChecklistItem: (p) => addChecklistItem(p.groupId, p.label, p.itemId),
 };
 
 const BASE_DELAY_MS = 1000;

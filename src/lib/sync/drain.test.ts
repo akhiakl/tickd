@@ -3,8 +3,16 @@ import { txQueue, __resetStoreForTests } from "./tx-queue";
 import { drainController, classifyFailure, backoffDelayMs } from "./drain";
 
 const setCheckedMock = vi.fn();
+const reorderChecklistItemsMock = vi.fn();
+const renameChecklistItemMock = vi.fn();
+const removeChecklistItemMock = vi.fn();
+const addChecklistItemMock = vi.fn();
 vi.mock("@/server/actions/checklist", () => ({
   setChecked: (...args: unknown[]) => setCheckedMock(...args),
+  reorderChecklistItems: (...args: unknown[]) => reorderChecklistItemsMock(...args),
+  renameChecklistItem: (...args: unknown[]) => renameChecklistItemMock(...args),
+  removeChecklistItem: (...args: unknown[]) => removeChecklistItemMock(...args),
+  addChecklistItem: (...args: unknown[]) => addChecklistItemMock(...args),
 }));
 
 beforeEach(async () => {
@@ -16,6 +24,10 @@ beforeEach(async () => {
 afterEach(() => {
   vi.restoreAllMocks();
   setCheckedMock.mockReset();
+  reorderChecklistItemsMock.mockReset();
+  renameChecklistItemMock.mockReset();
+  removeChecklistItemMock.mockReset();
+  addChecklistItemMock.mockReset();
   vi.useRealTimers();
 });
 
@@ -113,6 +125,33 @@ describe("DrainController", () => {
     expect(row.attempts).toBe(12);
     // Auto-retry stopped - no 13th call once marked stuck.
     expect(setCheckedMock).toHaveBeenCalledTimes(12);
+  });
+
+  it("routes each queued kind to its matching server action with the right argument order", async () => {
+    reorderChecklistItemsMock.mockResolvedValue({ ok: true });
+    renameChecklistItemMock.mockResolvedValue({ ok: true });
+    removeChecklistItemMock.mockResolvedValue({ ok: true });
+    addChecklistItemMock.mockResolvedValue({ ok: true });
+
+    await txQueue.enqueue("reorderChecklistItems", { groupId: "g1", orderedItemIds: ["i2", "i1"] });
+    await txQueue.enqueue("renameChecklistItem", { groupId: "g1", itemId: "i1", label: "New" });
+    await txQueue.enqueue("removeChecklistItem", { groupId: "g1", itemId: "i2" });
+    await txQueue.enqueue("addChecklistItem", { groupId: "g1", itemId: "new1", label: "New item" });
+
+    drainController.start();
+    await vi.waitFor(async () => {
+      expect(await txQueue.listPending()).toHaveLength(0);
+    });
+
+    expect(reorderChecklistItemsMock).toHaveBeenCalledWith({
+      groupId: "g1",
+      orderedItemIds: ["i2", "i1"],
+    });
+    expect(renameChecklistItemMock).toHaveBeenCalledWith("g1", "i1", "New");
+    expect(removeChecklistItemMock).toHaveBeenCalledWith("g1", "i2");
+    // itemId is passed through as addChecklistItem's clientId - the whole
+    // point being a retried add reuses the same server-side row id.
+    expect(addChecklistItemMock).toHaveBeenCalledWith("g1", "New item", "new1");
   });
 
   it("retryAllStuck resets a stuck row so the next drain pass attempts it again", async () => {

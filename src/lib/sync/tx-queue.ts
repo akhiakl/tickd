@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { checklistItemLabelSchema, reorderSchema } from "@/server/validation/schemas";
 
 /**
  * Durable, offline-safe queue for checklist mutations - see
@@ -15,11 +16,23 @@ const DB_NAME = "tickd-sync";
 const DB_VERSION = 1;
 const STORE = "tx_queue";
 
-// Only "setChecked" is wired up in this phase (see the plan's sequencing) -
-// extending to reorder/add/rename/remove is adding a key here plus a
-// payload schema, once each of those actions has the idempotency property
-// a retried queue entry requires (see the plan's Security section).
-export const TX_KINDS = ["setChecked"] as const;
+// Every checklist mutation the settings editor and the Today checklist can
+// make - each kind's payload schema (below) is reused straight from
+// src/server/validation/schemas.ts where one already exists, so the queue
+// can't drift from what the server itself accepts. Each of these actions is
+// safe to retry as-is (see the plan's Security section on idempotency):
+// setChecked/renameChecklistItem/removeChecklistItem are naturally
+// idempotent (same call twice = same end state), addChecklistItem is made
+// idempotent by reusing the queued row's own id as the inserted row's id
+// (onConflictDoNothing in the action), and reorderChecklistItems is a full
+// overwrite so a duplicate send just re-applies the same order.
+export const TX_KINDS = [
+  "setChecked",
+  "reorderChecklistItems",
+  "renameChecklistItem",
+  "removeChecklistItem",
+  "addChecklistItem",
+] as const;
 export type TxKind = (typeof TX_KINDS)[number];
 
 const payloadSchemas = {
@@ -27,6 +40,24 @@ const payloadSchemas = {
     groupId: z.string().min(1),
     checklistItemId: z.string().min(1),
     checked: z.boolean(),
+  }),
+  reorderChecklistItems: reorderSchema,
+  renameChecklistItem: z.object({
+    groupId: z.string().min(1),
+    itemId: z.string().min(1),
+    label: checklistItemLabelSchema,
+  }),
+  removeChecklistItem: z.object({
+    groupId: z.string().min(1),
+    itemId: z.string().min(1),
+  }),
+  addChecklistItem: z.object({
+    groupId: z.string().min(1),
+    // Client-generated, reused as the inserted row's id server-side - see
+    // the kind list's comment above on why that's what makes this action
+    // safe to queue/retry at all.
+    itemId: z.string().min(1),
+    label: checklistItemLabelSchema,
   }),
 } satisfies Record<TxKind, z.ZodType>;
 
@@ -76,17 +107,36 @@ export function validateRow(candidate: unknown): TxRow | null {
   return { ...parsed.data, payload: payload.data } as TxRow;
 }
 
-/** Stable coalescing key: a second enqueue for the same item while the
- * first is still queued replaces it in place instead of appending a new
- * row - see the plan's "Backoff, circuit breaker" section. Only meaningful
- * for kinds whose payload actually targets one identifiable thing;
- * `setChecked` does (one checklist item, one day). */
+/** Stable coalescing key: a second enqueue that resolves to the same key
+ * while the first is still queued replaces it in place instead of
+ * appending a new row - see the plan's "Backoff, circuit breaker" section.
+ * `null` opts a kind out of coalescing entirely (every enqueue is its own
+ * row) - right for `addChecklistItem` (each tap adds a genuinely distinct
+ * item) and `removeChecklistItem` (a duplicate delete is harmless, not
+ * worth the bookkeeping to dedupe). */
 function coalesceKey(kind: TxKind, payload: unknown): string | null {
-  if (kind === "setChecked") {
-    const p = payload as TxPayload<"setChecked">;
-    return `setChecked:${p.groupId}:${p.checklistItemId}`;
+  switch (kind) {
+    case "setChecked": {
+      const p = payload as TxPayload<"setChecked">;
+      return `setChecked:${p.groupId}:${p.checklistItemId}`;
+    }
+    case "reorderChecklistItems": {
+      // Keyed on groupId alone, not the order itself - only the *latest*
+      // full order should ever be sent; a stale mid-drag order queued
+      // behind it would just be overwritten again a moment later.
+      const p = payload as TxPayload<"reorderChecklistItems">;
+      return `reorderChecklistItems:${p.groupId}`;
+    }
+    case "renameChecklistItem": {
+      // Keyed on the item, not the label - retyping a name a few times
+      // before it settles should only ever send the final value.
+      const p = payload as TxPayload<"renameChecklistItem">;
+      return `renameChecklistItem:${p.groupId}:${p.itemId}`;
+    }
+    case "removeChecklistItem":
+    case "addChecklistItem":
+      return null;
   }
-  return null;
 }
 
 type Store = {
