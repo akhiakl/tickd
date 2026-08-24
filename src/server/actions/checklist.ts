@@ -35,41 +35,59 @@ async function requireAdminMembership(groupId: string, userId: string) {
   if (membership.role !== "admin") throw new Error("Only the group admin can do that.");
 }
 
-/** Toggles today's tick for one checklist item, for the signed-in member.
+/** Sets today's tick for one checklist item to `checked`, for the signed-in
+ * member. The caller (TodayLive) always already knows the state it's
+ * driving the item to - it just optimistically painted that same state -
+ * so this takes the target directly instead of reading the row first to
+ * decide which way to flip it. That cuts what used to be a
+ * read-then-write (select, then insert-or-delete: two sequential round
+ * trips before the write could even start) down to a single write, and
+ * makes repeated calls idempotent rather than order-sensitive - a real
+ * property to have given queueRef only serializes calls from the same
+ * tab, not from two tabs open on the same account.
+ *
  * The Today page already hides/disables the checklist before a group's
  * start date (see TodayChecklist's `disabled` prop) - this is the
  * server-side backstop against a stale client or a direct call bypassing
  * that UI, checked against the same UTC clock `date` below is written
  * under. */
-export async function toggleCheck(groupId: string, checklistItemId: string): Promise<ActionResult> {
+export async function setChecked(
+  groupId: string,
+  checklistItemId: string,
+  checked: boolean,
+): Promise<ActionResult> {
   const userId = await requireUserId();
-  await requireMembership(groupId, userId);
   const date = todayISODate();
 
-  const group = await db.query.groups.findFirst({ where: eq(groups.id, groupId) });
+  // Membership and the group's own row don't depend on each other - no
+  // reason to make one wait on the other.
+  const [, group] = await Promise.all([
+    requireMembership(groupId, userId),
+    db.query.groups.findFirst({ where: eq(groups.id, groupId) }),
+  ]);
   if (!group) throw new Error("That group doesn't exist.");
   if (date < group.startDate) {
     return { ok: false, error: "This challenge hasn't started yet." };
   }
 
-  const existing = await db.query.dailyChecks.findFirst({
-    where: and(
-      eq(dailyChecks.userId, userId),
-      eq(dailyChecks.checklistItemId, checklistItemId),
-      eq(dailyChecks.date, date),
-    ),
-  });
-
-  if (existing) {
-    await db.delete(dailyChecks).where(eq(dailyChecks.id, existing.id));
+  if (checked) {
+    // onConflictDoNothing against the (userId, checklistItemId, date)
+    // unique index below makes this safe to call again for a state
+    // that's already set, instead of erroring on a duplicate row.
+    await db
+      .insert(dailyChecks)
+      .values({ id: crypto.randomUUID(), groupId, userId, checklistItemId, date })
+      .onConflictDoNothing();
   } else {
-    await db.insert(dailyChecks).values({
-      id: crypto.randomUUID(),
-      groupId,
-      userId,
-      checklistItemId,
-      date,
-    });
+    await db
+      .delete(dailyChecks)
+      .where(
+        and(
+          eq(dailyChecks.userId, userId),
+          eq(dailyChecks.checklistItemId, checklistItemId),
+          eq(dailyChecks.date, date),
+        ),
+      );
   }
 
   refreshGroup(groupId);
