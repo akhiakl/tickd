@@ -68,6 +68,24 @@ class DrainController {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private started = false;
   private onError: ((message: string) => void) | null = null;
+  // Bumped whenever a queued write actually lands server-side (see
+  // sendOne's `result.ok` branch). setChecked et al. touch the same
+  // `tag:group:<id>` timestamp useGroupLiveSync polls for - without this,
+  // a device's own successful sync looks identical to a groupmate's
+  // change, and useGroupLiveSync would router.refresh() the page right
+  // after every one of your own taps finishes syncing. See
+  // getLastLocalSyncAt's own doc.
+  private lastLocalSyncAt: number | null = null;
+
+  /** How recently *this device* last landed a write, or null if it never
+   * has this session. useGroupLiveSync (src/lib/sync/use-group-live-sync.ts)
+   * uses this to tell "the timestamp moved because I just synced" apart
+   * from "the timestamp moved because a groupmate did something" - only
+   * the second should trigger a page refresh; the first is already
+   * reflected in this device's own optimistic state. */
+  getLastLocalSyncAt(): number | null {
+    return this.lastLocalSyncAt;
+  }
 
   subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
@@ -148,6 +166,7 @@ class DrainController {
     this.onError = null;
     this.status = { pendingCount: 0, stuckCount: 0 };
     this.listeners.clear();
+    this.lastLocalSyncAt = null;
   }
 
   private async runPass() {
@@ -200,6 +219,7 @@ class DrainController {
       const result = await execute(row.payload);
       if (result.ok) {
         await txQueue.remove(row.id);
+        this.lastLocalSyncAt = Date.now();
         return true;
       }
       // Terminal: the server understood the request and said no (bad

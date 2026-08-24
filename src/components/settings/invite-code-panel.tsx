@@ -5,6 +5,11 @@ import { regenerateInvite } from "@/server/actions/groups";
 import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
 
+// Same source and fallback as src/app/layout.tsx's metadataBase - a
+// hardcoded "tickd.app" here would copy a link pointing at production
+// even when running locally or on a preview deployment.
+const APP_HOST = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").host;
+
 export function InviteCodePanel({
   groupId,
   initialCode,
@@ -18,7 +23,7 @@ export function InviteCodePanel({
 
   function copy() {
     navigator.clipboard
-      .writeText(`tickd.app/join?code=${code}`)
+      .writeText(`${APP_HOST}/join?code=${code}`)
       .then(() => showToast("Invite link copied"))
       .catch(() => showToast("Couldn't copy - try selecting the code instead"));
   }

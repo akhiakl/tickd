@@ -2,8 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { drainController } from "@/lib/sync/drain";
 
 const POLL_INTERVAL_MS = 15_000;
+// A little over one poll interval: covers a sync that landed just before
+// this poll fired, without reaching so far back that an old sync could
+// mask a genuinely new groupmate change. See the self-sync guard below.
+const SELF_SYNC_GRACE_MS = POLL_INTERVAL_MS * 1.5;
 
 /**
  * Phase 3 (docs/local-first-sync-engine-plan.md): the read side of live
@@ -43,7 +48,19 @@ export function useGroupLiveSync(groupId: string) {
             lastSeenRef.current = updatedAt;
           } else if (updatedAt > lastSeenRef.current) {
             lastSeenRef.current = updatedAt;
-            router.refresh();
+            // setChecked et al. touch the same tag:group:<id> timestamp
+            // this poll watches, so this device's own write landing looks
+            // identical to a groupmate's change. Refreshing for your own
+            // already-reflected tap is exactly the jarring
+            // reload-right-after-you-just-did-something this guard
+            // exists to avoid - see DrainController.getLastLocalSyncAt's
+            // own doc. A genuine groupmate change inside this same grace
+            // window is the one case this misses; it's picked up on the
+            // very next poll instead; see SELF_SYNC_GRACE_MS's comment.
+            const lastLocalSyncAt = drainController.getLastLocalSyncAt();
+            const selfCaused =
+              lastLocalSyncAt !== null && Date.now() - lastLocalSyncAt < SELF_SYNC_GRACE_MS;
+            if (!selfCaused) router.refresh();
           }
         }
       } catch {
@@ -59,7 +76,13 @@ export function useGroupLiveSync(groupId: string) {
       void poll();
     }
 
-    if (document.visibilityState !== "hidden") void poll();
+    // The first poll only ever establishes a baseline (lastSeenRef starts
+    // null, so it can't trigger a refresh) - there's nothing to act on
+    // yet, so it doesn't need to compete with the page's own initial data
+    // fetching for network/attention. Scheduled like any other tick
+    // instead of fired immediately; `resume()` (tab refocus/reconnect)
+    // still polls right away, since that *is* meant to catch up promptly.
+    if (!cancelled) timer = setTimeout(poll, POLL_INTERVAL_MS);
 
     document.addEventListener("visibilitychange", resume);
     window.addEventListener("online", resume);
