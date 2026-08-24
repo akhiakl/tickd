@@ -9,7 +9,11 @@ import { DEFAULT_CHECKLIST_ITEMS } from "@/lib/constants";
 import { todayISODate } from "@/lib/challenge-stats";
 import { CalendarDays } from "lucide-react";
 
-const DURATIONS = [21, 31] as const;
+// Quick-pick shortcuts, not the only allowed values - the number input
+// next to them accepts anything from 1 to 365 (see createGroupSchema).
+const DURATION_PRESETS = [7, 14, 21, 30, 60, 90] as const;
+const MIN_DURATION = 1;
+const MAX_DURATION = 365;
 
 // dnd-kit is real bundle weight for a feature that's only touched once the
 // form is already open - split it into its own chunk instead of shipping
@@ -23,15 +27,21 @@ const ChecklistDraftEditor = dynamic(
 
 export function CreateGroupForm() {
   const [name, setName] = useState("");
-  const [duration, setDuration] = useState<21 | 31>(31);
+  const [duration, setDuration] = useState(31);
   // `todayISODate()` reads the real clock, so it can't run during
   // prerendering (Cache Components would freeze it at build time and serve
   // that same stale date to every visitor). Start empty and fill it in
-  // once mounted, which only ever happens at request/client time.
+  // once mounted, which only ever happens at request/client time. Also
+  // doubles as the date input's `min` (see below) - stays "" until mount,
+  // same reasoning, and an empty `min` just means no floor yet rather
+  // than briefly allowing anything.
+  const [today, setToday] = useState("");
   const [startDate, setStartDate] = useState("");
   useEffect(() => {
+    const now = todayISODate();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: today's date can only be read once mounted (see the comment above), not derived from props/state.
-    setStartDate(todayISODate());
+    setToday(now);
+    setStartDate(now);
   }, []);
   const [items, setItems] = useState(DEFAULT_CHECKLIST_ITEMS);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +50,10 @@ export function CreateGroupForm() {
   function submit(formEvent: React.FormEvent) {
     formEvent.preventDefault();
     setError(null);
+    if (!Number.isInteger(duration) || duration < MIN_DURATION || duration > MAX_DURATION) {
+      setError(`Runs for needs to be between ${MIN_DURATION} and ${MAX_DURATION} days.`);
+      return;
+    }
     startTransition(async () => {
       const result = await createGroup({ name, durationDays: duration, startDate, items });
       if (!result.ok) setError(result.error);
@@ -62,18 +76,30 @@ export function CreateGroupForm() {
       <label className="text-faint mt-5.5 mb-1.5 block text-[11px] tracking-[0.1em] uppercase">
         Runs for
       </label>
-      <div className="flex gap-2">
-        {DURATIONS.map((d) => (
-          <Pill
-            key={d}
-            type="button"
-            active={duration === d}
-            onClick={() => setDuration(d)}
-            className="flex-1"
-          >
+      <div className="flex flex-wrap gap-2">
+        {DURATION_PRESETS.map((d) => (
+          <Pill key={d} type="button" active={duration === d} onClick={() => setDuration(d)}>
             {d} days
           </Pill>
         ))}
+      </div>
+      <div className="border-text/[0.16] bg-surface mt-2 flex items-center gap-2.5 rounded-full border-[1.5px] px-4 py-3">
+        <input
+          type="number"
+          inputMode="numeric"
+          min={MIN_DURATION}
+          max={MAX_DURATION}
+          value={duration}
+          onChange={(e) => {
+            const value = Number(e.target.value);
+            if (Number.isFinite(value)) setDuration(value);
+          }}
+          aria-label="Number of days"
+          className="text-text w-16 border-0 bg-transparent p-0 text-[15px] font-semibold focus:outline-none"
+        />
+        <span className="text-muted text-[13px]">
+          days - any custom length from {MIN_DURATION} to {MAX_DURATION}
+        </span>
       </div>
 
       <label className="text-faint mt-5.5 mb-1.5 block text-[11px] tracking-[0.1em] uppercase">
@@ -84,6 +110,7 @@ export function CreateGroupForm() {
         <input
           type="date"
           value={startDate}
+          min={today}
           onChange={(e) => setStartDate(e.target.value)}
           aria-label="Starts"
           className="text-text flex-1 border-0 bg-transparent p-0 text-[15px] font-semibold focus:outline-none"

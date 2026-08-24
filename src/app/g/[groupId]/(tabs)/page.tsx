@@ -59,6 +59,13 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
 
   const groupToday = members.reduce((sum, m) => sum + (m.localCountsByDate[m.localToday] ?? 0), 0);
 
+  // Compared in the viewer's own local terms (today/startDate are both
+  // plain YYYY-MM-DD, so a string compare is a chronological one) - the
+  // real guard is toggleCheck itself rejecting the same case server-side;
+  // this just keeps the UI from pretending there's a "today" to check off
+  // before the challenge exists yet.
+  const notStartedYet = today < snapshot.startDate;
+
   return (
     <div className="pt-1.5 pb-30">
       <TodayHeader
@@ -81,16 +88,28 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
         streak={myStreak}
       />
 
+      {notStartedYet && (
+        <div className="bg-surface mx-4 mt-5.5 rounded-3xl px-4.5 py-4">
+          <div className="text-[15px] font-bold">This challenge hasn&apos;t started yet</div>
+          <div className="text-muted mt-0.5 text-[12.5px]">
+            Starts {snapshot.startDate} - the checklist unlocks that day.
+          </div>
+        </div>
+      )}
+
       <div className="flex items-baseline justify-between px-6 pt-6.5 pb-2.5">
         <span className="text-faint text-[11px] tracking-[0.12em] uppercase">
           Today&apos;s list
         </span>
-        <span className="text-muted text-[12px]">tap to tick</span>
+        <span className="text-muted text-[12px]">
+          {notStartedYet ? "not started yet" : "tap to tick"}
+        </span>
       </div>
       <TodayChecklist
         groupId={groupId}
         items={items}
         checkedItemIds={me.localItemsByDate[today] ?? []}
+        disabled={notStartedYet}
       />
 
       <div className="mx-4 mt-5.5 flex gap-2.5">

@@ -36,23 +36,31 @@ export function TodayHeader({
     <div className="flex items-start justify-between gap-3 px-5.5 pt-1.5">
       <div className="min-w-0 flex-1">
         <GroupSwitcher groups={groups} currentGroupId={groupId} groupName={groupName} />
-        <span className="text-muted mt-0.5 block text-[13px]" data-testid="today-header-day">
-          Day {dayIndex} of {durationDays} - {today}
-        </span>
+        <div className="mt-0.5 flex min-w-0 items-center gap-2.5">
+          <span className="text-muted truncate text-[13px]" data-testid="today-header-day">
+            Day {dayIndex} of {durationDays} - {today}
+          </span>
+          {/* Sits with the group's own title block, not the account-level
+              icons on the right (ThemeToggle/Avatar apply the same
+              regardless of which group is open) - this is scoped to
+              *this* group, so it reads as part of the group identity, not
+              global nav. Text link, not a circular icon button, so it
+              doesn't visually match that row either. */}
+          {isAdmin && (
+            <Link
+              href={`/g/${groupId}/settings`}
+              className="text-muted hover:text-text flex flex-none items-center gap-1 text-[12px] font-bold"
+            >
+              <Settings size={12} strokeWidth={2.4} />
+              Manage
+            </Link>
+          )}
+        </div>
       </div>
       <ThemeToggle />
       <Link href="/account" aria-label="Your account" className="flex-none">
         <Avatar name={myName} color={myColor} seed={myAvatarSeed} size={36} />
       </Link>
-      {isAdmin && (
-        <Link
-          href={`/g/${groupId}/settings`}
-          aria-label="Group settings"
-          className="border-text/[0.16] hover:bg-text/[0.06] flex h-9 w-9 flex-none items-center justify-center rounded-full border-[1.5px] transition-colors"
-        >
-          <Settings size={17} strokeWidth={2} />
-        </Link>
-      )}
     </div>
   );
 }

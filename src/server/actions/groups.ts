@@ -9,6 +9,8 @@ import { checklistItems, groupMembers, groups } from "@/server/db/schema";
 import { requireUserId } from "@/server/auth/require-user";
 import { rateLimit } from "@/server/rate-limit";
 import { createGroupSchema, joinGroupSchema } from "@/server/validation/schemas";
+import { getUserById } from "@/server/queries/users";
+import { localISODate } from "@/lib/timezone";
 import type { ActionResult } from "./result";
 
 const TOO_MANY_ATTEMPTS: ActionResult = { ok: false, error: "Too many attempts. Try again later." };
@@ -34,6 +36,16 @@ export async function createGroup(input: unknown): Promise<ActionResult & { grou
   if (!allowed) return TOO_MANY_ATTEMPTS;
 
   const { name, durationDays, startDate, items } = parsed.data;
+
+  // "Today" in the creator's own elected timezone (UTC if they haven't
+  // set one) - the client already disables past dates in the picker (see
+  // CreateGroupForm), this is the server-side backstop against a stale
+  // client clock or a direct call bypassing the form.
+  const creator = await getUserById(userId);
+  const creatorToday = localISODate(new Date(), creator?.timezone ?? null);
+  if (startDate < creatorToday) {
+    return { ok: false, error: "Start date can't be in the past." };
+  }
 
   const groupId = crypto.randomUUID();
   await db.transaction(async (tx) => {

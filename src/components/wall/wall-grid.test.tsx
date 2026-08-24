@@ -30,49 +30,64 @@ const items: ChecklistItemView[] = [
   { id: "i2", label: "Read", position: 1, isSideQuest: false },
 ];
 
+// 2026-01-01 is a Thursday. Challenge runs Jan 1 - Jan 10.
 const members = [
   {
     userId: "u1",
     name: "Ada",
+    color: "#55743f",
+    avatarSeed: "seed1",
     isMe: true,
-    countsByDate: { "2026-01-01": 1 },
-    itemsByDate: { "2026-01-01": ["i1"] },
+    localToday: "2026-01-05",
+    localCountsByDate: { "2026-01-01": 1 },
+    localItemsByDate: { "2026-01-01": ["i1"] },
   },
   {
     userId: "u2",
     name: "Marcus",
+    color: "#8c491a",
+    avatarSeed: "seed2",
     isMe: false,
-    countsByDate: { "2026-01-01": 2 },
-    itemsByDate: { "2026-01-01": ["i1", "i2"] },
+    localToday: "2026-01-05",
+    localCountsByDate: { "2026-01-01": 2 },
+    localItemsByDate: { "2026-01-01": ["i1", "i2"] },
   },
 ];
 
 describe("WallGrid", () => {
-  it("ranks members by total ticks, highest first", () => {
-    render(<WallGrid members={members} dates={["2026-01-01"]} today="2026-01-01" items={items} />);
-    const names = screen.getAllByText(/^(You|Marcus)$/).map((el) => el.textContent);
-    expect(names).toEqual(["Marcus", "You"]);
+  it("shows the month containing the selected member's own today", () => {
+    render(<WallGrid members={members} startDate="2026-01-01" durationDays={10} items={items} />);
+    expect(screen.getByText("January 2026")).toBeInTheDocument();
   });
 
   it("opens a day's detail panel on click and closes it via the close button", () => {
-    render(<WallGrid members={members} dates={["2026-01-01"]} today="2026-01-01" items={items} />);
-    fireEvent.click(screen.getByLabelText(/^Marcus, day 1,/));
-    expect(screen.getByText("2 of 2 done")).toBeInTheDocument();
+    render(<WallGrid members={members} startDate="2026-01-01" durationDays={10} items={items} />);
+    fireEvent.click(screen.getByLabelText("2026-01-01, 1 of 2 done"));
+    expect(screen.getByText("1 of 2 done")).toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText("Close"));
-    expect(screen.queryByText("2 of 2 done")).not.toBeInTheDocument();
+    expect(screen.queryByText("1 of 2 done")).not.toBeInTheDocument();
   });
 
-  it("disables future-day cells so they can't be selected", () => {
-    render(
-      <WallGrid
-        members={members}
-        dates={["2026-01-01", "2026-01-02"]}
-        today="2026-01-01"
-        items={items}
-      />,
-    );
-    const futureCell = screen.getByLabelText("you, day 2");
-    expect(futureCell).toBeDisabled();
+  it("disables days after the viewed member's own today", () => {
+    render(<WallGrid members={members} startDate="2026-01-01" durationDays={10} items={items} />);
+    expect(screen.getByLabelText("2026-01-10")).toBeDisabled();
+  });
+
+  it("disables days before the challenge started", () => {
+    render(<WallGrid members={members} startDate="2026-01-05" durationDays={10} items={items} />);
+    expect(screen.getByLabelText("2026-01-01")).toBeDisabled();
+  });
+
+  it("switches which member's data is shown", () => {
+    render(<WallGrid members={members} startDate="2026-01-01" durationDays={10} items={items} />);
+    fireEvent.click(screen.getByRole("button", { name: "Marcus" }));
+    fireEvent.click(screen.getByLabelText("2026-01-01, 2 of 2 done"));
+    expect(screen.getByText("Marcus - 2026-01-01")).toBeInTheDocument();
+  });
+
+  it("disables the previous-month button at the start of the challenge's range", () => {
+    render(<WallGrid members={members} startDate="2026-01-01" durationDays={10} items={items} />);
+    expect(screen.getByLabelText("Previous month")).toBeDisabled();
   });
 });
