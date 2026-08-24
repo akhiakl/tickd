@@ -18,6 +18,15 @@ vi.mock("@/server/actions/checklist", () => ({
   addChecklistItem: vi.fn().mockResolvedValue({ ok: true }),
 }));
 
+// TodayLive's Phase 3 live-sync poll (useGroupLiveSync) needs an App
+// Router context useRouter() can find, which jsdom/Vitest doesn't provide
+// on its own - stub the whole module instead. The poll's own fetch is
+// stubbed globally below so it never makes a real network call.
+const routerRefreshMock = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: routerRefreshMock }),
+}));
+
 const items: ChecklistItemView[] = [
   { id: "i1", label: "Wake early", position: 0, isSideQuest: false },
   { id: "i2", label: "Side quest", position: 1, isSideQuest: true },
@@ -36,12 +45,17 @@ beforeEach(async () => {
   __resetStoreForTests();
   await txQueue.clear();
   drainController.__resetForTests();
+  // Never resolves ok - useGroupLiveSync's poll no-ops on a non-ok
+  // response, same as a real network blip on this read-only endpoint.
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   setCheckedMock.mockReset();
   renameChecklistItemMock.mockClear();
+  routerRefreshMock.mockClear();
 });
 
 describe("TodayLive", () => {

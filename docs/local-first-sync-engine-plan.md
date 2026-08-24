@@ -45,7 +45,27 @@
     the pattern this file's toast/confetti calls already used, for the
     same reason: a `setState` made inside a still-pending transition
     doesn't paint until that transition's async work finishes).
-- Phase 3 (live sync resolver) is still design only - not started.
+- **Phase 3 (live sync resolver) — implemented as polling**, not the
+  originally-sketched SSE + Redis pub/sub - see that section below for
+  why (short version: `@upstash/redis` is REST-only, no `SUBSCRIBE`; a
+  real fix would mean a new `ioredis` dependency plus a persistent
+  per-client connection under Vercel's function-duration limits). New
+  `src/app/api/g/[groupId]/sync-status/route.ts` (a tiny authenticated,
+  rate-limited endpoint reusing the `tag:group:<id>` timestamp already
+  written for cache invalidation) and `src/lib/sync/use-group-live-sync.ts`
+  (a 15s poll, paused while the tab is hidden, that calls `router.refresh()`
+  on a change), wired into `today-live.tsx`. Also fixed a bug this exposed:
+  the reconciliation effect from Phase 2 was mount-only, so a
+  `router.refresh()`'s fresh props would arrive but never actually get
+  rendered - re-keyed it off `checkedItemIds`/`items` content signatures so
+  it re-runs on every genuine prop change, not just mount. Covered by
+  `use-group-live-sync.test.ts`; the route handler itself follows this
+  repo's existing convention of leaving route handlers to the Playwright
+  suite rather than Vitest (see `vitest.config.ts`'s coverage-include
+  comment) - no dedicated e2e test added yet for the live-sync path
+  specifically, since a real one needs two concurrent sessions and would
+  need the poll interval made test-controllable; noted here as a gap
+  rather than silently skipped.
 
 ## Why, and why carefully
 
@@ -216,27 +236,74 @@ or the queue is mid-backoff.
   worker + cached app shell) to scope separately - this phase deliberately
   doesn't reach for it.
 
-## Phase 3 — Live sync resolver (cross-member push)
+## Phase 3 — Live sync resolver (cross-member push) — implemented as polling
 
 **Goal:** when a groupmate ticks an item, everyone else's open tab updates
 without a manual reload.
 
-- Lowest-lift option given the stack (Vercel + no existing WS
-  infrastructure): Server-Sent Events. Add `src/app/api/g/[groupId]/events/
-route.ts` streaming a `group:<id>` channel; `setChecked` et al. publish an
-  "invalidate group X" message after their existing `updateTag` call (reuse
-  `@upstash/redis`, already a dependency, as the pub/sub backbone — no new
-  infra to provision).
-- Client subscribes per open group page, and on a message either (a) merges
-  a small diff payload if the event carries one, or (b) triggers the
-  existing `getGroupCore` re-fetch path — (b) first, since it reuses code
-  that already exists and is already correct; a diff-based merge is a later
-  optimization once (a) proves necessary.
-- This phase is genuinely optional relative to Phases 1–2: Tickd's data is
-  low-frequency (a handful of ticks/day per person), so "catches up on next
-  navigation" may be an acceptable UX bar. Recommend building Phases 1–2
-  first and revisiting whether Phase 3 earns its complexity based on real
-  usage/feedback.
+### Scope note: why this isn't SSE + Redis pub/sub
+
+The original sketch assumed `@upstash/redis` could serve as a pub/sub
+backbone for an SSE stream. It can't, for this stack specifically:
+
+- `@upstash/redis` (the only Redis client already in the app - see
+  `cache-handlers/redis-remote.js` and `src/server/rate-limit.ts`) is a
+  **REST** client - request/response only. Real Redis `SUBSCRIBE` needs a
+  persistent TCP connection, which means a different client (`ioredis`)
+  against Upstash's TCP endpoint - a materially different dependency and
+  connection model from the fetch-based one used everywhere else in this
+  app.
+- Independent of the Redis question, a genuinely live SSE connection needs
+  to stay open per connected client for as long as they're watching -
+  which runs straight into Vercel serverless function duration limits
+  (reconnect/backoff logic, cost per concurrent open connection, and a
+  materially different deployment shape than the rest of this
+  request/response app).
+
+Asked directly, the choice was: accept that added dependency + connection
+model + duration-limit complexity for true push, or ship something that
+delivers the same user-visible outcome (no manual reload needed) within the
+infrastructure already in place. Went with the latter:
+
+**What's implemented: lightweight polling, reusing existing infrastructure.**
+
+- `src/app/api/g/[groupId]/sync-status/route.ts` - a tiny authenticated,
+  membership-checked, rate-limited GET returning the _same_
+  `tag:group:<id>` timestamp `cache-handlers/redis-remote.js` already
+  writes on every `updateTag` call (every checklist mutation already makes
+  this call via `refreshGroup` in `src/server/actions/checklist.ts`, to
+  invalidate `getGroupCore`'s shared cache). No new write path - this
+  reads infrastructure that already existed for cache invalidation.
+- `src/lib/sync/use-group-live-sync.ts` - a client hook polling that
+  endpoint every 15s, comparing against its own last-seen value, and
+  calling `router.refresh()` (a normal Next.js re-render of the current
+  route's Server Components, not a client-side merge) the moment it sees
+  the timestamp move. Paused entirely (no timer running at all) while the
+  tab is hidden, resumed immediately on refocus or the browser's `online`
+  event rather than waiting out the rest of the interval.
+- Wired into `today-live.tsx` only (the highest-traffic surface) - Wall/
+  Ranks/Settings can adopt the same hook trivially later if staleness
+  there turns out to matter.
+- **A real bug this exposed and fixed:** `router.refresh()` only helps if
+  the component that receives the fresh props actually re-derives its
+  rendered state from them. `today-live.tsx`'s `optimisticChecked`/
+  `optimisticItems` were plain `useState` seeded once via a lazy
+  initializer (see Phase 2's note on why they're not `useOptimistic`) -
+  which meant a live-sync-triggered refresh would fetch fresh data and
+  hand it down as new props, and the component would silently keep
+  rendering the old state anyway. Fixed by re-keying the reconciliation
+  effect (Phase 2) off _content signatures_ of `checkedItemIds`/`items`
+  rather than running it mount-only, so it re-runs on every genuine prop
+  change - re-basing onto the fresh server data and re-applying whatever's
+  still in the local queue on top, so a groupmate's edit and this device's
+  own not-yet-sent one both end up reflected together.
+- Trade-off versus true push: up to ~15s of latency before a groupmate's
+  tick appears, versus sub-second. Given Tickd's actual data shape (a
+  handful of ticks/day per person, not a live collaborative document),
+  this is judged an acceptable bar - revisit toward true SSE/pub-sub only
+  if real usage shows 15s is a genuinely reported problem, at which point
+  the `ioredis` + persistent-connection trade-off above is worth
+  re-litigating with real evidence behind it.
 
 ## What not to build
 

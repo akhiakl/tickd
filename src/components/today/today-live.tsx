@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition, type ReactNode } from "reac
 import { txQueue } from "@/lib/sync/tx-queue";
 import { drainController } from "@/lib/sync/drain";
 import { applyPendingChecklistMutations, applyPendingChecks } from "@/lib/sync/reconcile";
+import { useGroupLiveSync } from "@/lib/sync/use-group-live-sync";
 import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
 import { Confetti } from "@/components/ui/confetti";
@@ -88,6 +89,14 @@ export function TodayLive({
     return () => drainController.setErrorHandler(null);
   }, [showToast]);
 
+  // Phase 3 (docs/local-first-sync-engine-plan.md): polls for a
+  // groupmate's change and, on one, calls router.refresh() - which hands
+  // this component fresh `checkedItemIds`/`items` props. The reconciliation
+  // effect below is what actually makes that refresh visible (see its own
+  // comment): without it, fresh props would arrive but plain useState
+  // wouldn't pick them up.
+  useGroupLiveSync(groupId);
+
   // The running true count of checked items, mutated synchronously on
   // every tap - not derived from `optimisticChecked` (React state) at
   // toggle-call time. Two taps fired back to back are both handled
@@ -101,36 +110,44 @@ export function TodayLive({
   // of it for rendering, not the source of truth for this math anymore.
   const checkedRef = useRef(new Set(checkedItemIds));
 
+  // Content signatures, not the raw arrays/objects - `checkedItemIds` and
+  // `items` are new references on every server render regardless of
+  // whether their content actually changed, and this effect should only
+  // redo reconciliation when it did (on mount, and again whenever fresh
+  // server data actually lands - notably from useGroupLiveSync's
+  // router.refresh() above, or the mutation's own eventual revalidation).
+  const checkedSignature = checkedItemIds.join(",");
+  const itemsSignature = items.map((item) => `${item.id}:${item.label}:${item.position}`).join("|");
+
   // Phase 2 (docs/local-first-sync-engine-plan.md): reconciles anything
-  // still sitting in the durable queue into the initial render, once on
-  // mount. Without this, a reload right after an offline tap (or an
-  // offline settings edit that hasn't drained yet) would briefly show the
-  // server's last-synced state instead of what's actually about to be
-  // sent - the checkbox looking un-ticked again, or a rename not showing,
-  // until the queue catches up. Silent by construction: this only ever
-  // corrects the render to match intent already recorded in the queue, it
-  // never toasts or celebrates (that stays tied to an actual tap). Not
-  // wrapped in startTransition - see toggle()'s own comment below on why
-  // a plain setState needs to be called outside one to actually paint
+  // still sitting in the durable queue on top of the latest server props.
+  // On mount, this is what makes an offline tap (or item edit) that
+  // hasn't drained yet show correctly instead of the server's
+  // last-synced state. On a later prop change (Phase 3's live sync, or
+  // this device's own write finally landing), re-running it is what keeps
+  // a still-queued write from being clobbered by fresher-but-incomplete
+  // server data arriving in the meantime - a groupmate's edit and this
+  // device's own not-yet-sent one both need to be reflected together.
+  // Silent by construction either way: no toast/confetti, this only ever
+  // corrects the render to match intent already recorded in the queue.
+  // Not wrapped in startTransition - see toggle()'s own comment below on
+  // why a plain setState needs to be called outside one to actually paint
   // promptly, now that this is a plain useState rather than useOptimistic.
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       const rows = (await txQueue.listPending()).filter((r) => r.payload.groupId === groupId);
-      if (cancelled || rows.length === 0) return;
-      const reconciledChecked = applyPendingChecks(checkedRef.current, rows);
+      if (cancelled) return;
+      const reconciledChecked = applyPendingChecks(new Set(checkedItemIds), rows);
       checkedRef.current = reconciledChecked;
       setOptimisticChecked(new Set(reconciledChecked));
-      setOptimisticItems(applyPendingChecklistMutations(items, rows));
+      setOptimisticItems(rows.length ? applyPendingChecklistMutations(items, rows) : items);
     })();
     return () => {
       cancelled = true;
     };
-    // Deliberately mount-only (per groupId) - a later change to `items`/
-    // `checkedItemIds` is the server's own fresher data winning, which
-    // should render as-is, not be re-diffed against the queue again.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupId]);
+  }, [groupId, checkedSignature, itemsSignature]);
 
   function toggle(itemId: string) {
     if (disabled) return;
