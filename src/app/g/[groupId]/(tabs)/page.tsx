@@ -1,13 +1,16 @@
 import { auth } from "@/auth";
 import { getGroupSnapshot } from "@/server/queries/group-snapshot";
 import { getMyGroups } from "@/server/queries/my-groups";
-import { computeTotal, currentStreakWithToday, dateRange } from "@/lib/challenge-stats";
+import {
+  computeStreak,
+  computeTotal,
+  currentStreakWithToday,
+  dateRange,
+} from "@/lib/challenge-stats";
 import { TodayHeader } from "@/components/today/today-header";
-import { TodayStatsPanel } from "@/components/today/today-stats-panel";
-import { TodayChecklist } from "@/components/today/today-checklist";
+import { TodayLive } from "@/components/today/today-live";
 import { MemberList, type MemberListRow } from "@/components/today/member-list";
 import { ShareButton } from "@/components/today/share-button";
-import { StreakMilestoneToast } from "@/components/today/streak-milestone-toast";
 import { NewBadgeToast } from "@/components/today/new-badge-toast";
 import { GroupMascot } from "@/components/today/group-mascot";
 import { earnedBadges } from "@/lib/achievements";
@@ -34,9 +37,10 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
   // me.isMe - so these two stay in lockstep for the viewer's own checklist.
   const dates = dateRange(snapshot.startDate, dayIndex);
 
-  const doneToday = me.localCountsByDate[today] ?? 0;
   const myCounts = dates.map((d) => me.localCountsByDate[d] ?? 0);
-  const myStreak = currentStreakWithToday(myCounts);
+  // The streak walking back through yesterday only, excluding today's own
+  // contribution - see TodayLive's `priorStreak` prop comment for why.
+  const myPriorStreak = computeStreak(myCounts.slice(0, -1));
 
   // Every other member's row walks *their own* timezone (localDayIndex/
   // localCountsByDate), independent of the viewer's today/dayIndex above -
@@ -66,7 +70,7 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
 
   // Compared in the viewer's own local terms (today/startDate are both
   // plain YYYY-MM-DD, so a string compare is a chronological one) - the
-  // real guard is toggleCheck itself rejecting the same case server-side;
+  // real guard is setChecked itself rejecting the same case server-side;
   // this just keeps the UI from pretending there's a "today" to check off
   // before the challenge exists yet.
   const notStartedYet = today < snapshot.startDate;
@@ -97,40 +101,36 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
         groups={groups}
       />
 
-      <TodayStatsPanel
-        doneToday={doneToday}
-        itemCount={items.length}
-        dayIndex={dayIndex}
-        durationDays={durationDays}
-        streak={myStreak}
-      />
-
-      {notStartedYet && (
-        <div className="bg-surface mx-4 mt-5.5 rounded-3xl px-4.5 py-4">
-          <div className="text-[15px] font-bold">This challenge hasn&apos;t started yet</div>
-          <div className="text-muted mt-0.5 text-[12.5px]">
-            Starts {snapshot.startDate} - the checklist unlocks that day.
-          </div>
-        </div>
-      )}
-
-      <GroupMascot avgStreak={avgStreak} />
-
-      <div className="flex items-baseline justify-between px-6 pt-6.5 pb-2.5">
-        <span className="text-faint text-[11px] tracking-[0.12em] uppercase">
-          Today&apos;s list
-        </span>
-        <span className="text-muted text-[12px]">
-          {notStartedYet ? "not started yet" : "tap to tick"}
-        </span>
-      </div>
-      <TodayChecklist
+      <TodayLive
         groupId={groupId}
         items={items}
         checkedItemIds={me.localItemsByDate[today] ?? []}
         today={today}
         disabled={notStartedYet}
-      />
+        dayIndex={dayIndex}
+        durationDays={durationDays}
+        priorStreak={myPriorStreak}
+      >
+        {notStartedYet && (
+          <div className="bg-surface mx-4 mt-5.5 rounded-3xl px-4.5 py-4">
+            <div className="text-[15px] font-bold">This challenge hasn&apos;t started yet</div>
+            <div className="text-muted mt-0.5 text-[12.5px]">
+              Starts {snapshot.startDate} - the checklist unlocks that day.
+            </div>
+          </div>
+        )}
+
+        <GroupMascot avgStreak={avgStreak} />
+
+        <div className="flex items-baseline justify-between px-6 pt-6.5 pb-2.5">
+          <span className="text-faint text-[11px] tracking-[0.12em] uppercase">
+            Today&apos;s list
+          </span>
+          <span className="text-muted text-[12px]">
+            {notStartedYet ? "not started yet" : "tap to tick"}
+          </span>
+        </div>
+      </TodayLive>
 
       <div className="mx-4 mt-5.5 flex gap-2.5">
         <div className="bg-surface flex-1 rounded-3xl px-4.5 py-4">
@@ -156,7 +156,6 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
       <MemberList groupId={groupId} rows={memberRows} />
 
       <ShareButton groupId={groupId} />
-      <StreakMilestoneToast groupId={groupId} streak={myStreak} />
       <NewBadgeToast groupId={groupId} earnedBadgeIds={myBadgeIds} />
     </div>
   );
