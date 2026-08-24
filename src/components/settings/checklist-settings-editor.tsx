@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   DndContext,
   closestCenter,
@@ -16,12 +16,11 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import {
-  addChecklistItem,
-  removeChecklistItem,
-  renameChecklistItem,
-  reorderChecklistItems,
-} from "@/server/actions/checklist";
+import { txQueue } from "@/lib/sync/tx-queue";
+import { drainController } from "@/lib/sync/drain";
+import { applyPendingChecklistMutations } from "@/lib/sync/reconcile";
+import { useToast } from "@/lib/use-toast";
+import { Toast } from "@/components/ui/toast";
 import { SortableItemRow } from "@/components/checklist/sortable-item-row";
 import type { ChecklistItemView } from "@/types/domain";
 
@@ -33,38 +32,114 @@ export function ChecklistSettingsEditor({
   items: ChecklistItemView[];
 }) {
   const [, startTransition] = useTransition();
-  const [optimisticItems, setOptimisticItems] = useOptimistic(items);
+  // Plain useState, not useOptimistic - see today-live.tsx's comment on
+  // the same choice: useOptimistic reverts to `items` once its enclosing
+  // transition settles, which would silently undo the mount-time
+  // reconciliation effect below.
+  const [optimisticItems, setOptimisticItems] = useState(items);
+  const { message, showToast } = useToast();
+
+  // Same durable-queue path as the Today checklist's setChecked - see
+  // src/lib/sync/drain.ts and docs/local-first-sync-engine-plan.md. A
+  // terminal failure (not an admin, a bad label, ...) surfaces here the
+  // same way it would have from a direct rejected call; a transport
+  // failure is retried in the background instead.
+  useEffect(() => {
+    drainController.setErrorHandler(showToast);
+    drainController.start();
+    return () => drainController.setErrorHandler(null);
+  }, [showToast]);
+
+  // Bumped synchronously by every edit (handleDragEnd/rename/remove/
+  // addItem below) - see today-live.tsx's epochRef for the full reasoning.
+  // Guards the reconciliation effect below against clobbering a fresher
+  // edit with a stale queue snapshot it started reading before that edit
+  // happened; confirmed reachable via e2e, not just theoretical.
+  const epochRef = useRef(0);
+
+  // Phase 2 (docs/local-first-sync-engine-plan.md) - same mount-time
+  // reconciliation as TodayLive's, so reopening Settings right after an
+  // offline edit shows that edit immediately instead of the server's
+  // last-synced list until the queue drains. Not wrapped in
+  // startTransition - see rename()'s own comment on why a plain setState
+  // needs to be called outside one to actually paint promptly.
+  useEffect(() => {
+    let cancelled = false;
+    const startEpoch = epochRef.current;
+    void (async () => {
+      const rows = (await txQueue.listPending()).filter((r) => r.payload.groupId === groupId);
+      if (cancelled || epochRef.current !== startEpoch || rows.length === 0) return;
+      setOptimisticItems(applyPendingChecklistMutations(items, rows));
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupId]);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
+    epochRef.current++;
     const from = optimisticItems.findIndex((i) => i.id === active.id);
     const to = optimisticItems.findIndex((i) => i.id === over.id);
     const next = arrayMove(optimisticItems, from, to);
 
+    setOptimisticItems(next);
     startTransition(async () => {
-      setOptimisticItems(next);
-      await reorderChecklistItems({ groupId, orderedItemIds: next.map((i) => i.id) });
+      await txQueue.enqueue("reorderChecklistItems", {
+        groupId,
+        orderedItemIds: next.map((i) => i.id),
+      });
+      drainController.kick();
     });
   }
 
   function rename(itemId: string, label: string) {
+    epochRef.current++;
+    // Plain state, not useOptimistic (see this component's earlier
+    // comment on why), so the update has to be dispatched *outside*
+    // startTransition to paint in the same tick as the keystroke - a
+    // setState made inside a still-pending transition doesn't actually
+    // paint until that transition's async work finishes.
+    setOptimisticItems(optimisticItems.map((i) => (i.id === itemId ? { ...i, label } : i)));
     startTransition(async () => {
-      setOptimisticItems(optimisticItems.map((i) => (i.id === itemId ? { ...i, label } : i)));
-      await renameChecklistItem(groupId, itemId, label);
+      const row = await txQueue.enqueue("renameChecklistItem", { groupId, itemId, label });
+      // Same message the server would have returned for the same bad
+      // input (checklistItemLabelSchema) - checked client-side first so
+      // typing an empty/too-long name fails instantly instead of after a
+      // round trip that was never going to succeed.
+      if (!row) {
+        showToast("Give the item a name.");
+        return;
+      }
+      drainController.kick();
     });
   }
 
   function remove(itemId: string) {
+    epochRef.current++;
+    setOptimisticItems(optimisticItems.filter((i) => i.id !== itemId));
     startTransition(async () => {
-      setOptimisticItems(optimisticItems.filter((i) => i.id !== itemId));
-      await removeChecklistItem(groupId, itemId);
+      await txQueue.enqueue("removeChecklistItem", { groupId, itemId });
+      drainController.kick();
     });
   }
 
   function addItem() {
+    // Generated here (not left to the server) so the same id both paints
+    // the optimistic row below and becomes the inserted row's real id -
+    // that's what makes a retried add idempotent instead of a duplicate
+    // (see addChecklistItem's own doc in src/server/actions/checklist.ts).
+    const itemId = crypto.randomUUID();
+    epochRef.current++;
+    setOptimisticItems([
+      ...optimisticItems,
+      { id: itemId, label: "New item", position: optimisticItems.length, isSideQuest: false },
+    ]);
     startTransition(async () => {
-      await addChecklistItem(groupId, "New item");
+      await txQueue.enqueue("addChecklistItem", { groupId, itemId, label: "New item" });
+      drainController.kick();
     });
   }
 
@@ -77,7 +152,7 @@ export function ChecklistSettingsEditor({
   );
 
   return (
-    <div>
+    <div className="relative">
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={optimisticItems} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-1.5" data-testid="checklist-items">
@@ -101,6 +176,7 @@ export function ChecklistSettingsEditor({
       >
         + Add an item
       </button>
+      <Toast message={message} />
     </div>
   );
 }

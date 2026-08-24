@@ -1,7 +1,10 @@
 "use client";
 
-import { useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";
-import { setChecked } from "@/server/actions/checklist";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { txQueue } from "@/lib/sync/tx-queue";
+import { drainController } from "@/lib/sync/drain";
+import { applyPendingChecklistMutations, applyPendingChecks } from "@/lib/sync/reconcile";
+import { useGroupLiveSync } from "@/lib/sync/use-group-live-sync";
 import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
 import { Confetti } from "@/components/ui/confetti";
@@ -61,25 +64,38 @@ export function TodayLive({
 }) {
   const [, startTransition] = useTransition();
   const { message, showToast } = useToast();
-  const [optimisticChecked, setOptimisticChecked] = useOptimistic(new Set(checkedItemIds));
+  // Plain useState, not useOptimistic: useOptimistic reverts its value
+  // back to the base (checkedItemIds/items) the moment its enclosing
+  // transition settles, which is exactly right for a tap's own in-flight
+  // write but wrong for the mount-time reconciliation below - that
+  // correction needs to *stick* until fresh server props actually arrive
+  // (the next navigation), not snap back once its own transition ends.
+  const [optimisticChecked, setOptimisticChecked] = useState(() => new Set(checkedItemIds));
+  const [optimisticItems, setOptimisticItems] = useState(items);
   // Bumped (never reset) each time a checkmark lands the last item and
   // hasn't already been celebrated today - see Confetti's own comment for
   // why a changing value is its whole trigger API, rather than a boolean
   // it'd have to be reset back to false.
   const [celebration, setCelebration] = useState(0);
 
-  // Serializes the actual network writes, one at a time - the optimistic
-  // checkmark above still updates instantly per tap regardless. Without
-  // this, rapidly ticking several boxes fires that many *concurrent*
-  // setChecked calls, each independently invalidating and repopulating
-  // the group's shared server cache (getGroupCore's `use cache: remote`);
-  // whichever regeneration happens to land last wins the cache, which
-  // isn't guaranteed to be the one that started last. A reload shortly
-  // after a fast multi-tap could then show some of those taps as never
-  // having happened, even though every write itself succeeded. Running
-  // them strictly in order removes the race: each write's own cache
-  // invalidation only ever follows a write that's already committed.
-  const queueRef = useRef<Promise<unknown>>(Promise.resolve());
+  // Surfaces a terminal queue failure (bad input, "hasn't started yet", a
+  // membership check that failed server-side) the same way a direct
+  // rejected setChecked call used to - a transport failure never reaches
+  // here, it's retried by the drain controller instead. See
+  // docs/local-first-sync-engine-plan.md and src/lib/sync/drain.ts.
+  useEffect(() => {
+    drainController.setErrorHandler(showToast);
+    drainController.start();
+    return () => drainController.setErrorHandler(null);
+  }, [showToast]);
+
+  // Phase 3 (docs/local-first-sync-engine-plan.md): polls for a
+  // groupmate's change and, on one, calls router.refresh() - which hands
+  // this component fresh `checkedItemIds`/`items` props. The reconciliation
+  // effect below is what actually makes that refresh visible (see its own
+  // comment): without it, fresh props would arrive but plain useState
+  // wouldn't pick them up.
+  useGroupLiveSync(groupId);
 
   // The running true count of checked items, mutated synchronously on
   // every tap - not derived from `optimisticChecked` (React state) at
@@ -94,29 +110,87 @@ export function TodayLive({
   // of it for rendering, not the source of truth for this math anymore.
   const checkedRef = useRef(new Set(checkedItemIds));
 
+  // Bumped synchronously by every tap (toggle(), below) - lets the
+  // reconciliation effect notice a tap happened *while its own async
+  // queue read was in flight* and discard its now-stale result instead of
+  // clobbering a fresher optimistic update back to what the queue looked
+  // like before that tap. Confirmed reachable, not just theoretical: an
+  // e2e test tapping immediately after a fresh page load can land inside
+  // that same window, since IndexedDB's first-ever open for an origin has
+  // real (if small) latency. Nothing is lost either way - the tap's own
+  // enqueue already persisted the write durably; this only decides which
+  // value the *display* briefly shows before the next real reconciliation.
+  const epochRef = useRef(0);
+
+  // Content signatures, not the raw arrays/objects - `checkedItemIds` and
+  // `items` are new references on every server render regardless of
+  // whether their content actually changed, and this effect should only
+  // redo reconciliation when it did (on mount, and again whenever fresh
+  // server data actually lands - notably from useGroupLiveSync's
+  // router.refresh() above, or the mutation's own eventual revalidation).
+  const checkedSignature = checkedItemIds.join(",");
+  const itemsSignature = items.map((item) => `${item.id}:${item.label}:${item.position}`).join("|");
+
+  // Phase 2 (docs/local-first-sync-engine-plan.md): reconciles anything
+  // still sitting in the durable queue on top of the latest server props.
+  // On mount, this is what makes an offline tap (or item edit) that
+  // hasn't drained yet show correctly instead of the server's
+  // last-synced state. On a later prop change (Phase 3's live sync, or
+  // this device's own write finally landing), re-running it is what keeps
+  // a still-queued write from being clobbered by fresher-but-incomplete
+  // server data arriving in the meantime - a groupmate's edit and this
+  // device's own not-yet-sent one both need to be reflected together.
+  // Silent by construction either way: no toast/confetti, this only ever
+  // corrects the render to match intent already recorded in the queue.
+  // Not wrapped in startTransition - see toggle()'s own comment below on
+  // why a plain setState needs to be called outside one to actually paint
+  // promptly, now that this is a plain useState rather than useOptimistic.
+  useEffect(() => {
+    let cancelled = false;
+    const startEpoch = epochRef.current;
+    void (async () => {
+      const rows = (await txQueue.listPending()).filter((r) => r.payload.groupId === groupId);
+      // A tap landed while this read was in flight - see epochRef's own
+      // comment. Bail without touching state; the tap's own synchronous
+      // update already reflects the current truth better than this
+      // now-outdated snapshot would.
+      if (cancelled || epochRef.current !== startEpoch) return;
+      const reconciledChecked = applyPendingChecks(new Set(checkedItemIds), rows);
+      checkedRef.current = reconciledChecked;
+      setOptimisticChecked(new Set(reconciledChecked));
+      setOptimisticItems(rows.length ? applyPendingChecklistMutations(items, rows) : items);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupId, checkedSignature, itemsSignature]);
+
   function toggle(itemId: string) {
     if (disabled) return;
+    epochRef.current++;
     const willBeDone = !checkedRef.current.has(itemId);
     if (willBeDone) checkedRef.current.add(itemId);
     else checkedRef.current.delete(itemId);
     const doneCountAfter = checkedRef.current.size;
     const snapshot = new Set(checkedRef.current);
 
-    // Toast + confetti are plain state (not useOptimistic), so they're
-    // fired here, *outside* the transition below, rather than alongside
-    // the `await setChecked(...)` call - a regular setState made inside
-    // a still-pending transition doesn't actually paint until that
-    // transition's async work settles (useOptimistic's dispatch is the
-    // one deliberate exception to that, which is why the checkbox itself
-    // already looked instant while these didn't). Keeping them here means
-    // they paint in the same tick as the tap, not once the real network
-    // round trip finishes.
+    // The checkbox itself is plain state now too (not useOptimistic - see
+    // this component's earlier comment on why: an optimistic value from
+    // useOptimistic reverts to its base props once its transition settles,
+    // which would undo the mount-time reconciliation effect above). A
+    // plain setState made *inside* startTransition doesn't paint until
+    // that transition's async work finishes, so this - like the toast and
+    // confetti calls just below - is fired here, synchronously, outside
+    // the transition that does the actual enqueue.
+    setOptimisticChecked(snapshot);
+
     if (willBeDone) {
-      const cleanSweep = doneCountAfter === items.length;
+      const cleanSweep = doneCountAfter === optimisticItems.length;
       showToast(
         cleanSweep
-          ? `Clean sweep. All ${items.length} done.`
-          : `Ticked - ${doneCountAfter}/${items.length}`,
+          ? `Clean sweep. All ${optimisticItems.length} done.`
+          : `Ticked - ${doneCountAfter}/${optimisticItems.length}`,
       );
       // The toast above still fires every time - only the confetti gets a
       // once-a-day cooldown, so someone un/re-checking the last item a
@@ -143,13 +217,23 @@ export function TodayLive({
     }
 
     startTransition(async () => {
-      setOptimisticChecked(snapshot);
-
-      const write = () => setChecked(groupId, itemId, willBeDone);
-      // Chained onto both branches so a rejected write doesn't wedge every
-      // toggle after it - the queue keeps moving either way.
-      queueRef.current = queueRef.current.then(write, write);
-      await queueRef.current;
+      // Persisted (IndexedDB-backed, falling back to in-memory where
+      // IndexedDB isn't available) rather than sent directly - a tap made
+      // offline survives a reload and drains once connectivity returns,
+      // instead of silently reverting the next time this data refetches.
+      // Same-item taps coalesce onto one queued row (tx-queue.ts's
+      // coalesceKey), so rapid re-toggling doesn't grow the queue or
+      // replay intermediate states - only the final one is ever sent.
+      // Ordering is still strictly one write in flight at a time
+      // (drain.ts's drainLoop), which is what keeps each write's cache
+      // invalidation (setChecked's revalidatePath/updateTag) from racing
+      // a later one - the same invariant the old in-memory queue enforced.
+      await txQueue.enqueue("setChecked", {
+        groupId,
+        checklistItemId: itemId,
+        checked: willBeDone,
+      });
+      drainController.kick();
     });
   }
 
@@ -160,7 +244,7 @@ export function TodayLive({
     <>
       <TodayStatsPanel
         doneToday={doneToday}
-        itemCount={items.length}
+        itemCount={optimisticItems.length}
         dayIndex={dayIndex}
         durationDays={durationDays}
         streak={liveStreak}
@@ -170,7 +254,7 @@ export function TodayLive({
 
       <div className="relative">
         <TodayChecklist
-          items={items}
+          items={optimisticItems}
           checkedIds={optimisticChecked}
           onToggle={toggle}
           disabled={disabled}

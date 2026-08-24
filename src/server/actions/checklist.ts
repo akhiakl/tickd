@@ -94,7 +94,19 @@ export async function setChecked(
   return { ok: true };
 }
 
-export async function addChecklistItem(groupId: string, label: string): Promise<ActionResult> {
+/**
+ * `clientId`, when given, becomes the inserted row's id instead of a
+ * server-generated one - lets the tx queue (src/lib/sync/tx-queue.ts) pass
+ * its own row id through, so a retried call (the network dropped the
+ * first response but the insert actually landed) hits `onConflictDoNothing`
+ * and becomes a no-op instead of inserting the item twice. Direct callers
+ * that don't need that property can omit it.
+ */
+export async function addChecklistItem(
+  groupId: string,
+  label: string,
+  clientId?: string,
+): Promise<ActionResult> {
   const parsed = checklistItemLabelSchema.safeParse(label);
   if (!parsed.success) return { ok: false, error: "Give the item a name." };
   const userId = await requireUserId();
@@ -107,12 +119,15 @@ export async function addChecklistItem(groupId: string, label: string): Promise<
     .orderBy(desc(checklistItems.position))
     .limit(1);
 
-  await db.insert(checklistItems).values({
-    id: crypto.randomUUID(),
-    groupId,
-    label: parsed.data,
-    position: (last.at(0)?.position ?? -1) + 1,
-  });
+  await db
+    .insert(checklistItems)
+    .values({
+      id: clientId ?? crypto.randomUUID(),
+      groupId,
+      label: parsed.data,
+      position: (last.at(0)?.position ?? -1) + 1,
+    })
+    .onConflictDoNothing();
 
   refreshGroup(groupId);
   return { ok: true };
