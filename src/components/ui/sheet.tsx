@@ -15,7 +15,12 @@ type SheetProps = {
 export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) {
   if (!open) return null;
   return (
-    <div className="bg-panel-deep/60 absolute inset-0 z-20 flex flex-col justify-end">
+    // `fixed`, not `absolute`: this needs to pin to the *viewport*, not to
+    // Screen's wrapper div (the nearest positioned ancestor) - that div's
+    // height is its scrollable content height, which on a long page is
+    // taller than the viewport, so `absolute inset-0` was anchoring the
+    // sheet to the bottom of the whole page instead of the visible fold.
+    <div className="bg-panel-deep/60 fixed inset-0 z-20 flex flex-col justify-end">
       <button
         type="button"
         aria-label="Close"

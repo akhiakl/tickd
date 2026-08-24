@@ -3,7 +3,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { revalidatePath, updateTag } from "next/cache";
 import { db } from "@/server/db";
-import { checklistItems, dailyChecks, groupMembers } from "@/server/db/schema";
+import { checklistItems, dailyChecks, groupMembers, groups } from "@/server/db/schema";
 import { requireUserId } from "@/server/auth/require-user";
 import { checklistItemLabelSchema, reorderSchema } from "@/server/validation/schemas";
 import { todayISODate } from "@/lib/challenge-stats";
@@ -35,11 +35,22 @@ async function requireAdminMembership(groupId: string, userId: string) {
   if (membership.role !== "admin") throw new Error("Only the group admin can do that.");
 }
 
-/** Toggles today's tick for one checklist item, for the signed-in member. */
+/** Toggles today's tick for one checklist item, for the signed-in member.
+ * The Today page already hides/disables the checklist before a group's
+ * start date (see TodayChecklist's `disabled` prop) - this is the
+ * server-side backstop against a stale client or a direct call bypassing
+ * that UI, checked against the same UTC clock `date` below is written
+ * under. */
 export async function toggleCheck(groupId: string, checklistItemId: string): Promise<ActionResult> {
   const userId = await requireUserId();
   await requireMembership(groupId, userId);
   const date = todayISODate();
+
+  const group = await db.query.groups.findFirst({ where: eq(groups.id, groupId) });
+  if (!group) throw new Error("That group doesn't exist.");
+  if (date < group.startDate) {
+    return { ok: false, error: "This challenge hasn't started yet." };
+  }
 
   const existing = await db.query.dailyChecks.findFirst({
     where: and(

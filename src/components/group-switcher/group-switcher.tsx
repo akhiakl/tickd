@@ -23,10 +23,16 @@ export function GroupSwitcher({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="min-w-0 cursor-pointer bg-transparent p-0 text-left"
+        className="flex w-full min-w-0 cursor-pointer bg-transparent p-0 text-left"
       >
-        <span className="flex items-center gap-1.5">
-          <span className="font-heading truncate text-2xl leading-tight">{groupName}</span>
+        {/* min-w-0 down every level of this flex chain, not just the
+            outer button - a nested flex row's children default to
+            min-width:auto (refusing to shrink below their own content
+            size) regardless of the ancestor being constrained, which is
+            what let a long name overlap the header's icons instead of
+            actually eliding. */}
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span className="font-heading min-w-0 truncate text-2xl leading-tight">{groupName}</span>
           <ChevronDown size={16} strokeWidth={2.75} className="text-faint flex-none" />
         </span>
       </button>

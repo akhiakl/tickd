@@ -18,6 +18,7 @@ export function TodayChecklist({
   items,
   checkedItemIds,
   today,
+  disabled = false,
 }: {
   groupId: string;
   items: ChecklistItemView[];
@@ -26,6 +27,11 @@ export function TodayChecklist({
    * a cooldown key so confetti fires once per day, not once per fumbled
    * checkbox. */
   today: string;
+  /** True before the group's start date (in the viewer's own timezone) -
+   * items render read-only, greyed, with nothing to tap. `toggleCheck`
+   * itself rejects the same case server-side, so this is UI-only backstop
+   * against nothing to do, not the actual guard. */
+  disabled?: boolean;
 }) {
   const [, startTransition] = useTransition();
   const { message, showToast } = useToast();
@@ -37,6 +43,7 @@ export function TodayChecklist({
   const [celebration, setCelebration] = useState(0);
 
   function toggle(itemId: string) {
+    if (disabled) return;
     const willBeDone = !optimisticChecked.has(itemId);
     const doneCountAfter = optimisticChecked.size + (willBeDone ? 1 : -1);
 
@@ -90,9 +97,12 @@ export function TodayChecklist({
             key={item.id}
             type="button"
             onClick={() => toggle(item.id)}
+            disabled={disabled}
+            aria-disabled={disabled}
             className={cn(
               "flex w-full items-center gap-3.5 rounded-[22px] px-4 py-3.5 text-left transition-colors",
               done ? "bg-ok-bg" : "bg-surface",
+              disabled && "cursor-not-allowed opacity-50",
             )}
           >
             <span

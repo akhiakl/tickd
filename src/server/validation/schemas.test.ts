@@ -48,9 +48,15 @@ describe("createGroupSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects a duration that isn't 21 or 31", () => {
-    const result = createGroupSchema.safeParse({ ...valid, durationDays: 30 });
-    expect(result.success).toBe(false);
+  it("accepts any custom duration within range", () => {
+    const result = createGroupSchema.safeParse({ ...valid, durationDays: 45 });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a duration outside 1-365", () => {
+    expect(createGroupSchema.safeParse({ ...valid, durationDays: 0 }).success).toBe(false);
+    expect(createGroupSchema.safeParse({ ...valid, durationDays: 366 }).success).toBe(false);
+    expect(createGroupSchema.safeParse({ ...valid, durationDays: 21.5 }).success).toBe(false);
   });
 
   it("rejects an empty checklist", () => {

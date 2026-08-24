@@ -129,7 +129,17 @@ export async function seedFreshGroup(options?: { historyDays?: number }): Promis
     const half = items.slice(0, Math.floor(items.length / 2));
     const rows: (typeof schema.dailyChecks.$inferInsert)[] = [];
     for (let d = 0; d < historyDays; d++) {
-      const date = toISODate(new Date(Date.now() - (historyDays - d) * 86_400_000));
+      const at = new Date(Date.now() - (historyDays - d) * 86_400_000);
+      const date = toISODate(at);
+      // Both seeded users have no elected timezone (falls back to UTC in
+      // localISODate), so noon UTC keeps checkedAt safely inside `date`
+      // regardless of what wall-clock time this suite happens to run at -
+      // checkedAt defaulting to insert-time `now()` would otherwise bucket
+      // every one of these backdated rows under *today* instead of the
+      // historical date they're meant to represent (see
+      // src/server/queries/group-snapshot.ts's localCountsByDate, which
+      // every screen reads from, not the raw `date` column).
+      const checkedAt = new Date(`${date}T12:00:00Z`);
       for (const item of items) {
         rows.push({
           id: crypto.randomUUID(),
@@ -137,6 +147,7 @@ export async function seedFreshGroup(options?: { historyDays?: number }): Promis
           userId: admin.id,
           checklistItemId: item.id,
           date,
+          checkedAt,
         });
       }
       for (const item of half) {
@@ -146,6 +157,7 @@ export async function seedFreshGroup(options?: { historyDays?: number }): Promis
           userId: member1.id,
           checklistItemId: item.id,
           date,
+          checkedAt,
         });
       }
     }

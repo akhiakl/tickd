@@ -74,7 +74,13 @@ export const credentialsSignInSchema = z.object({
 
 export const createGroupSchema = z.object({
   name: z.string().trim().min(1, "Give the group a name.").max(60),
-  durationDays: z.union([z.literal(21), z.literal(31)]),
+  // Any whole number of days works, not just the old 21/31 presets - the
+  // create form still offers those as quick-pick shortcuts, but this
+  // accepts whatever a person actually typed. Upper-bounded at a year
+  // mostly to keep the challenge day-index math (and the Wall's month
+  // grid) within a sane range, not because a longer challenge is
+  // conceptually wrong.
+  durationDays: z.number().int().min(1, "Needs to run at least 1 day.").max(365, "365 days, max."),
   startDate: z.iso.date(),
   items: z
     .array(z.string().trim().min(1).max(60))
