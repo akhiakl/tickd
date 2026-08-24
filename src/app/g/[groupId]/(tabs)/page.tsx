@@ -57,6 +57,7 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
         isMe: m.isMe,
         streak: currentStreakWithToday(counts),
         pct,
+        doneToday: (m.localCountsByDate[m.localToday] ?? 0) === items.length,
       };
     })
     .sort((a, b) => b.pct - a.pct);
