@@ -1,11 +1,12 @@
 "use client";
 
-import { useOptimistic, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { Check } from "lucide-react";
 import { toggleCheck } from "@/server/actions/checklist";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
+import { Confetti } from "@/components/ui/confetti";
 import type { ChecklistItemView } from "@/types/domain";
 
 export function TodayChecklist({
@@ -20,6 +21,10 @@ export function TodayChecklist({
   const [, startTransition] = useTransition();
   const { message, showToast } = useToast();
   const [optimisticChecked, setOptimisticChecked] = useOptimistic(new Set(checkedItemIds));
+  // Bumped (never reset) each time a checkmark lands the last item - see
+  // Confetti's own comment for why a changing value is its whole trigger
+  // API, rather than a boolean it'd have to be reset back to false.
+  const [celebration, setCelebration] = useState(0);
 
   function toggle(itemId: string) {
     const willBeDone = !optimisticChecked.has(itemId);
@@ -33,11 +38,13 @@ export function TodayChecklist({
         return next;
       });
       if (willBeDone) {
+        const cleanSweep = doneCountAfter === items.length;
         showToast(
-          doneCountAfter === items.length
+          cleanSweep
             ? `Clean sweep. All ${items.length} done.`
             : `Ticked - ${doneCountAfter}/${items.length}`,
         );
+        if (cleanSweep) setCelebration((n) => n + 1);
       }
       await toggleCheck(groupId, itemId);
     });
@@ -90,6 +97,7 @@ export function TodayChecklist({
         );
       })}
       <Toast message={message} />
+      <Confetti trigger={celebration} />
     </div>
   );
 }

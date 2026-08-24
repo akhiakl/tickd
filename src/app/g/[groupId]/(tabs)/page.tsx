@@ -7,6 +7,7 @@ import { TodayStatsPanel } from "@/components/today/today-stats-panel";
 import { TodayChecklist } from "@/components/today/today-checklist";
 import { MemberList, type MemberListRow } from "@/components/today/member-list";
 import { ShareButton } from "@/components/today/share-button";
+import { StreakMilestoneToast } from "@/components/today/streak-milestone-toast";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -117,6 +118,7 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
       <MemberList groupId={groupId} rows={memberRows} />
 
       <ShareButton groupId={groupId} />
+      <StreakMilestoneToast groupId={groupId} streak={myStreak} />
     </div>
   );
 }
