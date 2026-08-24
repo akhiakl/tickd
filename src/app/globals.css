@@ -235,3 +235,30 @@ body {
   background-repeat: no-repeat;
   animation: shimmer 1.6s ease-in-out infinite;
 }
+
+/* A single confetti piece's burst - see src/components/ui/confetti.tsx,
+   which computes a --dx/--dy landing offset and a --rotate spin per piece
+   in JS (not CSS trig functions - trig()/sin()/cos() in CSS are recent
+   enough to skip on an older browser silently) so one keyframe produces a
+   whole radial spray. Travels to its landing offset for the first 85% of
+   the animation then holds still while fading, rather than continuing to
+   move as it disappears - reads as a burst settling, not a piece sliding
+   offscreen. */
+@keyframes confetti-burst {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  85% {
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rotate));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rotate));
+    opacity: 0;
+  }
+}
+
+.animate-confetti-burst {
+  animation: confetti-burst 900ms cubic-bezier(0.15, 0.6, 0.35, 1) forwards;
+}

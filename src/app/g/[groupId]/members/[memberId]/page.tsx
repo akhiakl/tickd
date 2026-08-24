@@ -11,6 +11,8 @@ import { Screen } from "@/components/layout/screen";
 import { BackButton } from "@/components/ui/back-button";
 import { Avatar } from "@/components/ui/avatar";
 import { LocalTimeBadge } from "@/components/ui/local-time-badge";
+import { BadgeRow } from "@/components/ui/badge-row";
+import { earnedBadges } from "@/lib/achievements";
 import { cn } from "@/lib/utils";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -42,6 +44,15 @@ export default async function MemberProfilePage({
       (member.localItemsByDate[d] ?? []).includes(item.id),
     ).length;
     return { ...item, pct: dayIndex > 0 ? Math.round((doneDays / dayIndex) * 100) : 0 };
+  });
+
+  const badges = earnedBadges({
+    startDate: snapshot.startDate,
+    itemCount: items.length,
+    localToday: member.localToday,
+    localDayIndex: member.localDayIndex,
+    localCountsByDate: member.localCountsByDate,
+    localCheckHours: member.localCheckHours,
   });
 
   return (
@@ -85,6 +96,9 @@ export default async function MemberProfilePage({
           </div>
         ))}
       </div>
+
+      <div className="text-faint pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase">Badges</div>
+      <BadgeRow earned={badges} />
 
       <div className="text-faint pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase">
         Per item

@@ -20,7 +20,9 @@ function refreshGroup(groupId: string) {
   updateTag(`group:${groupId}`);
 }
 
-async function requireMembership(groupId: string, userId: string) {
+/** Exported for src/server/actions/nudge.ts, which needs the same
+ * "both people are actually in this group" check for a poke. */
+export async function requireMembership(groupId: string, userId: string) {
   const membership = await db.query.groupMembers.findFirst({
     where: and(eq(groupMembers.groupId, groupId), eq(groupMembers.userId, userId)),
   });
