@@ -6,6 +6,7 @@ import {
 } from "@/server/queries/push";
 import { sendPush, pushConfigured } from "@/server/push/send";
 import { localHour, localWeekday } from "@/lib/timezone";
+import { withCronAuth } from "@/server/cron-auth";
 
 const TARGET_WEEKDAY = "Sun";
 const TARGET_HOUR = 18; // 6pm, in each recipient's own local time.
@@ -18,11 +19,7 @@ const TARGET_HOUR = 18; // 6pm, in each recipient's own local time.
  * on each person's own Sunday evening even though the schedule itself
  * runs every hour, every day.
  */
-export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (secret && request.headers.get("authorization") !== `Bearer ${secret}`) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
+export const GET = withCronAuth(async () => {
   if (!pushConfigured) return NextResponse.json({ sent: 0, note: "push not configured" });
 
   const candidates = await getWeeklyRecapCandidates();
@@ -54,4 +51,4 @@ export async function GET(request: Request) {
   );
 
   return NextResponse.json({ candidates: candidates.length, dueNow: dueNow.length, sent });
-}
+});

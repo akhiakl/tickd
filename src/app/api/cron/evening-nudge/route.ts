@@ -9,6 +9,7 @@ import {
 } from "@/server/queries/push";
 import { sendPush, pushConfigured } from "@/server/push/send";
 import { localHour } from "@/lib/timezone";
+import { withCronAuth } from "@/server/cron-auth";
 
 const TARGET_HOUR = 20; // 8pm, in each recipient's own local time.
 
@@ -30,11 +31,7 @@ const TARGET_HOUR = 20; // 8pm, in each recipient's own local time.
  * rare cron-timing-drift cases skip/double an hour at the boundary. Fine
  * for "roughly evening," not worth a minute-level cron for.
  */
-export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (secret && request.headers.get("authorization") !== `Bearer ${secret}`) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
+export const GET = withCronAuth(async () => {
   if (!pushConfigured) return NextResponse.json({ sent: 0, note: "push not configured" });
 
   const candidates = await getReminderCandidates();
@@ -68,4 +65,4 @@ export async function GET(request: Request) {
     nudged: toNudge.size,
     sent,
   });
-}
+});
