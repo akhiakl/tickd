@@ -9,6 +9,7 @@ import { MemberList, type MemberListRow } from "@/components/today/member-list";
 import { ShareButton } from "@/components/today/share-button";
 import { StreakMilestoneToast } from "@/components/today/streak-milestone-toast";
 import { NewBadgeToast } from "@/components/today/new-badge-toast";
+import { GroupMascot } from "@/components/today/group-mascot";
 import { earnedBadges } from "@/lib/achievements";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -62,6 +63,9 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
 
   const groupToday = members.reduce((sum, m) => sum + (m.localCountsByDate[m.localToday] ?? 0), 0);
 
+  const avgStreak =
+    memberRows.reduce((sum, m) => sum + m.streak, 0) / Math.max(1, memberRows.length);
+
   const myBadgeIds = earnedBadges({
     startDate: snapshot.startDate,
     itemCount: items.length,
@@ -92,6 +96,8 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
         durationDays={durationDays}
         streak={myStreak}
       />
+
+      <GroupMascot avgStreak={avgStreak} />
 
       <div className="flex items-baseline justify-between px-6 pt-6.5 pb-2.5">
         <span className="text-faint text-[11px] tracking-[0.12em] uppercase">
