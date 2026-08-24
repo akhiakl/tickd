@@ -261,5 +261,6 @@ different scheduler later just means it falls back to the `CRON_SECRET` bearer c
   prototype did - both live on `/account` and carry over to every group.
 - **Per-item completion percentages on a member's profile are computed from real check history**,
   not the prototype's random placeholder values.
-- **The invite link domain (`tickd.app`) is a placeholder** - swap it for your real domain once one
-  exists; only the copy-to-clipboard text references it today, nothing routes through it.
+- **The invite link's copy-to-clipboard text is derived from `NEXT_PUBLIC_APP_URL`** (same var
+  `metadataBase` uses in `src/app/layout.tsx`), not a hardcoded domain - it always matches
+  wherever the app is actually configured to be reached, in every environment.

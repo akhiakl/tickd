@@ -156,8 +156,27 @@ export function TodayLive({
       // now-outdated snapshot would.
       if (cancelled || epochRef.current !== startEpoch) return;
       const reconciledChecked = applyPendingChecks(new Set(checkedItemIds), rows);
+      // Reconciliation runs on every mount and every genuine prop change
+      // (see this effect's own comment) - most of the time there's
+      // nothing actually pending, so the "reconciled" result is just
+      // `checkedItemIds` again. `new Set(...)` always allocates a fresh
+      // object regardless, so without this check every one of those runs
+      // would force a render anyway (React bails out of a plain useState
+      // update by reference equality, and a fresh Set is never
+      // reference-equal to the last one) - a real, confirmed source of an
+      // extra render shortly after every Today page load.
+      const changed =
+        reconciledChecked.size !== checkedRef.current.size ||
+        [...reconciledChecked].some((id) => !checkedRef.current.has(id));
       checkedRef.current = reconciledChecked;
-      setOptimisticChecked(new Set(reconciledChecked));
+      if (changed) setOptimisticChecked(new Set(reconciledChecked));
+      // No analogous guard needed here: unlike the Set above, `items` is
+      // passed through by reference when there's nothing to merge, and a
+      // plain useState setter already bails out on a reference-equal
+      // value - genuinely unchanged (mount, or a re-run whose signature
+      // dep didn't actually move) costs nothing, while a real prop change
+      // (this effect only reruns when checkedSignature/itemsSignature
+      // actually differ, or on mount) correctly still updates.
       setOptimisticItems(rows.length ? applyPendingChecklistMutations(items, rows) : items);
     })();
     return () => {

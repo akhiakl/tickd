@@ -19,7 +19,10 @@ describe("InviteCodePanel", () => {
   it("copies the invite link and confirms it with a toast", async () => {
     render(<InviteCodePanel groupId="g1" initialCode="ABC123" />);
     fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("tickd.app/join?code=ABC123");
+    // NEXT_PUBLIC_APP_URL isn't set under Vitest, so this exercises the
+    // same "localhost:3000" fallback src/app/layout.tsx's metadataBase
+    // uses - see invite-code-panel.tsx's own comment.
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("localhost:3000/join?code=ABC123");
     expect(await screen.findByText("Invite link copied")).toBeInTheDocument();
   });
 

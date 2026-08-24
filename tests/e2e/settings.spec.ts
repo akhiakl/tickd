@@ -24,7 +24,10 @@ test.describe("Group settings", () => {
     await page.getByRole("button", { name: "Copy link" }).click();
     await expect(page.getByText("Invite link copied")).toBeVisible();
     const clipboard = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clipboard).toBe(`tickd.app/join?code=${group.inviteCode}`);
+    // Derived from NEXT_PUBLIC_APP_URL (playwright.config.ts's appEnv sets
+    // it to this suite's own baseURL), not a hardcoded production domain -
+    // see invite-code-panel.tsx's own comment.
+    expect(clipboard).toBe(`${new URL(baseURL!).host}/join?code=${group.inviteCode}`);
 
     await page.getByRole("button", { name: "Regenerate" }).click();
     await expect(page.getByText(group.inviteCode)).toHaveCount(0);
