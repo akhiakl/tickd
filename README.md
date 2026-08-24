@@ -210,6 +210,51 @@ there's no separate manual step. (This only changes Vercel's own build command; 
 when there's nothing new to run.) Deploying elsewhere (not Vercel), run `pnpm run db:migrate`
 against the target database as part of your own release step.
 
+### Notification cron
+
+`src/app/api/cron/evening-nudge` and `.../weekly-recap` need to run **hourly** (each request
+filters to whoever's own local hour matches its target - see the routes' own comments), which
+rules out Vercel's own Cron feature on the Hobby plan (once-a-day only there) and GitHub Actions
+(kept free for CI). Instead, both routes are triggered by an [Upstash
+QStash](https://upstash.com/docs/qstash) schedule - you likely already have an Upstash account for
+`KV_REST_API_URL`/`KV_REST_API_TOKEN`; QStash is a separate free-tier product under the same
+account.
+
+The routes verify who's calling them via `src/server/cron-auth.ts`'s `withCronAuth`: when
+`QSTASH_CURRENT_SIGNING_KEY` is set it verifies QStash's own cryptographic request signature (via
+the `@upstash/qstash` SDK's `verifySignatureAppRouter` - no static secret in a header to leak,
+keys rotate from the Upstash console); otherwise it falls back to a plain `CRON_SECRET` bearer
+check, which is what keeps these routes hittable with a bare `curl` locally and in CI, where
+there's no real QStash signature to produce. Use signature verification in production.
+
+One-time setup, once the app is deployed:
+
+1. In the [Upstash console](https://console.upstash.com/qstash), grab a `QSTASH_TOKEN` (for
+   creating the schedule below) and the `QSTASH_CURRENT_SIGNING_KEY` /
+   `QSTASH_NEXT_SIGNING_KEY` pair (for the routes to verify with) - all three under the QStash
+   project's "Request Builder" / signing keys page. Set the two signing keys as env vars on the
+   Vercel project.
+2. Create a schedule for each route. Both routes only implement `GET`, so `Upstash-Method`
+   overrides QStash's default of `POST`:
+
+   ```bash
+   curl -X POST "https://qstash.upstash.io/v2/schedules/https://YOUR_APP_URL/api/cron/evening-nudge" \
+     -H "Authorization: Bearer $QSTASH_TOKEN" \
+     -H "Upstash-Cron: 0 * * * *" \
+     -H "Upstash-Method: GET"
+
+   curl -X POST "https://qstash.upstash.io/v2/schedules/https://YOUR_APP_URL/api/cron/weekly-recap" \
+     -H "Authorization: Bearer $QSTASH_TOKEN" \
+     -H "Upstash-Cron: 0 * * * *" \
+     -H "Upstash-Method: GET"
+   ```
+
+3. Confirm both show up under Schedules in the QStash console, and check the Logs tab there after
+   the next run for a 200 from each.
+
+No app code depends on QStash specifically beyond the signature check itself - swapping to a
+different scheduler later just means it falls back to the `CRON_SECRET` bearer check instead.
+
 ## Product notes and intentional deviations from the prototype
 
 - **Accounts are real**, so the join flow no longer re-asks for a name and color the way the

@@ -9,17 +9,21 @@ import {
 } from "@/server/queries/push";
 import { sendPush, pushConfigured } from "@/server/push/send";
 import { localHour } from "@/lib/timezone";
+import { withCronAuth } from "@/server/cron-auth";
 
 const TARGET_HOUR = 20; // 8pm, in each recipient's own local time.
 
 /**
- * Runs hourly (see vercel.json's crons) rather than once a day at a fixed
- * UTC time: every run, each candidate's *own* local hour is checked
- * against TARGET_HOUR, so someone in Tokyo and someone in Denver each get
- * nudged at their own 8pm, not the server's. A candidate whose browser
- * hasn't synced a timezone yet (see src/components/timezone-sync.tsx)
- * falls back to matching on UTC 8pm - still works, just not personalized
- * until that happens once.
+ * Runs hourly rather than once a day at a fixed UTC time: every run, each
+ * candidate's *own* local hour is checked against TARGET_HOUR, so someone
+ * in Tokyo and someone in Denver each get nudged at their own 8pm, not
+ * UTC 8pm for everyone. The hourly beat itself comes from an Upstash
+ * QStash schedule calling this route directly (see README's "Notification
+ * cron" section for how it's set up) - not Vercel's own Cron feature,
+ * that's once-a-day-only on the Hobby plan, and not GitHub Actions either,
+ * to leave that usage for CI. A candidate with no elected timezone yet
+ * (see src/components/timezone-sync.tsx) falls back to matching on UTC
+ * 8pm - still works, just not personalized until they get one.
  *
  * Known imprecision, accepted rather than engineered around: hourly
  * granularity means a half-hour-offset zone (India, Newfoundland, ...)
@@ -27,11 +31,7 @@ const TARGET_HOUR = 20; // 8pm, in each recipient's own local time.
  * rare cron-timing-drift cases skip/double an hour at the boundary. Fine
  * for "roughly evening," not worth a minute-level cron for.
  */
-export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (secret && request.headers.get("authorization") !== `Bearer ${secret}`) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
+export const GET = withCronAuth(async () => {
   if (!pushConfigured) return NextResponse.json({ sent: 0, note: "push not configured" });
 
   const candidates = await getReminderCandidates();
@@ -65,4 +65,4 @@ export async function GET(request: Request) {
     nudged: toNudge.size,
     sent,
   });
-}
+});
