@@ -47,6 +47,11 @@ export type MemberSnapshot = {
    * Wall - see localToday/localDayIndex's comments. */
   localCountsByDate: Record<string, number>;
   localItemsByDate: Record<string, string[]>;
+  /** The local hour (0-23) of every check this member has ever made, in
+   * their own timezone - a flat list, not date-keyed, since badge
+   * computation (src/lib/achievements.ts's early-bird/night-owl) only
+   * cares "did any check ever land before 7am," not which day. */
+  localCheckHours: number[];
 };
 
 export type GroupSnapshot = {
