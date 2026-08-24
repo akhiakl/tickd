@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Flame } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
