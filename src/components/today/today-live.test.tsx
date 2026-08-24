@@ -6,8 +6,16 @@ import { drainController } from "@/lib/sync/drain";
 import type { ChecklistItemView } from "@/types/domain";
 
 const setCheckedMock = vi.fn();
+const renameChecklistItemMock = vi.fn().mockResolvedValue({ ok: true });
 vi.mock("@/server/actions/checklist", () => ({
   setChecked: (...args: unknown[]) => setCheckedMock(...args),
+  renameChecklistItem: (...args: unknown[]) => renameChecklistItemMock(...args),
+  // Not exercised by these tests, but drain.ts imports all five - an
+  // unmocked export would be undefined and throw if the drain loop ever
+  // reached one.
+  reorderChecklistItems: vi.fn().mockResolvedValue({ ok: true }),
+  removeChecklistItem: vi.fn().mockResolvedValue({ ok: true }),
+  addChecklistItem: vi.fn().mockResolvedValue({ ok: true }),
 }));
 
 const items: ChecklistItemView[] = [
@@ -33,6 +41,7 @@ beforeEach(async () => {
 afterEach(() => {
   vi.restoreAllMocks();
   setCheckedMock.mockReset();
+  renameChecklistItemMock.mockClear();
 });
 
 describe("TodayLive", () => {
@@ -95,6 +104,40 @@ describe("TodayLive", () => {
 
     expect(await screen.findByText("This challenge hasn't started yet.")).toBeInTheDocument();
     await waitFor(() => expect(setCheckedMock).toHaveBeenCalledTimes(2));
+  });
+
+  it("shows a pending offline tick as checked on mount, before the queue drains", async () => {
+    let resolveWrite: () => void = () => {};
+    setCheckedMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveWrite = () => resolve({ ok: true });
+      }),
+    );
+    // As if a tap was made offline in a previous session and never synced.
+    await txQueue.enqueue("setChecked", { groupId: "g1", checklistItemId: "i2", checked: true });
+
+    render(<TodayLive {...baseProps} checkedItemIds={[]} />);
+
+    // i2 renders checked once the (async) reconciliation lands, not from
+    // checkedItemIds, which (matching a stale server) says nothing is
+    // done. waitFor rather than findByText, since the text itself is
+    // present either way - only the class changes once reconciled.
+    await waitFor(() => expect(screen.getByText("Side quest")).toHaveClass("line-through"));
+    resolveWrite();
+  });
+
+  it("shows a pending offline rename on mount, before the queue drains", async () => {
+    renameChecklistItemMock.mockReturnValue(new Promise(() => {})); // never resolves - stays queued
+    await txQueue.enqueue("renameChecklistItem", {
+      groupId: "g1",
+      itemId: "i1",
+      label: "Wake before 6",
+    });
+
+    render(<TodayLive {...baseProps} checkedItemIds={[]} />);
+
+    expect(await screen.findByText("Wake before 6")).toBeInTheDocument();
+    expect(screen.queryByText("Wake early")).not.toBeInTheDocument();
   });
 
   it("only celebrates confetti once per day, even after repeated clean sweeps", async () => {

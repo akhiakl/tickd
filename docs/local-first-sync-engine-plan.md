@@ -24,8 +24,28 @@
   the plan's "What not to build" - no LWW/conflict-resolution layer yet.
   Revisit only if concurrent-reorder conflicts turn out to be a real
   problem in practice.
-- Phases 2 (local snapshot store) and 3 (live sync resolver) are still design
-  only - not started.
+- **Phase 2 (reconciling pending writes into the initial render) —
+  implemented**, scoped down from the original "instant bootstrap from
+  IndexedDB" sketch - see that section below for why. New
+  `src/lib/sync/reconcile.ts` (`applyPendingChecklistMutations`,
+  `applyPendingChecks`, both pure and unit-tested in
+  `reconcile.test.ts`); `today-live.tsx` and `checklist-settings-editor.tsx`
+  each read the queue once on mount and reconcile it into their initial
+  state.
+  - This also surfaced (and fixed) a real bug: both components had been
+    using `useOptimistic` for their checked-set/item-list state, whose
+    documented behavior is to revert to the passed-in base props once its
+    owning transition settles - fine when that transition is the actual
+    Server Action call (Next auto-refreshes the route's props once it
+    resolves, so the "revert" lands on already-matching data), but the
+    tx-queue's `enqueue()` call resolves immediately on the local write,
+    well before the real network round trip completes, so the revert was
+    landing on stale props. Switched both to plain `useState`, with the
+    optimistic `setState` calls moved outside `startTransition` (matching
+    the pattern this file's toast/confetti calls already used, for the
+    same reason: a `setState` made inside a still-pending transition
+    doesn't paint until that transition's async work finishes).
+- Phase 3 (live sync resolver) is still design only - not started.
 
 ## Why, and why carefully
 
@@ -137,24 +157,64 @@ This phase is the highest-value, lowest-risk slice: it's additive, touches
 one write path first (`setChecked`, the highest-frequency mutation), and is
 independently shippable/testable before Phase 2 exists.
 
-## Phase 2 — Local store + instant bootstrap
+## Phase 2 — Reconciling pending writes into the initial render
 
-**Goal:** opening a group renders from disk immediately, then reconciles with
-the network — instead of every navigation waiting on `getGroupCore`.
+### Scope note: why this isn't the original "instant bootstrap from IndexedDB" plan
 
-- Mirror `GroupSnapshot` (already the exact shape `getGroupSnapshot`
-  produces) into an IndexedDB `group_snapshot` store, keyed by `groupId`,
-  written after every successful fetch.
-- On mount, a client boundary in `src/app/g/[groupId]/page.tsx`'s tree reads
-  the cached snapshot synchronously (via `useSyncExternalStore`) for first
-  paint, then the existing server-rendered fetch reconciles it — effectively
-  stale-while-revalidate, but the "stale" copy is the member's own last-known
-  state rather than a loading spinner.
-- This is the one piece that benefits from _some_ client-side store
-  abstraction; given the domain is one snapshot object per group rather than
-  a graph of independently-mutable entities, a plain `Map<groupId,
-GroupSnapshot>` behind `useSyncExternalStore` is enough — no need for
-  MobX/Zustand/Valtio.
+The original sketch of Phase 2 (mirror the full `GroupSnapshot` into
+IndexedDB, hydrate a client boundary from it on mount for instant first
+paint) assumed a client-fetched page that can render from local disk before
+the network responds. Tickd's group pages are Server Components
+(`src/app/g/[groupId]/(tabs)/page.tsx`) - the HTML itself is generated
+server-side per request. Two consequences that weren't obvious until
+looking at the actual render path:
+
+- A cold/hard reload while genuinely offline can't render _anything_
+  client-stored, IndexedDB included - the browser has no document to
+  parse until it reaches the server at all. Fixing that needs a service
+  worker caching the app shell/document (real, but a materially different
+  and larger project: offline routing, cache invalidation for a stale
+  shell, etc.) - out of scope here, and not implied by anything built so
+  far.
+- On a warm navigation (client-side routing between Today/Wall/Ranks, or
+  back to an already-visited group), Next's own router cache already
+  avoids re-fetching - an IndexedDB mirror wouldn't measurably improve on
+  that for this app's request volume.
+
+So the "instant bootstrap" framing doesn't actually pay off here without
+first committing to PWA-shell infrastructure that's a separate decision.
+What _does_ pay off, and fits Phase 1's own premise, is narrower and more
+concrete:
+
+**Goal:** a mutation sitting in the durable queue - made offline, or just
+not sent yet - is reflected in what's rendered immediately after a reload,
+not only after the queue finishes draining. Today, a reload while a
+`setChecked` is still queued shows the server's last-synced (stale, e.g.
+still unchecked) state until the drain catches up - usually near-instant if
+online, but a real, visible gap if the reload happens while still offline
+or the queue is mid-backoff.
+
+- New `src/lib/sync/reconcile.ts`: a pure function that takes the
+  server-rendered checklist items and applies any still-pending
+  `renameChecklistItem` / `removeChecklistItem` / `addChecklistItem` /
+  `reorderChecklistItems` rows for that group, in queue order - same
+  logic the server will eventually apply, computed locally so the render
+  doesn't have to wait for it.
+- `today-live.tsx` and `checklist-settings-editor.tsx` both read the tx
+  queue once on mount and reconcile: `TodayLive` overlays pending
+  `setChecked` rows onto its initial checked set _and_ pending item
+  mutations onto its item list; the settings editor overlays pending item
+  mutations onto its list. Both already own an optimistic-state slice
+  (`useOptimistic`) this plugs into - no new state shape, just a richer
+  initial value.
+- Silent by construction: this only ever corrects what's already
+  rendered to match intent already recorded in the queue - it doesn't
+  toast, celebrate, or otherwise announce anything (that stays tied to an
+  actual user tap, not a mount-time reconciliation).
+- If a genuine "reload while fully offline should still render the app at
+  all" requirement shows up later, that's a distinct project (a service
+  worker + cached app shell) to scope separately - this phase deliberately
+  doesn't reach for it.
 
 ## Phase 3 — Live sync resolver (cross-member push)
 

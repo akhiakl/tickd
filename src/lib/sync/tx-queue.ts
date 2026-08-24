@@ -80,15 +80,24 @@ const txRowSchema = z.object({
   stuck: z.boolean().optional(),
 });
 
+// The `{ [P in K]: ... }[K]` indirection (rather than a plain object type
+// with two independently-generic `kind`/`payload` fields) is what makes
+// this a real discriminated union - it distributes over K so
+// `row.kind === "renameChecklistItem"` actually narrows `row.payload`'s
+// type at every call site (drain.ts's executors, reconcile.ts), instead
+// of `payload` staying the full cross-kind union no matter which branch
+// you're in.
 export type TxRow<K extends TxKind = TxKind> = {
-  id: string;
-  kind: K;
-  payload: TxPayload<K>;
-  createdAt: number;
-  attempts: number;
-  lastError?: string;
-  stuck?: boolean;
-};
+  [P in K]: {
+    id: string;
+    kind: P;
+    payload: TxPayload<P>;
+    createdAt: number;
+    attempts: number;
+    lastError?: string;
+    stuck?: boolean;
+  };
+}[K];
 
 /** Re-validates a row's payload against its own kind's schema. Called both
  * when a row is first enqueued (reject bad input the same way the old

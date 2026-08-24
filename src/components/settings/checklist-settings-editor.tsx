@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useOptimistic, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import {
   DndContext,
   closestCenter,
@@ -18,6 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import { txQueue } from "@/lib/sync/tx-queue";
 import { drainController } from "@/lib/sync/drain";
+import { applyPendingChecklistMutations } from "@/lib/sync/reconcile";
 import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
 import { SortableItemRow } from "@/components/checklist/sortable-item-row";
@@ -31,7 +32,11 @@ export function ChecklistSettingsEditor({
   items: ChecklistItemView[];
 }) {
   const [, startTransition] = useTransition();
-  const [optimisticItems, setOptimisticItems] = useOptimistic(items);
+  // Plain useState, not useOptimistic - see today-live.tsx's comment on
+  // the same choice: useOptimistic reverts to `items` once its enclosing
+  // transition settles, which would silently undo the mount-time
+  // reconciliation effect below.
+  const [optimisticItems, setOptimisticItems] = useState(items);
   const { message, showToast } = useToast();
 
   // Same durable-queue path as the Today checklist's setChecked - see
@@ -45,6 +50,25 @@ export function ChecklistSettingsEditor({
     return () => drainController.setErrorHandler(null);
   }, [showToast]);
 
+  // Phase 2 (docs/local-first-sync-engine-plan.md) - same mount-time
+  // reconciliation as TodayLive's, so reopening Settings right after an
+  // offline edit shows that edit immediately instead of the server's
+  // last-synced list until the queue drains. Not wrapped in
+  // startTransition - see rename()'s own comment on why a plain setState
+  // needs to be called outside one to actually paint promptly.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const rows = (await txQueue.listPending()).filter((r) => r.payload.groupId === groupId);
+      if (cancelled || rows.length === 0) return;
+      setOptimisticItems(applyPendingChecklistMutations(items, rows));
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupId]);
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -52,8 +76,8 @@ export function ChecklistSettingsEditor({
     const to = optimisticItems.findIndex((i) => i.id === over.id);
     const next = arrayMove(optimisticItems, from, to);
 
+    setOptimisticItems(next);
     startTransition(async () => {
-      setOptimisticItems(next);
       await txQueue.enqueue("reorderChecklistItems", {
         groupId,
         orderedItemIds: next.map((i) => i.id),
@@ -63,8 +87,13 @@ export function ChecklistSettingsEditor({
   }
 
   function rename(itemId: string, label: string) {
+    // Plain state, not useOptimistic (see this component's earlier
+    // comment on why), so the update has to be dispatched *outside*
+    // startTransition to paint in the same tick as the keystroke - a
+    // setState made inside a still-pending transition doesn't actually
+    // paint until that transition's async work finishes.
+    setOptimisticItems(optimisticItems.map((i) => (i.id === itemId ? { ...i, label } : i)));
     startTransition(async () => {
-      setOptimisticItems(optimisticItems.map((i) => (i.id === itemId ? { ...i, label } : i)));
       const row = await txQueue.enqueue("renameChecklistItem", { groupId, itemId, label });
       // Same message the server would have returned for the same bad
       // input (checklistItemLabelSchema) - checked client-side first so
@@ -79,8 +108,8 @@ export function ChecklistSettingsEditor({
   }
 
   function remove(itemId: string) {
+    setOptimisticItems(optimisticItems.filter((i) => i.id !== itemId));
     startTransition(async () => {
-      setOptimisticItems(optimisticItems.filter((i) => i.id !== itemId));
       await txQueue.enqueue("removeChecklistItem", { groupId, itemId });
       drainController.kick();
     });
@@ -92,11 +121,11 @@ export function ChecklistSettingsEditor({
     // that's what makes a retried add idempotent instead of a duplicate
     // (see addChecklistItem's own doc in src/server/actions/checklist.ts).
     const itemId = crypto.randomUUID();
+    setOptimisticItems([
+      ...optimisticItems,
+      { id: itemId, label: "New item", position: optimisticItems.length, isSideQuest: false },
+    ]);
     startTransition(async () => {
-      setOptimisticItems([
-        ...optimisticItems,
-        { id: itemId, label: "New item", position: optimisticItems.length, isSideQuest: false },
-      ]);
       await txQueue.enqueue("addChecklistItem", { groupId, itemId, label: "New item" });
       drainController.kick();
     });

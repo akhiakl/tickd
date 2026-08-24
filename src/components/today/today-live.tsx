@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { txQueue } from "@/lib/sync/tx-queue";
 import { drainController } from "@/lib/sync/drain";
+import { applyPendingChecklistMutations, applyPendingChecks } from "@/lib/sync/reconcile";
 import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
 import { Confetti } from "@/components/ui/confetti";
@@ -62,7 +63,14 @@ export function TodayLive({
 }) {
   const [, startTransition] = useTransition();
   const { message, showToast } = useToast();
-  const [optimisticChecked, setOptimisticChecked] = useOptimistic(new Set(checkedItemIds));
+  // Plain useState, not useOptimistic: useOptimistic reverts its value
+  // back to the base (checkedItemIds/items) the moment its enclosing
+  // transition settles, which is exactly right for a tap's own in-flight
+  // write but wrong for the mount-time reconciliation below - that
+  // correction needs to *stick* until fresh server props actually arrive
+  // (the next navigation), not snap back once its own transition ends.
+  const [optimisticChecked, setOptimisticChecked] = useState(() => new Set(checkedItemIds));
+  const [optimisticItems, setOptimisticItems] = useState(items);
   // Bumped (never reset) each time a checkmark lands the last item and
   // hasn't already been celebrated today - see Confetti's own comment for
   // why a changing value is its whole trigger API, rather than a boolean
@@ -93,6 +101,37 @@ export function TodayLive({
   // of it for rendering, not the source of truth for this math anymore.
   const checkedRef = useRef(new Set(checkedItemIds));
 
+  // Phase 2 (docs/local-first-sync-engine-plan.md): reconciles anything
+  // still sitting in the durable queue into the initial render, once on
+  // mount. Without this, a reload right after an offline tap (or an
+  // offline settings edit that hasn't drained yet) would briefly show the
+  // server's last-synced state instead of what's actually about to be
+  // sent - the checkbox looking un-ticked again, or a rename not showing,
+  // until the queue catches up. Silent by construction: this only ever
+  // corrects the render to match intent already recorded in the queue, it
+  // never toasts or celebrates (that stays tied to an actual tap). Not
+  // wrapped in startTransition - see toggle()'s own comment below on why
+  // a plain setState needs to be called outside one to actually paint
+  // promptly, now that this is a plain useState rather than useOptimistic.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const rows = (await txQueue.listPending()).filter((r) => r.payload.groupId === groupId);
+      if (cancelled || rows.length === 0) return;
+      const reconciledChecked = applyPendingChecks(checkedRef.current, rows);
+      checkedRef.current = reconciledChecked;
+      setOptimisticChecked(new Set(reconciledChecked));
+      setOptimisticItems(applyPendingChecklistMutations(items, rows));
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Deliberately mount-only (per groupId) - a later change to `items`/
+    // `checkedItemIds` is the server's own fresher data winning, which
+    // should render as-is, not be re-diffed against the queue again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupId]);
+
   function toggle(itemId: string) {
     if (disabled) return;
     const willBeDone = !checkedRef.current.has(itemId);
@@ -101,21 +140,22 @@ export function TodayLive({
     const doneCountAfter = checkedRef.current.size;
     const snapshot = new Set(checkedRef.current);
 
-    // Toast + confetti are plain state (not useOptimistic), so they're
-    // fired here, *outside* the transition below, rather than alongside
-    // the `await setChecked(...)` call - a regular setState made inside
-    // a still-pending transition doesn't actually paint until that
-    // transition's async work settles (useOptimistic's dispatch is the
-    // one deliberate exception to that, which is why the checkbox itself
-    // already looked instant while these didn't). Keeping them here means
-    // they paint in the same tick as the tap, not once the real network
-    // round trip finishes.
+    // The checkbox itself is plain state now too (not useOptimistic - see
+    // this component's earlier comment on why: an optimistic value from
+    // useOptimistic reverts to its base props once its transition settles,
+    // which would undo the mount-time reconciliation effect above). A
+    // plain setState made *inside* startTransition doesn't paint until
+    // that transition's async work finishes, so this - like the toast and
+    // confetti calls just below - is fired here, synchronously, outside
+    // the transition that does the actual enqueue.
+    setOptimisticChecked(snapshot);
+
     if (willBeDone) {
-      const cleanSweep = doneCountAfter === items.length;
+      const cleanSweep = doneCountAfter === optimisticItems.length;
       showToast(
         cleanSweep
-          ? `Clean sweep. All ${items.length} done.`
-          : `Ticked - ${doneCountAfter}/${items.length}`,
+          ? `Clean sweep. All ${optimisticItems.length} done.`
+          : `Ticked - ${doneCountAfter}/${optimisticItems.length}`,
       );
       // The toast above still fires every time - only the confetti gets a
       // once-a-day cooldown, so someone un/re-checking the last item a
@@ -142,8 +182,6 @@ export function TodayLive({
     }
 
     startTransition(async () => {
-      setOptimisticChecked(snapshot);
-
       // Persisted (IndexedDB-backed, falling back to in-memory where
       // IndexedDB isn't available) rather than sent directly - a tap made
       // offline survives a reload and drains once connectivity returns,
@@ -171,7 +209,7 @@ export function TodayLive({
     <>
       <TodayStatsPanel
         doneToday={doneToday}
-        itemCount={items.length}
+        itemCount={optimisticItems.length}
         dayIndex={dayIndex}
         durationDays={durationDays}
         streak={liveStreak}
@@ -181,7 +219,7 @@ export function TodayLive({
 
       <div className="relative">
         <TodayChecklist
-          items={items}
+          items={optimisticItems}
           checkedIds={optimisticChecked}
           onToggle={toggle}
           disabled={disabled}
