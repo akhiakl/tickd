@@ -20,7 +20,12 @@ export function BadgeRow({ earned }: { earned: Badge[] }) {
             title={`${badge.label} - ${badge.description}`}
             className={cn(
               "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-bold",
-              has ? "bg-ok-bg text-ok-d dark:text-ok" : "bg-surface text-faint opacity-50",
+              // `text-faint` alone is already calibrated to clear WCAG AA
+              // against bg-surface (see its own comment in globals.css) -
+              // an added opacity-50 here halved that back below 4.5:1. The
+              // emoji's grayscale filter alone carries the "not earned
+              // yet" read without touching the label's own contrast.
+              has ? "bg-ok-bg text-ok-d dark:text-ok" : "bg-surface text-faint",
             )}
           >
             <span className={cn(!has && "grayscale")}>{badge.emoji}</span>
