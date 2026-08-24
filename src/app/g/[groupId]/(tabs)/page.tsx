@@ -110,6 +110,7 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
         groupId={groupId}
         items={items}
         checkedItemIds={me.localItemsByDate[today] ?? []}
+        today={today}
       />
 
       <div className="mx-4 mt-5.5 flex gap-2.5">
