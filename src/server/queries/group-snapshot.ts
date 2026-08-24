@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { checklistItems, dailyChecks, groupMembers, groups, users } from "@/server/db/schema";
 import { challengeDayIndex } from "@/lib/challenge-stats";
-import { localISODate } from "@/lib/timezone";
+import { localISODate, localHour } from "@/lib/timezone";
 import { SIDE_QUEST_PATTERN } from "@/lib/constants";
 import type { GroupSnapshot, MemberSnapshot } from "@/types/domain";
 
@@ -91,6 +91,7 @@ async function getGroupCore(groupId: string): Promise<GroupCore | null> {
       itemsByDate: {},
       localCountsByDate: {},
       localItemsByDate: {},
+      localCheckHours: [],
     }),
   );
   const memberById = new Map(members.map((m) => [m.userId, m]));
@@ -104,6 +105,7 @@ async function getGroupCore(groupId: string): Promise<GroupCore | null> {
     const localDate = localISODate(check.checkedAt, member.timezone);
     member.localCountsByDate[localDate] = (member.localCountsByDate[localDate] ?? 0) + 1;
     (member.localItemsByDate[localDate] ??= []).push(check.checklistItemId);
+    member.localCheckHours.push(localHour(member.timezone, check.checkedAt));
   }
 
   return {

@@ -8,6 +8,8 @@ import { TodayChecklist } from "@/components/today/today-checklist";
 import { MemberList, type MemberListRow } from "@/components/today/member-list";
 import { ShareButton } from "@/components/today/share-button";
 import { StreakMilestoneToast } from "@/components/today/streak-milestone-toast";
+import { NewBadgeToast } from "@/components/today/new-badge-toast";
+import { earnedBadges } from "@/lib/achievements";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -59,6 +61,15 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
     .sort((a, b) => b.pct - a.pct);
 
   const groupToday = members.reduce((sum, m) => sum + (m.localCountsByDate[m.localToday] ?? 0), 0);
+
+  const myBadgeIds = earnedBadges({
+    startDate: snapshot.startDate,
+    itemCount: items.length,
+    localToday: me.localToday,
+    localDayIndex: me.localDayIndex,
+    localCountsByDate: me.localCountsByDate,
+    localCheckHours: me.localCheckHours,
+  }).map((b) => b.id);
 
   return (
     <div className="pt-1.5 pb-30">
@@ -119,6 +130,7 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
 
       <ShareButton groupId={groupId} />
       <StreakMilestoneToast groupId={groupId} streak={myStreak} />
+      <NewBadgeToast groupId={groupId} earnedBadgeIds={myBadgeIds} />
     </div>
   );
 }
