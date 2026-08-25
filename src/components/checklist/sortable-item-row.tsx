@@ -42,7 +42,7 @@ export function SortableItemRow({
         value={label}
         onChange={(e) => onRename(e.target.value)}
         aria-label="Item label"
-        className="text-text min-w-0 flex-1 border-0 bg-transparent p-0 text-[14.5px] font-semibold focus:outline-none"
+        className="text-text focus-visible:outline-accent min-w-0 flex-1 border-0 bg-transparent p-0 text-[14.5px] font-semibold outline-none focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2"
       />
       <button
         type="button"

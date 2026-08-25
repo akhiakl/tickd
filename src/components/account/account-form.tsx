@@ -153,7 +153,7 @@ export function AccountForm({
             onChange={(e) => setName(e.target.value)}
             onBlur={() => saveProfile(name, color)}
             aria-label="Your name"
-            className="font-heading text-text w-full border-0 bg-transparent p-0 text-[21px] focus:outline-none"
+            className="font-heading text-text focus-visible:outline-accent w-full border-0 bg-transparent p-0 text-[21px] outline-none focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2"
           />
           <div className="text-muted mt-0.5 text-[12.5px]">{email ?? "Guest account"}</div>
         </div>
@@ -196,7 +196,7 @@ export function AccountForm({
             value={timezone}
             onChange={(e) => saveTimezone(e.target.value)}
             aria-label="Your timezone"
-            className="text-text max-w-[130px] flex-none truncate bg-transparent text-right text-[13px] font-semibold focus:outline-none"
+            className="text-text focus-visible:outline-accent max-w-[130px] flex-none truncate bg-transparent text-right text-[13px] font-semibold outline-none focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {timezoneOptions.map((zone) => (
               <option key={zone} value={zone}>
