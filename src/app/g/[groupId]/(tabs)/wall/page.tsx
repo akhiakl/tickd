@@ -1,5 +1,7 @@
 import { getGroupSnapshot } from "@/server/queries/group-snapshot";
+import { getMyGroups } from "@/server/queries/my-groups";
 import { requireValidUserId } from "@/server/auth/require-user";
+import { GroupTabHeader } from "@/components/nav/group-tab-header";
 import { WallGrid } from "@/components/wall/wall-grid";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -11,13 +13,27 @@ export const metadata = { title: "The wall" };
 export default async function WallPage({ params }: PageProps<"/g/[groupId]/wall">) {
   const { groupId } = await params;
   const userId = await requireValidUserId(`/g/${groupId}/wall`);
-  const snapshot = await getGroupSnapshot(groupId, userId);
+  const [snapshot, groups] = await Promise.all([
+    getGroupSnapshot(groupId, userId),
+    getMyGroups(userId),
+  ]);
   if (!snapshot) return null;
+  const me = snapshot.members.find((m) => m.isMe)!;
 
   return (
     <div className="pt-1.5 pb-8">
-      <div className="px-5.5 pb-3.5">
-        <div className="font-heading text-2xl">The wall</div>
+      <GroupTabHeader
+        groupId={groupId}
+        groupName={snapshot.name}
+        myName={me.name}
+        myColor={me.color}
+        myAvatarSeed={me.avatarSeed}
+        isAdmin={snapshot.myRole === "admin"}
+        groups={groups}
+        subtitle={<span className="text-muted truncate text-[13px]">The wall</span>}
+      />
+
+      <div className="px-5.5 pt-3.5 pb-3.5">
         <div className="text-muted text-[13px]">
           {snapshot.durationDays} days - {snapshot.members.length} people - tap any day
         </div>
