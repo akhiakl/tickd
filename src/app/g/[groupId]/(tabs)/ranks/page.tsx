@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { Flame } from "lucide-react";
-import { auth } from "@/auth";
 import { getGroupSnapshot } from "@/server/queries/group-snapshot";
+import { requireValidUserId } from "@/server/auth/require-user";
 import {
   currentStreakWithToday,
   dateRange,
@@ -30,8 +30,8 @@ export default async function RanksPage({ params, searchParams }: PageProps<"/g/
   const { w } = await searchParams;
   const window: RankWindow = w === "week" || w === "all" ? w : "month";
 
-  const session = await auth();
-  const snapshot = await getGroupSnapshot(groupId, session!.user!.id);
+  const userId = await requireValidUserId(`/g/${groupId}/ranks`);
+  const snapshot = await getGroupSnapshot(groupId, userId);
   if (!snapshot) return null;
 
   // Each member's score/streak is walked over *their own* elected timezone

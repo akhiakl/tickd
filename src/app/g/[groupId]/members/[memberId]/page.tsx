@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { auth } from "@/auth";
 import { getGroupSnapshot } from "@/server/queries/group-snapshot";
+import { requireValidUserId } from "@/server/auth/require-user";
 import {
   computeBestStreak,
   computeTotal,
@@ -23,8 +23,8 @@ export default async function MemberProfilePage({
   params,
 }: PageProps<"/g/[groupId]/members/[memberId]">) {
   const { groupId, memberId } = await params;
-  const session = await auth();
-  const snapshot = await getGroupSnapshot(groupId, session!.user!.id);
+  const userId = await requireValidUserId(`/g/${groupId}/members/${memberId}`);
+  const snapshot = await getGroupSnapshot(groupId, userId);
   if (!snapshot) return null;
 
   const member = snapshot.members.find((m) => m.userId === memberId);

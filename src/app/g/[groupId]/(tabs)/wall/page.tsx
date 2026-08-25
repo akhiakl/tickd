@@ -1,5 +1,5 @@
-import { auth } from "@/auth";
 import { getGroupSnapshot } from "@/server/queries/group-snapshot";
+import { requireValidUserId } from "@/server/auth/require-user";
 import { WallGrid } from "@/components/wall/wall-grid";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -10,8 +10,8 @@ export const metadata = { title: "The wall" };
 
 export default async function WallPage({ params }: PageProps<"/g/[groupId]/wall">) {
   const { groupId } = await params;
-  const session = await auth();
-  const snapshot = await getGroupSnapshot(groupId, session!.user!.id);
+  const userId = await requireValidUserId(`/g/${groupId}/wall`);
+  const snapshot = await getGroupSnapshot(groupId, userId);
   if (!snapshot) return null;
 
   return (

@@ -1,6 +1,6 @@
-import { auth } from "@/auth";
 import { getGroupSnapshot } from "@/server/queries/group-snapshot";
 import { getMyGroups } from "@/server/queries/my-groups";
+import { requireValidUserId } from "@/server/auth/require-user";
 import {
   computeStreak,
   computeTotal,
@@ -21,8 +21,7 @@ export const instant = false;
 
 export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
   const { groupId } = await params;
-  const session = await auth();
-  const userId = session!.user!.id;
+  const userId = await requireValidUserId(`/g/${groupId}`);
 
   const [snapshot, groups] = await Promise.all([
     getGroupSnapshot(groupId, userId),
