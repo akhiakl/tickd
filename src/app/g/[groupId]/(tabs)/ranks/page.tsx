@@ -1,14 +1,16 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { Flame } from "lucide-react";
-import { auth } from "@/auth";
 import { getGroupSnapshot } from "@/server/queries/group-snapshot";
+import { getMyGroups } from "@/server/queries/my-groups";
+import { requireValidUserId } from "@/server/auth/require-user";
 import {
   currentStreakWithToday,
   dateRange,
   rankScore,
   type RankWindow,
 } from "@/lib/challenge-stats";
+import { GroupTabHeader } from "@/components/nav/group-tab-header";
 import { Avatar } from "@/components/ui/avatar";
 import { LocalTimeBadge } from "@/components/ui/local-time-badge";
 import { cn } from "@/lib/utils";
@@ -30,9 +32,13 @@ export default async function RanksPage({ params, searchParams }: PageProps<"/g/
   const { w } = await searchParams;
   const window: RankWindow = w === "week" || w === "all" ? w : "month";
 
-  const session = await auth();
-  const snapshot = await getGroupSnapshot(groupId, session!.user!.id);
+  const userId = await requireValidUserId(`/g/${groupId}/ranks`);
+  const [snapshot, groups] = await Promise.all([
+    getGroupSnapshot(groupId, userId),
+    getMyGroups(userId),
+  ]);
   if (!snapshot) return null;
+  const me = snapshot.members.find((m) => m.isMe)!;
 
   // Each member's score/streak is walked over *their own* elected timezone
   // - localDayIndex/localCountsByDate - not the viewer's, so two people can
@@ -47,8 +53,18 @@ export default async function RanksPage({ params, searchParams }: PageProps<"/g/
 
   return (
     <div className="pt-1.5 pb-8">
-      <div className="px-5.5 pb-3.5">
-        <div className="font-heading text-2xl">Standings</div>
+      <GroupTabHeader
+        groupId={groupId}
+        groupName={snapshot.name}
+        myName={me.name}
+        myColor={me.color}
+        myAvatarSeed={me.avatarSeed}
+        isAdmin={snapshot.myRole === "admin"}
+        groups={groups}
+        subtitle={<span className="text-muted truncate text-[13px]">Standings</span>}
+      />
+
+      <div className="px-5.5 pt-3.5 pb-3.5">
         <div className="text-muted text-[13px]">by items completed</div>
       </div>
 

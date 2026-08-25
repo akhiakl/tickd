@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { auth } from "@/auth";
 import { getUserById } from "@/server/queries/users";
 import { getMyGroups } from "@/server/queries/my-groups";
+import { requireValidUserId } from "@/server/auth/require-user";
 import { Screen } from "@/components/layout/screen";
 import { BackButton } from "@/components/ui/back-button";
 import { AccountForm } from "@/components/account/account-form";
@@ -16,8 +16,7 @@ export const instant = false;
 export const metadata = { title: "Your account" };
 
 export default async function AccountPage() {
-  const session = await auth();
-  const userId = session!.user!.id;
+  const userId = await requireValidUserId("/account");
   const [user, groups] = await Promise.all([getUserById(userId), getMyGroups(userId)]);
   if (!user) return null;
 

@@ -1,13 +1,14 @@
-import { auth } from "@/auth";
 import { getGroupSnapshot } from "@/server/queries/group-snapshot";
 import { getMyGroups } from "@/server/queries/my-groups";
+import { requireValidUserId } from "@/server/auth/require-user";
 import {
   computeStreak,
   computeTotal,
   currentStreakWithToday,
   dateRange,
 } from "@/lib/challenge-stats";
-import { TodayHeader } from "@/components/today/today-header";
+import { GroupTabHeader } from "@/components/nav/group-tab-header";
+import { TodayDateLabel } from "@/components/today/today-date-label";
 import { TodayLive } from "@/components/today/today-live";
 import { MemberList, type MemberListRow } from "@/components/today/member-list";
 import { ShareButton } from "@/components/today/share-button";
@@ -21,8 +22,7 @@ export const instant = false;
 
 export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
   const { groupId } = await params;
-  const session = await auth();
-  const userId = session!.user!.id;
+  const userId = await requireValidUserId(`/g/${groupId}`);
 
   const [snapshot, groups] = await Promise.all([
     getGroupSnapshot(groupId, userId),
@@ -89,16 +89,15 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
 
   return (
     <div className="pt-1.5 pb-30">
-      <TodayHeader
+      <GroupTabHeader
         groupId={groupId}
         groupName={snapshot.name}
-        dayIndex={dayIndex}
-        durationDays={durationDays}
         myName={me.name}
         myColor={me.color}
         myAvatarSeed={me.avatarSeed}
         isAdmin={snapshot.myRole === "admin"}
         groups={groups}
+        subtitle={<TodayDateLabel dayIndex={dayIndex} durationDays={durationDays} />}
       />
 
       <TodayLive

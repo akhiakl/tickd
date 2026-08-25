@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { auth } from "@/auth";
 import { getUserById } from "@/server/queries/users";
+import { requireValidUserId } from "@/server/auth/require-user";
 import { Screen } from "@/components/layout/screen";
 import { BackButton } from "@/components/ui/back-button";
 import { Avatar } from "@/components/ui/avatar";
@@ -16,8 +16,12 @@ export const metadata = { title: "Join a group" };
  */
 async function JoinContent({ searchParams }: { searchParams: PageProps<"/join">["searchParams"] }) {
   const { code } = await searchParams;
-  const session = await auth();
-  const user = await getUserById(session!.user!.id);
+  // Preserves the invite code across a sign-in round trip, so a stale
+  // session gets cleared and the visitor lands right back on this same
+  // join flow instead of losing the code they came in with.
+  const currentPath = typeof code === "string" ? `/join?code=${encodeURIComponent(code)}` : "/join";
+  const userId = await requireValidUserId(currentPath);
+  const user = await getUserById(userId);
   if (!user) return null;
 
   return (

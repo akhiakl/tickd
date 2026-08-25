@@ -42,3 +42,28 @@ export async function signInAs(context: BrowserContext, user: SeededUser, baseUR
     },
   ]);
 }
+
+/**
+ * Signs a browser context in with a cryptographically valid session that
+ * references a user id never inserted into the database - the scenario
+ * `requireValidUserId` (src/server/auth/require-user.ts) exists to catch:
+ * a JWT that's fine on its own but points at a row that's gone (a stale
+ * cookie from a wiped/reseeded dev database, or a deleted account).
+ * Middleware alone can't tell this apart from a real signed-in user (it
+ * never touches the database - see src/auth-edge.ts's own comment), so
+ * this is the one way to actually exercise that path in a test.
+ */
+export async function signInAsStaleUser(context: BrowserContext, baseURL: string) {
+  const ghostId = crypto.randomUUID();
+  await signInAs(
+    context,
+    {
+      id: ghostId,
+      email: `ghost-${ghostId}@example.com`,
+      name: "Ghost",
+      color: "",
+      avatarSeed: "",
+    },
+    baseURL,
+  );
+}

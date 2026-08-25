@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import dynamic from "next/dynamic";
-import { auth } from "@/auth";
 import { getGroupSnapshot } from "@/server/queries/group-snapshot";
+import { requireValidUserId } from "@/server/auth/require-user";
 import { Screen } from "@/components/layout/screen";
 import { BackButton } from "@/components/ui/back-button";
 import { InviteCodePanel } from "@/components/settings/invite-code-panel";
@@ -26,8 +26,8 @@ export const metadata = { title: "Group settings" };
 
 export default async function GroupSettingsPage({ params }: PageProps<"/g/[groupId]/settings">) {
   const { groupId } = await params;
-  const session = await auth();
-  const snapshot = await getGroupSnapshot(groupId, session!.user!.id);
+  const userId = await requireValidUserId(`/g/${groupId}/settings`);
+  const snapshot = await getGroupSnapshot(groupId, userId);
   if (!snapshot) return null;
   if (snapshot.myRole !== "admin") redirect(`/g/${groupId}`);
 
