@@ -95,7 +95,7 @@ export function CreateGroupForm() {
             if (Number.isFinite(value)) setDuration(value);
           }}
           aria-label="Number of days"
-          className="text-text w-16 border-0 bg-transparent p-0 text-[15px] font-semibold focus:outline-none"
+          className="text-text focus-visible:outline-accent w-16 border-0 bg-transparent p-0 text-[15px] font-semibold outline-none focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2"
         />
         <span className="text-muted text-[13px]">
           days - any custom length from {MIN_DURATION} to {MAX_DURATION}
@@ -113,7 +113,7 @@ export function CreateGroupForm() {
           min={today}
           onChange={(e) => setStartDate(e.target.value)}
           aria-label="Starts"
-          className="text-text flex-1 border-0 bg-transparent p-0 text-[15px] font-semibold focus:outline-none"
+          className="text-text focus-visible:outline-accent flex-1 border-0 bg-transparent p-0 text-[15px] font-semibold outline-none focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2"
         />
       </div>
 
