@@ -1,13 +1,26 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getUserById } from "@/server/queries/users";
+
+/**
+ * `auth()` decrypts/verifies the session JWE on every call - real CPU work
+ * (~5-10ms measured against a local build), not just a cheap object read -
+ * and unlike `getUserById` below it wasn't deduped anywhere upstream. Every
+ * group screen calls `requireValidUserId` twice per navigation (once from
+ * `GroupLayout`, once from the tab page itself), so without this it paid
+ * for that decrypt twice. React `cache()` dedupes by argument identity, so
+ * this only helps because it's called with no arguments - `currentPath`
+ * varies per call site and stays out of the memoized part.
+ */
+const getSession = cache(() => auth());
 
 /** Resolves the signed-in user's internal id, or throws. Middleware already
  * redirects anonymous visitors away from protected routes; this is the
  * defense-in-depth check inside server actions themselves. */
 export async function requireUserId(): Promise<string> {
-  const session = await auth();
+  const session = await getSession();
   const id = session?.user?.id;
   if (!id) throw new Error("You need to be signed in to do that.");
   return id;
@@ -34,7 +47,7 @@ export async function requireUserId(): Promise<string> {
  * handler), so the caller passes its own route (e.g. `` `/g/${groupId}` ``).
  */
 export async function requireValidUserId(currentPath: string): Promise<string> {
-  const session = await auth();
+  const session = await getSession();
   const sessionUserId = session?.user?.id;
   if (!sessionUserId) {
     redirect(`/signin?callbackUrl=${encodeURIComponent(currentPath)}`);

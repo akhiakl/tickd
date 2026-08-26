@@ -69,6 +69,7 @@ export async function createGroup(input: unknown): Promise<ActionResult & { grou
   });
 
   revalidatePath("/");
+  updateTag(`my-groups:${userId}`);
   redirect(`/g/${groupId}`);
 }
 
@@ -98,6 +99,7 @@ export async function joinGroup(input: unknown): Promise<ActionResult & { groupI
 
   revalidatePath("/");
   updateTag(`group:${group.id}`);
+  updateTag(`my-groups:${userId}`);
   redirect(`/g/${group.id}`);
 }
 
@@ -135,6 +137,12 @@ export async function deleteGroup(groupId: string): Promise<ActionResult> {
   await db.delete(groups).where(eq(groups.id, groupId));
   revalidatePath("/");
   updateTag(`group:${groupId}`);
+  // Other members' own my-groups:${theirId} tags aren't touched here -
+  // same staleness trade-off getGroupCore's own comment accepts for
+  // membership changes: they stop being able to load the group within
+  // the cache's revalidate window, well before it'd still show in their
+  // switcher.
+  updateTag(`my-groups:${userId}`);
   redirect("/");
 }
 
@@ -147,5 +155,6 @@ export async function removeMember(groupId: string, memberUserId: string): Promi
     .where(and(eq(groupMembers.groupId, groupId), eq(groupMembers.userId, memberUserId)));
   revalidatePath(`/g/${groupId}/settings`);
   updateTag(`group:${groupId}`);
+  updateTag(`my-groups:${memberUserId}`);
   return { ok: true };
 }
