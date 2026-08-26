@@ -23,7 +23,8 @@ function leafPositions(count: number): { x: number; y: number; side: 1 | -1 }[] 
   return Array.from({ length: count }, (_, i) => {
     const side = i % 2 === 0 ? 1 : -1;
     const row = Math.floor(i / 2);
-    return { x: 32 + side * (6 + row * 3), y: 58 - row * 12, side };
+    // FIXED: Changed 58 to 46 so the first row sits above the pot
+    return { x: 32 + side * (6 + row * 3), y: 46 - row * 12, side };
   });
 }
 
@@ -42,7 +43,8 @@ function leafPositions(count: number): { x: number; y: number; side: 1 | -1 }[] 
 export function GroupMascot({ avgStreak }: { avgStreak: number }) {
   const stage = stageFor(avgStreak);
   const leaves = leafPositions(stage.leaves);
-  const stemTop = stage.leaves === 0 ? 62 : 58 - Math.floor((stage.leaves - 1) / 2) * 12 - 6;
+  // FIXED: Changed 58 to 46 here as well to match the leaf coordinates
+  const stemTop = stage.leaves === 0 ? 62 : 46 - Math.floor((stage.leaves - 1) / 2) * 12 - 6;
 
   return (
     <div className="bg-surface mx-4 mt-5.5 flex items-center gap-3.5 rounded-3xl px-4.5 py-3.5">
