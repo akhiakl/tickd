@@ -12,8 +12,8 @@ import { BackButton } from "@/components/ui/back-button";
 import { Avatar } from "@/components/ui/avatar";
 import { LocalTimeBadge } from "@/components/ui/local-time-badge";
 import { BadgeRow } from "@/components/ui/badge-row";
+import { HistoryGrid } from "@/components/member/history-grid";
 import { earnedBadges } from "@/lib/achievements";
-import { cn } from "@/lib/utils";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -121,30 +121,18 @@ export default async function MemberProfilePage({
       </div>
 
       <div className="text-faint pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase">
-        History
+        History - tap a day
       </div>
-      <div className="flex max-w-[340px] flex-wrap gap-1.5">
-        {allDates.map((date, i) => {
-          const future = date > localToday;
-          const count = future ? null : (member.localCountsByDate[date] ?? 0);
-          const full = count === items.length;
-          const partial = count !== null && count > 0 && !full;
-          return (
-            <span
-              key={date}
-              className={cn(
-                "flex h-[34px] w-[38px] items-center justify-center rounded-[10px] text-[11px] font-bold",
-                future && "border-text/20 text-muted border border-dashed",
-                !future && count === 0 && "bg-zero text-muted",
-                !future && full && "bg-ok text-bg",
-                !future && partial && "bg-ok-4 text-muted",
-              )}
-            >
-              {i + 1}
-            </span>
-          );
-        })}
-      </div>
+      <HistoryGrid
+        dates={allDates}
+        localToday={localToday}
+        itemCount={items.length}
+        items={items}
+        memberName={member.name}
+        isMe={member.isMe}
+        localCountsByDate={member.localCountsByDate}
+        localItemsByDate={member.localItemsByDate}
+      />
     </Screen>
   );
 }
