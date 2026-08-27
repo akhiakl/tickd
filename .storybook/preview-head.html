@@ -1,0 +1,60 @@
+<!--
+  Storybook doesn't run inside Next's build pipeline, so `next/font/google`
+  (src/lib/fonts.ts) isn't available to generate the --font-caprasimo /
+  --font-figtree variables the app's layout sets on <html>. These are the
+  same two Google Fonts families, self-hosted from .storybook/fonts/ rather
+  than fetched from fonts.googleapis.com at story-render time - this build
+  environment's network policy doesn't reliably reach that host from a
+  headless browser context, and self-hosting is also just closer to how
+  Next itself serves these (next/font/google downloads and bundles them at
+  build time rather than loading from Google's CDN at runtime).
+-->
+<style>
+  @font-face {
+    font-family: "Caprasimo";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("/sb-fonts/caprasimo-400.ttf") format("truetype");
+  }
+  @font-face {
+    font-family: "Figtree";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("/sb-fonts/figtree-400.ttf") format("truetype");
+  }
+  @font-face {
+    font-family: "Figtree";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("/sb-fonts/figtree-500.ttf") format("truetype");
+  }
+  @font-face {
+    font-family: "Figtree";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("/sb-fonts/figtree-600.ttf") format("truetype");
+  }
+  @font-face {
+    font-family: "Figtree";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("/sb-fonts/figtree-700.ttf") format("truetype");
+  }
+  @font-face {
+    font-family: "Figtree";
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url("/sb-fonts/figtree-800.ttf") format("truetype");
+  }
+
+  :root {
+    --font-caprasimo: "Caprasimo";
+    --font-figtree: "Figtree";
+  }
+</style>

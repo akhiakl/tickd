@@ -1,3 +1,6 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from "eslint-plugin-storybook";
+
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
@@ -28,8 +31,7 @@ const eslintConfig = defineConfig([
       // table-driven cases add bulk without adding complexity.
       "max-lines": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
     },
-  },
-  // Default ignores of eslint-config-next.
+  }, // Default ignores of eslint-config-next.
   globalIgnores([
     ".next/**",
     "out/**",
@@ -43,6 +45,7 @@ const eslintConfig = defineConfig([
     // comment) rather than app source.
     "cache-handlers/**",
   ]),
+  ...storybook.configs["flat/recommended"],
 ]);
 
 export default eslintConfig;
