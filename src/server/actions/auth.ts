@@ -11,6 +11,7 @@ import {
   credentialsSignInSchema,
   setCredentialsSchema,
   usernameSchema,
+  timezoneSchema,
 } from "@/server/validation/schemas";
 import type { ActionResult } from "./result";
 
@@ -25,9 +26,14 @@ const TOO_MANY_ATTEMPTS: ActionResult = { ok: false, error: "Too many attempts. 
 export async function signInAsGuest(input: {
   name: string;
   callbackUrl: string;
+  /** Browser-detected IANA zone, best-effort - see guest-sign-in-form.tsx.
+   * Silently dropped rather than failing sign-in when it's missing or
+   * doesn't parse; the account still creates fine without it. */
+  timezone?: string;
 }): Promise<ActionResult> {
   const parsed = guestNameSchema.safeParse(input.name);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+  const parsedTimezone = timezoneSchema.safeParse(input.timezone);
 
   // Every call inserts a fresh users row with no auth barrier at all - the
   // cheapest thing in the app for a bot to spam, so it gets the tightest
@@ -36,7 +42,11 @@ export async function signInAsGuest(input: {
   const allowed = await rateLimit(`guest-signup:${ip}`, 8, 600);
   if (!allowed) return TOO_MANY_ATTEMPTS;
 
-  await signIn("guest", { name: parsed.data, redirectTo: input.callbackUrl });
+  await signIn("guest", {
+    name: parsed.data,
+    timezone: parsedTimezone.success ? parsedTimezone.data : undefined,
+    redirectTo: input.callbackUrl,
+  });
   return { ok: true };
 }
 
