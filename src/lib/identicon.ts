@@ -5,7 +5,12 @@
  * pattern) is the whole point, not unpredictability.
  */
 
-const DEFAULT_GRID_SIZE = 5;
+// 7x7 (not the original 5x5) for a denser, more distinctive pattern now
+// that there's less blank canvas to fill - the center overlaps the
+// initial-letter badge Avatar draws on top, so the extra cells are what
+// keeps the pattern reading as "a pattern" rather than a handful of
+// visible squares around a big empty middle.
+const DEFAULT_GRID_SIZE = 7;
 
 /**
  * A small, dependency-free string hash (FNV-1a), good enough to scatter
