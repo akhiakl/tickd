@@ -84,7 +84,12 @@ export function WallGrid({
 
   return (
     <div>
-      <div className="no-scrollbar flex gap-2 overflow-x-auto px-5.5 pb-3.5">
+      {/* pt-1.5 (not just the horizontal/bottom padding) matters here:
+          overflow-x-auto forces the browser to clip overflow-y too, and
+          each button's selection ring is a box-shadow that extends past
+          the avatar's own box - with no top padding, the ring on a
+          selected avatar in the top row gets clipped instead of drawn. */}
+      <div className="no-scrollbar flex gap-2 overflow-x-auto px-5.5 pt-1.5 pb-3.5">
         {members.map((m) => (
           <button
             key={m.userId}
@@ -92,12 +97,24 @@ export function WallGrid({
             onClick={() => selectMember(m.userId)}
             aria-label={m.isMe ? "You" : m.name}
             aria-pressed={m.userId === member.userId}
-            className={cn(
-              "flex-none rounded-full ring-2 transition-colors",
-              m.userId === member.userId ? "ring-accent" : "ring-transparent",
-            )}
+            className="flex-none rounded-full"
           >
-            <Avatar name={m.name} color={m.color} seed={m.avatarSeed} size={40} />
+            <span
+              className={cn(
+                "block rounded-full ring-2 transition-colors",
+                m.userId === member.userId ? "ring-accent" : "ring-transparent",
+              )}
+            >
+              <Avatar name={m.name} color={m.color} seed={m.avatarSeed} size={40} />
+            </span>
+            <span
+              className={cn(
+                "mt-1 block max-w-[40px] truncate text-center text-[10px] font-bold",
+                m.userId === member.userId ? "text-text" : "text-faint",
+              )}
+            >
+              {m.isMe ? "You" : m.name}
+            </span>
           </button>
         ))}
       </div>
