@@ -59,7 +59,22 @@ const server = createServer((req, res) => {
     // Real Auth0 ends its hosted session, then 302s to `returnTo`. This
     // fake has no session to end, but redirecting is what the suite
     // actually needs to verify (see the sign-out-button's Auth0 logout).
-    const returnTo = url.searchParams.get("returnTo") ?? "/";
+    const returnToParam = url.searchParams.get("returnTo");
+    let returnTo = "/";
+
+    if (returnToParam) {
+      try {
+        const referer = req.headers.referer;
+        const allowedOrigin = referer ? new URL(referer).origin : undefined;
+        const candidate = new URL(returnToParam);
+        if (allowedOrigin && candidate.origin === allowedOrigin) {
+          returnTo = candidate.toString();
+        }
+      } catch {
+        returnTo = "/";
+      }
+    }
+
     res.writeHead(302, { location: returnTo }).end();
     return;
   }
