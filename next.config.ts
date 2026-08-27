@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   // Cache Components (component/function-level `use cache`, PPR by
@@ -30,4 +31,25 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Only used to upload source maps at build time - all optional and only
+  // active when set, so this stays a no-op until SENTRY_AUTH_TOKEN exists
+  // (in CI/Vercel; never needed locally). org/project come from the
+  // Sentry project you create - fill in once you have them.
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  // Quiets Sentry's own build-time logging when the token isn't set
+  // (every build until the project exists) instead of warning on each one.
+  silent: !process.env.SENTRY_AUTH_TOKEN,
+  // Keeps stack traces readable in Sentry without shipping the source
+  // maps themselves to the client.
+  widenClientFileUpload: true,
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+  },
+  // Routes client-side Sentry requests through this app's own domain
+  // (avoids ad-blockers dropping requests to sentry.io directly). Costs a
+  // few extra bytes of middleware; fine for this app's traffic.
+  tunnelRoute: "/monitoring",
+});
