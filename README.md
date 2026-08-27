@@ -12,12 +12,16 @@ reference; nothing in that folder ships in the app.
 - **Next.js 16** (App Router, Turbopack, typed routes) on **React 19**
 - **Postgres** via **Drizzle ORM** (works with Neon, Supabase, or Vercel's Postgres marketplace
   integration - anything that hands you a connection string)
-- **Auth.js v5** with an **Auth0** application: any unauthenticated visit to a protected route
-  redirects straight to Auth0's hosted Universal Login - no in-app sign-in screen
+- **Auth.js v5**, in one of two modes (`AUTH0_ENABLED`, off by default): a frictionless
+  name-only **guest join** (no password/email/OAuth), or an **Auth0** application where any
+  unauthenticated visit to a protected route redirects straight to Auth0's hosted Universal
+  Login - no in-app sign-in screen either way
 - **Tailwind CSS v4**, with the prototype's color/spacing/font tokens ported into `globals.css`
 - **@dnd-kit** for the checklist drag-to-reorder interaction
 - **next/og** (`ImageResponse`) for the personal share card, generated server-side as a PNG
-- **Vercel Analytics** and **Speed Insights**
+- **Vercel Analytics** and **Speed Insights**, plus **Sentry** for client/server error tracking
+  (optional - see [Error tracking](#error-tracking))
+- **Upstash Redis**, backing the remote cache handler (see [Caching and rendering](#caching-and-rendering))
 - **Vitest** + **Testing Library** for unit and component tests
 - **Husky** + **lint-staged** + **commitlint** + **Prettier** + **ESLint** (flat config)
 
@@ -25,17 +29,22 @@ reference; nothing in that folder ships in the app.
 
 ```bash
 pnpm install
-cp .env.example .env.local   # fill in DATABASE_URL and the AUTH0_* values
+cp .env.example .env.local   # at minimum, fill in DATABASE_URL - guest mode needs nothing else
 pnpm run db:migrate           # applies drizzle/*.sql to your database
 pnpm run db:seed              # optional: seeds one sample group with 15 members
 pnpm run dev
 ```
 
-### Auth0 setup
+### Auth0 setup (optional)
 
-Create a Regular Web Application in Auth0 and enable whichever connections you want offered on its
-hosted Universal Login page (Google, email/password, passwordless, etc.) - the app itself renders
-no sign-in UI, so there's no `connection` field to wire up on our side.
+Skip this entirely for local dev - with `AUTH0_ENABLED` unset (or `"false"`), visitors instead
+pick a display name to join, no account required, which is the default and what `pnpm run dev`
+gives you out of the box.
+
+To require real sign-in instead, set `AUTH0_ENABLED="true"` and create a Regular Web Application
+in Auth0, enabling whichever connections you want offered on its hosted Universal Login page
+(Google, email/password, passwordless, etc.) - the app itself renders no sign-in UI, so there's no
+`connection` field to wire up on our side.
 
 Set:
 
@@ -74,17 +83,33 @@ Every screen past the landing page is per-user, live data (your group, your tick
 much here that benefits from time-based caching, and caching it anyway would mean occasionally
 showing someone a stale streak. The choices actually made:
 
-- **`React.cache()`** wraps every read in `src/server/queries/`, so the group layout and the page it
-  wraps share one database round trip per request instead of two.
-- **Route segment defaults are left on `auto`.** Next's own heuristic already prerenders what it
-  can - `/create`, for instance, has no per-request data dependency and comes out of `next build`
-  as a static route with no configuration from us.
+- **Cache Components (`cacheComponents: true` in `next.config.ts`)** is on project-wide, adopted
+  incrementally - every route under `/g/[groupId]` currently opts out (an `instant = false` export,
+  see the comment on each one) until it's converted to a proper static-shell/dynamic-hole split.
+  `/create`, `/join`, and a few others don't need the opt-out and already get Next's normal
+  build-time prerendering.
+- **`React.cache()`** wraps every read in `src/server/queries/` (and the session lookup in
+  `src/server/auth/require-user.ts`), so a group navigation shares one DB round trip and one
+  session decrypt across the layout and the page it wraps, instead of paying for each twice.
+- **`"use cache: remote"`** scopes the group-wide data that's identical for every viewer -
+  `getGroupCore` in `group-snapshot.ts` and the raw rows behind `getMyGroups` - behind a short-TTL
+  cache (`cacheLife({ stale: 5, revalidate: 2, expire: 30 })`) shared across requests and
+  serverless instances via Upstash Redis (`cache-handlers/redis-remote.js`; falls back to an
+  in-memory Map when Redis isn't configured, which is fine for local dev/CI but means **the
+  cross-instance sharing this exists for doesn't happen in production without
+  `KV_REST_API_URL`/`KV_REST_API_TOKEN` set** - see Deploying). Anything viewer-specific or
+  clock-dependent (today's date, `isMe`) is computed fresh outside the cached scope on every
+  request.
+- **The Today page streams**: the checklist and member-list sections are separate async Server
+  Components behind their own `<Suspense>` boundaries (`(tabs)/today-checklist-section.tsx`,
+  `member-list-section.tsx`), so the header/stats shell can paint before the heavier per-member
+  computation finishes, without any client-side fetching.
 - **The share-card image** (`/api/share/[groupId]`) is deliberately _not_ cached: it renders the
   requesting user's exact current tick state, and a cached PNG would go stale the moment they check
   another box.
-- **Mutations** (`toggleCheck`, `reorderChecklistItems`, and so on) call `revalidatePath` on the
-  group's layout segment, so the whole group subtree picks up fresh data on the next navigation
-  without a manual refetch.
+- **Mutations** (`toggleCheck`, `reorderChecklistItems`, and so on) call `revalidatePath` and/or
+  `updateTag` (`group:${groupId}`, `my-groups:${userId}`) so the group subtree and switcher list
+  pick up fresh data on the next navigation without a manual refetch.
 
 ## Performance notes
 
@@ -193,15 +218,36 @@ Two workflows run in GitHub Actions:
   suite. The workflow job itself fails if any of the three suites failed, even though the comment
   posts either way.
 
+> **Known issue:** `pr-quality.yml` has been failing on every PR regardless of content (each run
+> finishes in a couple of seconds, too fast to have actually run a suite - almost certainly a setup
+> step, e.g. `pnpm install --frozen-lockfile` against a stale lockfile). It's not gating anything
+> right now; worth fixing before relying on it again.
+
 ## Deploying
 
-The app is a standard Next.js project, deployable to Vercel with the following environment
-variables:
+The app is a standard Next.js project, deployable to Vercel. Required environment variables:
 
 - `DATABASE_URL`
 - `AUTH_SECRET` (generate with `npx auth secret`)
 - `NEXT_PUBLIC_APP_URL` (your production origin)
-- `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_ISSUER`
+- `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_ISSUER` - only if `AUTH0_ENABLED="true"`
+
+Strongly recommended in production, though the app degrades gracefully without them:
+
+- `KV_REST_API_URL`/`KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`) -
+  the Upstash Redis credentials the `"use cache: remote"` handler needs for its cross-instance
+  sharing (see [Caching and rendering](#caching-and-rendering)). Without these, every serverless
+  instance falls back to its own in-memory cache, so the cache exists but stops doing its actual
+  job of sharing one lookup across instances/requests.
+- **Match your compute region to your database's region.** Vercel's default function region and
+  your Postgres provider's region are independent settings - a mismatch (e.g. a US Vercel region
+  against an ap-southeast-1 Supabase project) adds a real cross-region round trip to _every_
+  uncached query, easily 200ms+ round-trip depending on the pair, dwarfing anything else in the
+  request. Set it in Vercel's dashboard under Project Settings → Functions → Function Region, or
+  `regions` in `vercel.json`.
+
+See [`.env.example`](.env.example) for the complete list including optional push notifications
+(`VAPID_*`) and error tracking (`SENTRY_*`, see below).
 
 `vercel.json` overrides the Vercel build command to `pnpm run db:migrate && pnpm run build`, so
 every deploy applies any pending `drizzle/*.sql` migrations to `DATABASE_URL` before building -
@@ -254,6 +300,27 @@ One-time setup, once the app is deployed:
 
 No app code depends on QStash specifically beyond the signature check itself - swapping to a
 different scheduler later just means it falls back to the `CRON_SECRET` bearer check instead.
+
+### Error tracking
+
+[Sentry](https://sentry.io) (`@sentry/nextjs`) covers what Vercel's own Observability can't: a
+crash in the _browser_ (a render error, a click handler throwing, a failed client-side fetch) -
+Vercel's runtime logs only ever see server-side (serverless/edge function) errors.
+
+- `src/instrumentation.ts` / `src/instrumentation-client.ts` - server/edge and browser
+  `Sentry.init()`, both no-op cleanly when `SENTRY_DSN`/`NEXT_PUBLIC_SENTRY_DSN` are unset, so
+  Sentry is entirely optional and the app runs identically without it.
+- `src/app/error.tsx` - the on-brand, app-wide error boundary (catches anything under the root
+  layout without a closer `error.tsx` of its own).
+- `src/app/global-error.tsx` - Next's required last-resort boundary for the rare case the root
+  layout itself throws; deliberately minimal since it can't assume anything else in the app is
+  intact.
+
+Setup: create a Sentry project (platform Next.js), then set `SENTRY_DSN` and
+`NEXT_PUBLIC_SENTRY_DSN` to its DSN (Settings → Client Keys). For readable stack traces, also set
+`SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` (Settings → Auth Tokens, scoped to
+`project:releases`) - `next.config.ts`'s `withSentryConfig` uploads source maps at build time only
+when all three are present, and is silent otherwise.
 
 ## Product notes and intentional deviations from the prototype
 
