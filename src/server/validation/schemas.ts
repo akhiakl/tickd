@@ -1,7 +1,16 @@
 import { z } from "zod";
-import { AVATAR_SWATCHES } from "@/lib/constants";
+import { ALL_AVATAR_SWATCHES } from "@/lib/constants";
 
 export const guestNameSchema = z.string().trim().min(1, "Enter a name.").max(40);
+
+/** A loose IANA-zone-shaped check ("Region/City", "Region/City/City", or
+ * "UTC") - not validating against the real tz database, just guarding
+ * against obviously-wrong input before it lands in a column the cron
+ * routes trust. Shared by every path that can set a timezone: the guest
+ * sign-in form's browser-detected default, TimezoneSync's background
+ * best-effort default, and the Account settings picker. */
+export const IANA_TIMEZONE_PATTERN = /^[A-Za-z_]+(\/[A-Za-z_]+){0,2}$|^UTC$/;
+export const timezoneSchema = z.string().regex(IANA_TIMEZONE_PATTERN, "Invalid timezone.");
 
 // Same shape most sites converge on (GitHub, Instagram, etc): lowercase
 // letters, digits, underscore, and period only - no uppercase, no other
@@ -96,7 +105,7 @@ export const joinGroupSchema = z.object({
     .transform((v) => v.toUpperCase()),
 });
 
-export const avatarColorSchema = z.enum(AVATAR_SWATCHES as [string, ...string[]]);
+export const avatarColorSchema = z.enum(ALL_AVATAR_SWATCHES as [string, ...string[]]);
 
 export const updateProfileSchema = z.object({
   name: z.string().trim().min(1, "Your name can't be empty.").max(40),

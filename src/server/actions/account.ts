@@ -6,14 +6,12 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { users } from "@/server/db/schema";
 import { requireUserId } from "@/server/auth/require-user";
-import { updatePrefsSchema, updateProfileSchema } from "@/server/validation/schemas";
+import {
+  updatePrefsSchema,
+  updateProfileSchema,
+  timezoneSchema,
+} from "@/server/validation/schemas";
 import type { ActionResult } from "./result";
-
-/** A loose IANA-zone-shaped check ("Region/City", "Region/City/City", or
- * "UTC") - not validating against the real tz database, just guarding
- * against obviously-wrong input before it lands in a column the cron
- * routes trust. */
-const IANA_TIMEZONE_PATTERN = /^[A-Za-z_]+(\/[A-Za-z_]+){0,2}$|^UTC$/;
 
 export async function updateProfile(input: unknown): Promise<ActionResult> {
   const parsed = updateProfileSchema.safeParse(input);
@@ -52,7 +50,8 @@ export async function updatePreferences(input: unknown): Promise<ActionResult> {
  * this first write.
  */
 export async function setTimezone(timezone: string): Promise<ActionResult> {
-  if (!IANA_TIMEZONE_PATTERN.test(timezone)) return { ok: false, error: "Invalid timezone." };
+  const parsed = timezoneSchema.safeParse(timezone);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
   const session = await auth();
   const userId = session?.user?.id;
@@ -73,7 +72,8 @@ export async function setTimezone(timezone: string): Promise<ActionResult> {
  * best-effort background sync).
  */
 export async function setTimezonePreference(timezone: string): Promise<ActionResult> {
-  if (!IANA_TIMEZONE_PATTERN.test(timezone)) return { ok: false, error: "Invalid timezone." };
+  const parsed = timezoneSchema.safeParse(timezone);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
   const userId = await requireUserId();
 
   await db.update(users).set({ timezone }).where(eq(users.id, userId));
