@@ -17,7 +17,12 @@ permissions:
 env:
   DATABASE_URL: postgres://postgres:postgres@localhost:5432/tickd_test
   AUTH_SECRET: ci-test-secret-do-not-use-in-production
-  NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
+  # Deliberately not set here: playwright.config.ts's webServer already
+  # injects it (tests/e2e/playwright.shared.ts hardcodes baseURL to
+  # 127.0.0.1:3100), so setting it workflow-wide was redundant for e2e and
+  # actively wrong for the unit-tests job, which leaked it into Vitest and
+  # broke invite-code-panel.test.tsx's assertion on getBaseUrl()'s
+  # no-env-var localhost:3000 fallback.
 
 jobs:
   unit-tests:
