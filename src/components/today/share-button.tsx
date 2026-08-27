@@ -51,14 +51,30 @@ export function ShareButton({ groupId }: { groupId: string }) {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={openSheet}
-        className="bg-accent font-heading text-on-panel absolute right-4.5 bottom-24 z-10 flex cursor-pointer items-center gap-2 rounded-full py-3.5 pr-5 pl-4.5 text-[15px] shadow-lg"
-      >
-        <ArrowUpFromLine size={19} strokeWidth={2.4} />
-        Share today
-      </button>
+      {/* fixed, not absolute: this needs to float at a constant spot on
+          screen regardless of how far the checklist/member list below it
+          is scrolled - absolute would anchor to whichever ancestor
+          happens to establish its containing block, which isn't
+          guaranteed to track the viewport as the page scrolls. The outer
+          div matches Screen's own responsive column width
+          (max-w-md/xl/2xl) and is what's actually `fixed` + centered;
+          the button positions `absolute` within *that*, so it lines up
+          with the page content instead of the raw window edge on wider
+          viewports. The outer div has no in-flow content of its own (the
+          button is taken out of flow), so it collapses to zero height -
+          harmless, and `pointer-events-none` (undone on the button
+          itself) keeps that zero-height box from blocking clicks/scroll
+          anywhere else on the page. */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md md:max-w-xl lg:max-w-2xl">
+        <button
+          type="button"
+          onClick={openSheet}
+          className="bg-accent font-heading text-on-panel pointer-events-auto absolute right-4.5 bottom-24 flex cursor-pointer items-center gap-2 rounded-full py-3.5 pr-5 pl-4.5 text-[15px] shadow-lg"
+        >
+          <ArrowUpFromLine size={19} strokeWidth={2.4} />
+          Share today
+        </button>
+      </div>
 
       <Sheet
         open={open}

@@ -37,7 +37,14 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
   }).map((b) => b.id);
 
   return (
-    <div className="pt-1.5 pb-30">
+    // pb-40 (not the old pb-30) reserves enough room for ShareButton, now
+    // that it's genuinely fixed to the viewport at all scroll positions
+    // instead of an absolute-positioned element that happened to render
+    // near the bottom: fixed bottom-24 + the button's own ~54px height
+    // puts its top edge ~150px above the viewport bottom, so the last
+    // checklist/member row needs at least that much clearance to never
+    // sit underneath it when scrolled all the way down.
+    <div className="pt-1.5 pb-40">
       <GroupTabHeader
         groupId={groupId}
         groupName={snapshot.name}
