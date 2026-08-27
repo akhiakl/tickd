@@ -5,10 +5,11 @@ import { caprasimo, figtree } from "@/lib/fonts";
 import { ThemeProvider } from "@/components/theme-provider";
 import { HydrationMarker } from "@/components/hydration-marker";
 import { TimezoneSync } from "@/components/timezone-sync";
+import { getBaseUrl } from "@/lib/base-url";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(getBaseUrl()),
   title: {
     default: "Tickd",
     template: "%s / Tickd",
