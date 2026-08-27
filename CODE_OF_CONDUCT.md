@@ -45,10 +45,11 @@ spaces.
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the
-maintainers by opening a confidential report as described in [`SECURITY.md`](./SECURITY.md), or by
-contacting a maintainer directly. All complaints will be reviewed and investigated promptly and
-fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting
+the maintainers directly - open a private conversation via a maintainer's GitHub profile, or reach
+out through the contact info there if listed. This is a separate channel from
+[`SECURITY.md`](./SECURITY.md), which covers software vulnerability reports only. All complaints
+will be reviewed and investigated promptly and fairly.
 
 All maintainers are obligated to respect the privacy and security of the reporter of any incident.
 
