@@ -64,9 +64,11 @@ const server = createServer((req, res) => {
 
     if (returnToParam) {
       try {
-        const candidate = new URL(returnToParam, FAKE_AUTH0_URL);
-        if (candidate.origin === FAKE_AUTH0_URL) {
-          returnTo = `${candidate.pathname}${candidate.search}${candidate.hash}`;
+        const referer = req.headers.referer;
+        const allowedOrigin = referer ? new URL(referer).origin : undefined;
+        const candidate = new URL(returnToParam);
+        if (allowedOrigin && candidate.origin === allowedOrigin) {
+          returnTo = candidate.toString();
         }
       } catch {
         returnTo = "/";
