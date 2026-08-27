@@ -8,7 +8,7 @@ import {
   randomizeAvatar,
   setTimezonePreference,
 } from "@/server/actions/account";
-import { AVATAR_SWATCHES } from "@/lib/constants";
+import { AVATAR_SWATCHES, AVATAR_SWATCHES_MORE, ALL_AVATAR_SWATCHES } from "@/lib/constants";
 import { Avatar } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -52,6 +52,12 @@ export function AccountForm({
 }) {
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
+  // Starts expanded if the saved color already came from the extra list -
+  // otherwise it'd be selected but invisible until someone thinks to tap
+  // "More colors" themselves.
+  const [showMoreColors, setShowMoreColors] = useState(() =>
+    (AVATAR_SWATCHES_MORE as readonly string[]).includes(initialColor),
+  );
   const [avatarSeed, setAvatarSeed] = useState(initialAvatarSeed);
   const [prefs, setPrefs] = useState(initialPrefs);
   const [, startTransition] = useTransition();
@@ -163,7 +169,7 @@ export function AccountForm({
         Your colour
       </div>
       <div className="flex flex-wrap gap-2.5 px-5.5">
-        {AVATAR_SWATCHES.map((swatch) => (
+        {(showMoreColors ? ALL_AVATAR_SWATCHES : AVATAR_SWATCHES).map((swatch) => (
           <button
             key={swatch}
             type="button"
@@ -179,6 +185,16 @@ export function AccountForm({
             aria-label={`Choose ${swatch}`}
           />
         ))}
+        {!showMoreColors && (
+          <button
+            type="button"
+            onClick={() => setShowMoreColors(true)}
+            aria-label={`Show ${AVATAR_SWATCHES_MORE.length} more colors`}
+            className="border-text/25 text-muted hover:text-text hover:border-text/40 flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] border-dashed text-[11px] font-bold"
+          >
+            +{AVATAR_SWATCHES_MORE.length}
+          </button>
+        )}
       </div>
 
       <div className="text-faint px-6 pt-6.5 pb-2 text-[11px] tracking-[0.12em] uppercase">

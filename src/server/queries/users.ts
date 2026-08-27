@@ -56,7 +56,7 @@ export async function upsertUserFromIdentity(identity: {
  * key on - every guest sign-in is a fresh participant, even if two people
  * (or the same person on two devices) type the same name.
  */
-export async function createGuestUser(input: { name: string }): Promise<User> {
+export async function createGuestUser(input: { name: string; timezone?: string }): Promise<User> {
   const [created] = await db
     .insert(users)
     .values({
@@ -65,6 +65,13 @@ export async function createGuestUser(input: { name: string }): Promise<User> {
       color: AVATAR_SWATCHES[0],
       avatarSeed: crypto.randomUUID(),
       isGuest: true,
+      // Set right at creation when the sign-in form managed to detect one
+      // (see guest-sign-in-form.tsx), so there's no gap where this account
+      // has no timezone until TimezoneSync's next-page-load round trip
+      // catches up. Still just a default: `undefined` here leaves the
+      // column null exactly like before, and TimezoneSync/Account settings
+      // remain the paths that actually set or change it after this.
+      timezone: input.timezone,
     })
     .returning();
 

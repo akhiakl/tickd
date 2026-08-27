@@ -12,8 +12,18 @@ export function GuestSignInForm({ callbackUrl }: { callbackUrl: string }) {
   function submit(formEvent: React.FormEvent) {
     formEvent.preventDefault();
     setError(null);
+    // Best-effort: caught rather than left to throw, since a person on an
+    // old/unusual browser should still be able to sign in - just without
+    // this shortcut, same as before this existed (TimezoneSync's own
+    // background sync still catches it on the very next page load).
+    let timezone: string | undefined;
+    try {
+      timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      // Leave undefined.
+    }
     startTransition(async () => {
-      const result = await signInAsGuest({ name, callbackUrl });
+      const result = await signInAsGuest({ name, callbackUrl, timezone });
       if (!result.ok) setError(result.error);
     });
   }

@@ -3,7 +3,11 @@ import { authConfig } from "@/auth.config";
 import { auth0Enabled } from "@/lib/flags";
 import { upsertUserFromIdentity, createGuestUser, getUserByUsername } from "@/server/queries/users";
 import { verifyPassword } from "@/server/auth/password";
-import { guestNameSchema, credentialsSignInSchema } from "@/server/validation/schemas";
+import {
+  guestNameSchema,
+  credentialsSignInSchema,
+  timezoneSchema,
+} from "@/server/validation/schemas";
 
 // The full Auth.js instance: real providers, DB-backed callbacks. Used by
 // the /api/auth/[...nextauth] route, Server Actions, and Server
@@ -33,11 +37,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async (request) => {
         (await import("next-auth/providers/credentials")).default({
           id: "guest",
           name: "Guest",
-          credentials: { name: { label: "Name", type: "text" } },
+          credentials: {
+            name: { label: "Name", type: "text" },
+            // Optional: the browser-detected IANA zone (see
+            // guest-sign-in-form.tsx), set at creation so there's no gap
+            // where a brand-new account has no timezone until
+            // TimezoneSync's next-page-load round trip catches up. Left
+            // out entirely (undefined, not a bad-value error) when
+            // detection failed client-side or on an older client - the
+            // account still creates fine, just null here as before.
+            timezone: { label: "Timezone", type: "text" },
+          },
           async authorize(credentials) {
             const parsed = guestNameSchema.safeParse(credentials?.name);
             if (!parsed.success) return null;
-            const dbUser = await createGuestUser({ name: parsed.data });
+            const parsedTimezone = timezoneSchema.safeParse(credentials?.timezone);
+            const dbUser = await createGuestUser({
+              name: parsed.data,
+              timezone: parsedTimezone.success ? parsedTimezone.data : undefined,
+            });
             return { id: dbUser.id, name: dbUser.name };
           },
         }),

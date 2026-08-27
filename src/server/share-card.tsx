@@ -93,7 +93,7 @@ export function ShareCard({
               overflow: "hidden",
             }}
           >
-            <svg viewBox="0 0 5 5" width={s(40)} height={s(40)}>
+            <svg viewBox="0 0 7 7" width={s(40)} height={s(40)}>
               {cells.map((row, rowIndex) =>
                 row.map(
                   (filled, colIndex) =>
