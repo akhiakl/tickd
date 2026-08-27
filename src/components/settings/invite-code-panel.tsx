@@ -4,11 +4,12 @@ import { useState, useTransition } from "react";
 import { regenerateInvite } from "@/server/actions/groups";
 import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
+import { getBaseUrl } from "@/lib/base-url";
 
 // Same source and fallback as src/app/layout.tsx's metadataBase - a
 // hardcoded "tickd.app" here would copy a link pointing at production
 // even when running locally or on a preview deployment.
-const APP_HOST = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").host;
+const APP_HOST = new URL(getBaseUrl()).host;
 
 export function InviteCodePanel({
   groupId,

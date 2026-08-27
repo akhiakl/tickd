@@ -19,9 +19,9 @@ describe("InviteCodePanel", () => {
   it("copies the invite link and confirms it with a toast", async () => {
     render(<InviteCodePanel groupId="g1" initialCode="ABC123" />);
     fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
-    // NEXT_PUBLIC_APP_URL isn't set under Vitest, so this exercises the
-    // same "localhost:3000" fallback src/app/layout.tsx's metadataBase
-    // uses - see invite-code-panel.tsx's own comment.
+    // Vitest sets NODE_ENV="test", not "development", and doesn't set
+    // Vercel's env vars either, so getBaseUrl() falls through to its final
+    // "localhost:3000" fallback - see src/lib/base-url.ts.
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("localhost:3000/join?code=ABC123");
     expect(await screen.findByText("Invite link copied")).toBeInTheDocument();
   });

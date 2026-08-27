@@ -229,8 +229,13 @@ The app is a standard Next.js project, deployable to Vercel. Required environmen
 
 - `DATABASE_URL`
 - `AUTH_SECRET` (generate with `npx auth secret`)
-- `NEXT_PUBLIC_APP_URL` (your production origin)
 - `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_ISSUER` - only if `AUTH0_ENABLED="true"`
+
+No app-URL variable to set on Vercel: `src/lib/base-url.ts` derives the app's own origin from
+Vercel's system env vars (production domain if attached, else the deployment's own `*.vercel.app`
+URL) when `NEXT_PUBLIC_APP_URL` isn't set, so it's correct on production and on every preview
+deployment automatically. Set `NEXT_PUBLIC_APP_URL` explicitly only if deploying somewhere other
+than Vercel.
 
 Strongly recommended in production, though the app degrades gracefully without them:
 
@@ -328,6 +333,7 @@ when all three are present, and is silent otherwise.
   prototype did - both live on `/account` and carry over to every group.
 - **Per-item completion percentages on a member's profile are computed from real check history**,
   not the prototype's random placeholder values.
-- **The invite link's copy-to-clipboard text is derived from `NEXT_PUBLIC_APP_URL`** (same var
-  `metadataBase` uses in `src/app/layout.tsx`), not a hardcoded domain - it always matches
-  wherever the app is actually configured to be reached, in every environment.
+- **The invite link's copy-to-clipboard text is derived from `getBaseUrl()`** (`src/lib/base-url.ts`,
+  the same helper `metadataBase` uses in `src/app/layout.tsx`), not a hardcoded domain - it always
+  matches wherever the app is actually being served, in every environment, with no env var to keep
+  in sync.
