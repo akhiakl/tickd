@@ -342,11 +342,11 @@ when all three are present, and is silent otherwise.
 
 ## Contributing
 
-Bug reports, feature requests, and pull requests are welcome. See
-[`CONTRIBUTING.md`](./CONTRIBUTING.md) for local setup, code style, and what CI expects before you
-open a PR, and the [wiki](https://github.com/akhiakl/tickd/wiki) for deeper architecture notes.
-This project follows the [Contributor Covenant](./CODE_OF_CONDUCT.md). Found a security issue?
-Please report it privately - see [`SECURITY.md`](./SECURITY.md).
+The source is MIT-licensed and public for reference and reuse, but tickd is a single product
+built for its own specific use case, not a library or tool with a public extension surface - so
+there's no active call for outside contributions. If you do want to build on it or send a fix,
+see [`CONTRIBUTING.md`](./CONTRIBUTING.md) for local setup, code style, and what CI expects.
+Found a security issue? Please report it privately - see [`SECURITY.md`](./SECURITY.md).
 
 ## License
 

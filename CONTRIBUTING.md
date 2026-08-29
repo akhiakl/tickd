@@ -1,7 +1,9 @@
-# Contributing to tickd
+# Working on tickd
 
-Thanks for taking the time to contribute. This doc covers everything you need to get a change
-from your machine into `main`.
+tickd is a single, opinionated product (a shared daily checklist app) rather than a library or
+tool with a public extension surface, so this isn't a contributor-recruitment doc - it's the
+reference for building and testing changes in this repo, kept up to date the same as any other
+project doc.
 
 ## Getting set up
 
@@ -81,18 +83,6 @@ production build instead of `next dev`.
 - Fill in the PR template - summary, changes, how to test, and the checklist above.
 - Keep PRs focused: one logical change per PR is easier to review and easier to revert if
   something goes wrong.
-- Link any issue the PR addresses.
-
-## Reporting bugs / requesting features
-
-Use the issue templates - they ask for the context that's usually needed to act on a report
-(repro steps, expected vs. actual, environment) so a first response doesn't have to start by
-asking for it.
-
-## Code of Conduct
-
-This project follows the [Contributor Covenant](./CODE_OF_CONDUCT.md). By participating, you're
-expected to uphold it.
 
 ## Security
 
