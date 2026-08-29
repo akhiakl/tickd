@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;500;600;700;800&display=swap">
+  <style>
+    :root {
+      --bg: #f7f3e9; --surface: #e9e3d2; --text: #1d2019; --muted: #5f6455;
+      --panel: #232720; --panel-2: #3b4034; --panel-soft: #9aa08c; --on-panel: #f6f1e6;
+      --accent: #55743f; --accent-d: #3f5a2c; --ok-bg: #e6eeda;
+      --danger: #a3402c; --danger-d: #832f1e; --danger-bg: #f3ded7;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Figtree', system-ui, sans-serif; }
+    .heading { font-family: 'Caprasimo', Georgia, serif; font-weight: 400; margin: 0; }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 40px 40px 64px; }
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+    .item-row { display:flex; align-items:center; gap: 12px; background: var(--surface); border-radius: 18px; padding: 13px 16px; }
+    @media (max-width: 900px) { .settings-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) { .wrap { padding: 20px 20px 40px; } }
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div style="display:flex; align-items:center; gap: 14px; margin-bottom: 32px;">
+    <div style="width:44px; height:44px; border-radius:999px; background:var(--surface); display:flex; align-items:center; justify-content:center; flex:none;">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+    </div>
+    <span class="heading" style="font-size: 30px;">Group settings</span>
+  </div>
+
+  <div class="settings-grid">
+    <!-- left: invite + members -->
+    <div style="display:flex; flex-direction:column; gap: 24px;">
+      <div>
+        <div style="font-size: 12px; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin-bottom: 12px;">INVITE CODE</div>
+        <div style="background: var(--panel); color: var(--on-panel); border-radius: 28px; padding: 26px;">
+          <div class="heading" style="font-size: 26px; letter-spacing: 0.06em;">DALQ-WBAH</div>
+          <div style="display:flex; gap: 10px; margin-top: 18px;">
+            <button style="flex:1; background: var(--accent); color: var(--on-panel); border:none; border-radius: 999px; padding: 13px; font-family:'Caprasimo',serif; font-size: 14.5px;">Copy link</button>
+            <button style="flex:1; background: transparent; color: var(--on-panel); border: 1.5px solid rgba(246,241,230,0.3); border-radius: 999px; padding: 13px; font-family:'Caprasimo',serif; font-size: 14.5px;">Regenerate</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 12px; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin-bottom: 12px;">MEMBERS &middot; 17</div>
+        <div style="display:flex; flex-direction:column; gap: 8px;">
+          <div class="item-row">
+            <div style="width:30px; height:30px; border-radius:999px; background:var(--accent); color:var(--on-panel); display:flex; align-items:center; justify-content:center; font-size:12px; flex:none;" class="heading">D</div>
+            <span style="flex:1; font-size: 14.5px; font-weight: 600;">Dana Reviewer (you)</span>
+            <span style="font-size: 11px; color: var(--muted); background: var(--ok-bg); padding: 3px 9px; border-radius: 999px;">admin</span>
+          </div>
+          <div class="item-row">
+            <div style="width:30px; height:30px; border-radius:999px; background:#8aa26a; color:var(--on-panel); display:flex; align-items:center; justify-content:center; font-size:12px; flex:none;" class="heading">A</div>
+            <span style="flex:1; font-size: 14.5px; font-weight: 600;">Ada</span>
+          </div>
+          <div class="item-row">
+            <div style="width:30px; height:30px; border-radius:999px; background:#3b4034; color:var(--on-panel); display:flex; align-items:center; justify-content:center; font-size:12px; flex:none;" class="heading">P</div>
+            <span style="flex:1; font-size: 14.5px; font-weight: 600;">Priya</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- right: checklist editor + danger zone -->
+    <div style="display:flex; flex-direction:column; gap: 24px;">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 12px;">
+          <span style="font-size: 12px; letter-spacing: 0.1em; color: var(--muted); font-weight: 600;">CHECKLIST ITEMS</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap: 8px;">
+          <div class="item-row"><span style="color:var(--muted); flex:none;">&#8942;&#8942;</span><span style="flex:1; font-size: 14.5px; font-weight: 600;">Exercise for 30 minutes</span><span style="color:var(--muted); cursor:pointer;">&times;</span></div>
+          <div class="item-row"><span style="color:var(--muted); flex:none;">&#8942;&#8942;</span><span style="flex:1; font-size: 14.5px; font-weight: 600;">Walk 10,000+ steps</span><span style="color:var(--muted); cursor:pointer;">&times;</span></div>
+          <div class="item-row"><span style="color:var(--muted); flex:none;">&#8942;&#8942;</span><span style="flex:1; font-size: 14.5px; font-weight: 600;">Drink 2L+ water</span><span style="color:var(--muted); cursor:pointer;">&times;</span></div>
+          <div style="border: 1.5px dashed rgba(29,32,25,0.22); border-radius: 18px; padding: 13px; text-align:center; font-size: 13.5px; color: var(--muted);">+ Add an item</div>
+        </div>
+      </div>
+
+      <!-- danger zone: now visually distinct - warm red tint, not the same green as every other action -->
+      <div style="border: 1.5px solid var(--danger); background: var(--danger-bg); border-radius: 24px; padding: 22px;">
+        <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 6px;">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--danger-d)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+          <div class="heading" style="font-size: 17px; color: var(--danger-d);">End of the road</div>
+        </div>
+        <p style="font-size: 13.5px; color: var(--danger-d); line-height: 1.5; margin: 0 0 16px;">Archiving keeps the wall visible but locks new ticks. Deleting removes the group for everyone - this can't be undone.</p>
+        <div style="display:flex; gap: 10px;">
+          <button style="flex:1; background: transparent; color: var(--text); border: 1.5px solid rgba(29,32,25,0.2); border-radius: 999px; padding: 12px; font-family:'Caprasimo',serif; font-size: 14px;">Archive</button>
+          <button style="flex:1; background: var(--danger); color: var(--on-panel); border:none; border-radius: 999px; padding: 12px; font-family:'Caprasimo',serif; font-size: 14px;">Delete group</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

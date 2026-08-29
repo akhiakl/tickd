@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;500;600;700;800&display=swap">
+  <style>
+    :root {
+      --bg: #f7f3e9; --surface: #e9e3d2; --text: #1d2019; --muted: #5f6455; --faint: #63675a;
+      --panel: #232720; --panel-2: #3b4034; --panel-soft: #9aa08c; --on-panel: #f6f1e6;
+      --accent: #55743f; --ok: #55743f; --ok-2: #a8bd8b; --zero: #f2ded0;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Figtree', system-ui, sans-serif; }
+    .heading { font-family: 'Caprasimo', Georgia, serif; font-weight: 400; margin: 0; }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 40px 64px; }
+    .detail-grid { display: grid; grid-template-columns: 340px 1fr; gap: 32px; align-items: start; }
+    .stat-tile { background: var(--surface); border-radius: 18px; padding: 16px; text-align:center; }
+    .badge { display:flex; align-items:center; gap: 8px; border-radius: 999px; padding: 8px 14px 8px 10px; font-size: 12.5px; font-weight: 700; }
+    .prog-row { margin-bottom: 14px; }
+    .prog-track { height: 6px; border-radius: 999px; background: rgba(29,32,25,0.09); margin-top: 6px; overflow:hidden; }
+    .prog-fill { height: 100%; border-radius: 999px; background: var(--accent); }
+    @media (max-width: 900px) { .detail-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) { .wrap { padding: 20px 20px 40px; } }
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div style="display:flex; align-items:center; gap: 10px; margin-bottom: 28px;">
+    <div style="width:40px; height:40px; border-radius:999px; background:var(--surface); display:flex; align-items:center; justify-content:center; flex:none;">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+    </div>
+    <span style="font-size: 12px; letter-spacing: 0.12em; color: var(--muted); font-weight: 600;">MEMBER</span>
+  </div>
+
+  <div class="detail-grid">
+    <!-- left: profile + stats + badges -->
+    <div style="display:flex; flex-direction:column; gap: 22px;">
+      <div style="display:flex; align-items:center; gap: 16px;">
+        <div style="width:64px; height:64px; border-radius:999px; background:var(--accent); color:var(--on-panel); display:flex; align-items:center; justify-content:center; font-size:24px; flex:none;" class="heading">A</div>
+        <div>
+          <div class="heading" style="font-size: 24px;">Ada</div>
+          <div style="font-size: 13px; color: var(--muted); margin-top: 2px;">joined day 1 &middot; 71% of the challenge</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(3,1fr); gap: 10px;">
+        <div class="stat-tile"><div class="heading" style="font-size: 22px;">6</div><div style="font-size: 10.5px; color: var(--muted); letter-spacing:0.05em; margin-top:2px;">STREAK</div></div>
+        <div class="stat-tile"><div class="heading" style="font-size: 22px;">9</div><div style="font-size: 10.5px; color: var(--muted); letter-spacing:0.05em; margin-top:2px;">LONGEST</div></div>
+        <div class="stat-tile"><div class="heading" style="font-size: 22px;">54</div><div style="font-size: 10.5px; color: var(--muted); letter-spacing:0.05em; margin-top:2px;">DONE</div></div>
+      </div>
+
+      <div>
+        <div style="font-size: 12px; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin-bottom: 12px;">BADGES</div>
+        <div style="display:flex; flex-wrap:wrap; gap: 8px;">
+          <!-- earned: full color -->
+          <div class="badge" style="background: #e6eeda; color: var(--accent-d, #3f5a2c);">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" stroke="none"><path d="M12 2 9.5 8.5 3 9l5 4.6L6.5 21 12 17.3 17.5 21 16 13.6 21 9l-6.5-.5Z"></path></svg>
+            Founding member
+          </div>
+          <div class="badge" style="background: #f2ded0; color: #8c491a;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"></path></svg>
+            Early bird
+          </div>
+          <!-- locked: desaturated + lock icon, clearly distinct from earned -->
+          <div class="badge" style="background: rgba(29,32,25,0.06); color: var(--faint);">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+            Night owl
+          </div>
+          <div class="badge" style="background: rgba(29,32,25,0.06); color: var(--faint);">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+            Perfect week
+          </div>
+          <div class="badge" style="background: rgba(29,32,25,0.06); color: var(--faint);">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+            Comeback kid
+          </div>
+          <div class="badge" style="background: rgba(29,32,25,0.06); color: var(--faint);">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+            Century club
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- right: per-item + history -->
+    <div style="display:flex; flex-direction:column; gap: 28px;">
+      <div>
+        <div style="font-size: 12px; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin-bottom: 14px;">PER ITEM</div>
+
+        <div class="prog-row"><div style="display:flex; justify-content:space-between; font-size:14px; font-weight:600;"><span>Exercise for 30 minutes</span><span style="color:var(--muted);">74%</span></div><div class="prog-track"><div class="prog-fill" style="width:74%;"></div></div></div>
+        <div class="prog-row"><div style="display:flex; justify-content:space-between; font-size:14px; font-weight:600;"><span>Walk 10,000+ steps</span><span style="color:var(--muted);">61%</span></div><div class="prog-track"><div class="prog-fill" style="width:61%;"></div></div></div>
+        <div class="prog-row"><div style="display:flex; justify-content:space-between; font-size:14px; font-weight:600;"><span>Drink 2L+ water</span><span style="color:var(--muted);">88%</span></div><div class="prog-track"><div class="prog-fill" style="width:88%;"></div></div></div>
+        <div class="prog-row"><div style="display:flex; justify-content:space-between; font-size:14px; font-weight:600;"><span>Sleep 7+ hours</span><span style="color:var(--muted);">45%</span></div><div class="prog-track"><div class="prog-fill" style="width:45%;"></div></div></div>
+        <div class="prog-row"><div style="display:flex; justify-content:space-between; font-size:14px; font-weight:600;"><span>No junk food</span><span style="color:var(--muted);">52%</span></div><div class="prog-track"><div class="prog-fill" style="width:52%;"></div></div></div>
+      </div>
+
+      <div>
+        <div style="font-size: 12px; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin-bottom: 14px;">HISTORY</div>
+        <div style="display:grid; grid-template-columns: repeat(10,1fr); gap: 7px;">
+          <div style="aspect-ratio:1; border-radius:8px; background:var(--ok); color:var(--bg); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">1</div>
+          <div style="aspect-ratio:1; border-radius:8px; background:var(--ok-2); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">2</div>
+          <div style="aspect-ratio:1; border-radius:8px; background:var(--ok); color:var(--bg); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">3</div>
+          <div style="aspect-ratio:1; border-radius:8px; background:var(--zero); color:var(--faint); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">4</div>
+          <div style="aspect-ratio:1; border-radius:8px; background:var(--ok); color:var(--bg); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">5</div>
+          <div style="aspect-ratio:1; border-radius:8px; background:var(--ok-2); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">6</div>
+          <div style="aspect-ratio:1; border-radius:8px; background:var(--ok); color:var(--bg); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">7</div>
+          <div style="aspect-ratio:1; border-radius:8px; background:var(--ok); color:var(--bg); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">8</div>
+          <div style="aspect-ratio:1; border-radius:8px; background:var(--ok-2); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">9</div>
+          <div style="aspect-ratio:1; border-radius:8px; background:var(--zero); color:var(--faint); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">10</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
