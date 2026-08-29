@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: Question / discussion
-    url: https://github.com/akhiakl/tickd/discussions
-    about: Ask a question or start a discussion instead of opening an issue.
-  - name: Security vulnerability
-    url: https://github.com/akhiakl/tickd/security/advisories/new
-    about: Please report security issues privately - see SECURITY.md.
