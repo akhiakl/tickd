@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap">
+  <style>
+    :root {
+      --bg: #f7f3e9;
+      --surface: #e9e3d2;
+      --surface-2: #ded7c2;
+      --text: #1d2019;
+      --muted: #5f6455;
+      --panel: #232720;
+      --panel-2: #3b4034;
+      --panel-soft: #9aa08c;
+      --on-panel: #f6f1e6;
+      --accent: #55743f;
+      --accent-d: #3f5a2c;
+      --ok: #55743f;
+      --ok-bg: #e6eeda;
+      --ok-d: #34401f;
+      --flame: #d07a3c;
+      --flame-light: #eda061;
+      --pot: #8c491a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Figtree', system-ui, sans-serif; }
+    a { color: var(--accent-d); }
+    a:hover { color: var(--accent); }
+    .heading { font-family: 'Caprasimo', Georgia, serif; font-weight: 400; margin: 0; }
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 40px 40px 64px; }
+    .tab { display:flex; align-items:center; gap:8px; padding: 11px 22px; border-radius: 999px; font-family:'Caprasimo', serif; font-size: 14.5px; }
+    .main-grid { display: grid; grid-template-columns: 1fr 372px; gap: 32px; align-items: start; }
+    .checklist-row { display:flex; align-items:center; gap: 14px; border-radius: 22px; padding: 15px 18px; }
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .wrap { padding: 20px 20px 40px; }
+      .top-name { font-size: 24px !important; }
+    }
+  </style>
+</helmet>
+
+<div class="wrap">
+
+  <!-- top bar -->
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 22px;">
+    <div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="heading top-name" style="font-size: 30px;">The August Eight</span>
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+      </div>
+      <div style="font-size: 14px; color: var(--muted); margin-top: 3px;">Day 1 of 31 &middot; Sat, August 29</div>
+    </div>
+    <div style="display:flex; align-items:center; gap: 12px;">
+      <div style="width:44px; height:44px; border-radius:999px; background:var(--surface); display:flex; align-items:center; justify-content:center;">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"></path></svg>
+      </div>
+      <div style="width:40px; height:40px; border-radius:999px; background:var(--accent); color:var(--on-panel); display:flex; align-items:center; justify-content:center;" class="heading">D</div>
+    </div>
+  </div>
+
+  <!-- desktop tab row (replaces the mobile fixed bottom nav) -->
+  <div style="display:flex; gap: 10px; margin-bottom: 32px;">
+    <div class="tab" style="background: var(--accent); color: var(--on-panel);">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path></svg>
+      Today
+    </div>
+    <div class="tab" style="background: var(--surface); color: var(--text);">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+      Wall
+    </div>
+    <div class="tab" style="background: var(--surface); color: var(--text);">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>
+      Ranks
+    </div>
+  </div>
+
+  <!-- main two-column layout -->
+  <div class="main-grid">
+
+    <!-- checklist column -->
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline; padding: 0 4px 12px;">
+        <span style="font-size: 12px; letter-spacing: 0.1em; color: var(--muted); font-weight: 600;">TODAY'S LIST</span>
+        <span style="font-size: 12px; color: var(--muted);">tap to tick</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap: 10px;">
+
+        <div class="checklist-row" style="background: var(--ok-bg);">
+          <span style="width:27px; height:27px; border-radius:9px; background:var(--ok); border:2px solid var(--ok); flex:none; display:flex; align-items:center; justify-content:center;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--on-panel)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+          </span>
+          <span style="flex:1; font-size: 15.5px; font-weight: 600; color: var(--ok-d); text-decoration: line-through; text-decoration-color: rgba(52,64,31,0.45);">Exercise for 30 minutes</span>
+        </div>
+
+        <div class="checklist-row" style="background: var(--surface);">
+          <span style="width:27px; height:27px; border-radius:9px; border:2px solid rgba(29,32,25,0.3); flex:none;"></span>
+          <span style="flex:1; font-size: 15.5px; font-weight: 600;">Walk 10,000+ steps</span>
+        </div>
+
+        <div class="checklist-row" style="background: var(--surface);">
+          <span style="width:27px; height:27px; border-radius:9px; border:2px solid rgba(29,32,25,0.3); flex:none;"></span>
+          <span style="flex:1; font-size: 15.5px; font-weight: 600;">Drink 2L+ water</span>
+        </div>
+
+        <div class="checklist-row" style="background: var(--surface);">
+          <span style="width:27px; height:27px; border-radius:9px; border:2px solid rgba(29,32,25,0.3); flex:none;"></span>
+          <span style="flex:1; font-size: 15.5px; font-weight: 600;">Sleep 7+ hours</span>
+        </div>
+
+        <div class="checklist-row" style="background: var(--surface);">
+          <span style="width:27px; height:27px; border-radius:9px; border:2px solid rgba(29,32,25,0.3); flex:none;"></span>
+          <span style="flex:1; font-size: 15.5px; font-weight: 600;">No junk food</span>
+        </div>
+
+        <div class="checklist-row" style="background: var(--surface);">
+          <span style="width:27px; height:27px; border-radius:9px; border:2px solid rgba(29,32,25,0.3); flex:none;"></span>
+          <span style="flex:1; font-size: 15.5px; font-weight: 600;">Read 10 pages</span>
+        </div>
+
+        <div class="checklist-row" style="background: var(--surface);">
+          <span style="width:27px; height:27px; border-radius:9px; border:2px solid rgba(29,32,25,0.3); flex:none;"></span>
+          <span style="flex:1; font-size: 15.5px; font-weight: 600;">No alcohol or smoking</span>
+        </div>
+
+        <div class="checklist-row" style="background: var(--surface);">
+          <span style="width:27px; height:27px; border-radius:9px; border:2px solid rgba(29,32,25,0.3); flex:none;"></span>
+          <span style="flex:1; font-size: 15.5px; font-weight: 600;">Side quest</span>
+          <span style="flex:none; background: var(--ok-bg); color: var(--accent-d); border-radius: 999px; padding: 3px 9px; font-size: 9.5px; letter-spacing: 0.08em;">SIDE QUEST</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- sidebar: emphasis stats + mascot + share, in flow (fixes the floating-button collision) -->
+    <div style="display:flex; flex-direction:column; gap: 18px; position: sticky; top: 24px;">
+
+      <div style="background: var(--panel); color: var(--on-panel); border-radius: 30px; padding: 26px;">
+        <div style="display:flex; align-items:center; gap: 16px;">
+          <div style="width:84px; height:84px; border-radius:999px; flex:none; display:flex; align-items:center; justify-content:center; background: conic-gradient(var(--flame-light) 45deg, rgba(246,241,230,0.16) 0deg);">
+            <div style="width:68px; height:68px; border-radius:999px; background: var(--panel-2); display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;">
+              <span class="heading" style="font-size: 22px;">1</span>
+              <span style="font-size: 9px; letter-spacing: 0.1em; color: var(--panel-soft); margin-top: 2px;">OF 8</span>
+            </div>
+          </div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-size: 10.5px; letter-spacing: 0.13em; color: var(--panel-soft);">DAY 1 OF 31</div>
+            <div class="heading" style="font-size: 20px; margin: 4px 0;">7 left today</div>
+            <div style="display:flex; align-items:center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="var(--flame-light)" stroke="none"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>
+              <span style="font-size: 13px; font-weight: 700;">1-day streak</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid rgba(246,241,230,0.14); margin-top: 20px; padding-top: 18px;">
+          <button style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background: var(--accent); color: var(--on-panel); border: none; border-radius: 999px; padding: 14px; font-family:'Caprasimo', serif; font-size: 15px; cursor:pointer;">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 9-6-6-6 6"></path><path d="M12 3v14"></path><path d="M5 21h14"></path></svg>
+            Share today
+          </button>
+        </div>
+      </div>
+
+      <div style="background: var(--surface); border-radius: 24px; padding: 18px; display:flex; align-items:center; gap: 14px;">
+        <svg width="52" height="52" viewBox="0 0 64 64" aria-hidden="true" style="flex:none;">
+          <path d="M20 52 L44 52 L40 62 L24 62 Z" fill="var(--pot)"></path>
+          <line x1="32" y1="52" x2="32" y2="34" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"></line>
+          <ellipse cx="38" cy="34" rx="7" ry="4.5" fill="var(--accent)" transform="rotate(35 38 34)"></ellipse>
+        </svg>
+        <div style="min-width:0; flex:1;">
+          <div style="font-size: 15px; font-weight: 700;">Sprouting</div>
+          <div style="font-size: 12.5px; color: var(--muted); margin-top: 2px;">Grows with the group's momentum</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

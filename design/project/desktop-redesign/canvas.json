@@ -1,0 +1,29 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 1420 },
+    { "file": "TodayDesktop.dc.html", "x": 1600, "y": 0, "w": 1440, "h": 1000 },
+    { "file": "WallDesktop.dc.html", "x": 3200, "y": 0, "w": 1440, "h": 1000 },
+    { "file": "RanksDesktop.dc.html", "x": 4800, "y": 0, "w": 1440, "h": 850 },
+    { "file": "GroupSettingsDesktop.dc.html", "x": 6400, "y": 0, "w": 1440, "h": 850 },
+    { "file": "AccountDesktop.dc.html", "x": 8000, "y": 0, "w": 1440, "h": 900 },
+    { "file": "MemberDetailDesktop.dc.html", "x": 9600, "y": 0, "w": 1440, "h": 800 },
+
+    { "file": "LandingMobile.dc.html", "x": 0, "y": 1540, "w": 390, "h": 1900 },
+    { "file": "TodayMobile.dc.html", "x": 530, "y": 1540, "w": 390, "h": 1500 },
+    { "file": "WallMobile.dc.html", "x": 1060, "y": 1540, "w": 390, "h": 1600 },
+    { "file": "RanksMobile.dc.html", "x": 1590, "y": 1540, "w": 390, "h": 1300 },
+    { "file": "GroupSettingsMobile.dc.html", "x": 2120, "y": 1540, "w": 390, "h": 1500 },
+    { "file": "AccountMobile.dc.html", "x": 2650, "y": 1540, "w": 390, "h": 1700 },
+    { "file": "MemberDetailMobile.dc.html", "x": 3180, "y": 1540, "w": 390, "h": 1500 }
+  ],
+  "annotations": [
+    {
+      "id": "pattern-note",
+      "x": 0,
+      "y": -160,
+      "w": 1200,
+      "text": "Desktop layout fix\nTop row: desktop (1440px) versions of every main screen, replacing the mobile column stretched into a wide viewport with a real desktop composition — centered content, two-column layouts (checklist + sidebar, profile + stats, invite code + danger zone), and per-screen fixes from the review (destructive actions now read as dangerous, leaderboard top-3 stand out, badges show locked vs earned, the wall's member row no longer cuts off with no scroll cue).\nBottom row: mobile (390px) versions of the same screens, for side-by-side comparison — these match the app's existing mobile layout, which wasn't broken."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}
