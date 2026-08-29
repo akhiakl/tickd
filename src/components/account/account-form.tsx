@@ -42,6 +42,7 @@ export function AccountForm({
   initialAvatarSeed,
   initialTimezone,
   initialPrefs,
+  className,
 }: {
   initialName: string;
   email: string | null;
@@ -49,6 +50,7 @@ export function AccountForm({
   initialAvatarSeed: string;
   initialTimezone: string | null;
   initialPrefs: Prefs;
+  className?: string;
 }) {
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
@@ -140,8 +142,8 @@ export function AccountForm({
   }
 
   return (
-    <div>
-      <div className="bg-surface mx-4 flex items-center gap-4 rounded-[28px] p-5">
+    <div className={className}>
+      <div className="bg-surface mx-4 flex items-center gap-4 rounded-[28px] p-5 lg:mx-0">
         <div className="relative flex-none">
           <Avatar name={name} color={color} seed={avatarSeed} size={60} />
           <button
@@ -165,10 +167,10 @@ export function AccountForm({
         </div>
       </div>
 
-      <div className="text-faint px-6 pt-6.5 pb-2 text-[11px] tracking-[0.12em] uppercase">
+      <div className="text-faint px-6 pt-6.5 pb-2 text-[11px] tracking-[0.12em] uppercase lg:px-0">
         Your colour
       </div>
-      <div className="flex flex-wrap gap-2.5 px-5.5">
+      <div className="flex flex-wrap gap-2.5 px-5.5 lg:px-0">
         {(showMoreColors ? ALL_AVATAR_SWATCHES : AVATAR_SWATCHES).map((swatch) => (
           <button
             key={swatch}
@@ -197,10 +199,10 @@ export function AccountForm({
         )}
       </div>
 
-      <div className="text-faint px-6 pt-6.5 pb-2 text-[11px] tracking-[0.12em] uppercase">
+      <div className="text-faint px-6 pt-6.5 pb-2 text-[11px] tracking-[0.12em] uppercase lg:px-0">
         Your timezone
       </div>
-      <div className="px-5.5">
+      <div className="px-5.5 lg:px-0">
         <label className="bg-surface flex items-center justify-between gap-3 rounded-[22px] px-4.5 py-3.5">
           <span className="min-w-0 flex-1">
             <span className="block text-[15px] font-bold">Timezone</span>
@@ -223,10 +225,10 @@ export function AccountForm({
         </label>
       </div>
 
-      <div className="text-faint px-6 pt-6.5 pb-2 text-[11px] tracking-[0.12em] uppercase">
+      <div className="text-faint px-6 pt-6.5 pb-2 text-[11px] tracking-[0.12em] uppercase lg:px-0">
         Preferences
       </div>
-      <div className="flex flex-col gap-1.5 px-4">
+      <div className="flex flex-col gap-1.5 px-4 lg:px-0">
         {PREF_COPY.map(({ key, label, sub }) => (
           <button
             key={key}

@@ -3,10 +3,19 @@
 import { useOptimistic, useTransition } from "react";
 import { removeMember } from "@/server/actions/groups";
 import { Avatar } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 type Member = { userId: string; name: string; color: string; avatarSeed: string; isMe: boolean };
 
-export function MembersSettingsList({ groupId, members }: { groupId: string; members: Member[] }) {
+export function MembersSettingsList({
+  groupId,
+  members,
+  className,
+}: {
+  groupId: string;
+  members: Member[];
+  className?: string;
+}) {
   const [, startTransition] = useTransition();
   const [optimisticMembers, setOptimisticMembers] = useOptimistic(members);
 
@@ -18,7 +27,7 @@ export function MembersSettingsList({ groupId, members }: { groupId: string; mem
   }
 
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className={cn("flex flex-col gap-0.5", className)}>
       {optimisticMembers.map((member) => (
         <div key={member.userId} className="flex items-center gap-3 rounded-[18px] px-2.5 py-2">
           <Avatar name={member.name} color={member.color} seed={member.avatarSeed} size={30} />

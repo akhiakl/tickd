@@ -44,11 +44,11 @@ export async function MemberListSection({ groupId, userId }: { groupId: string; 
 
   return (
     <>
-      <div className="flex items-baseline justify-between px-6 pt-6.5 pb-2.5">
+      <div className="flex items-baseline justify-between px-6 pt-6.5 pb-2.5 lg:col-start-1 lg:px-0">
         <span className="text-faint text-[11px] tracking-[0.12em] uppercase">The group</span>
         <span className="text-muted text-[12px]">{members.length} people</span>
       </div>
-      <MemberList groupId={groupId} rows={rows} />
+      <MemberList groupId={groupId} rows={rows} className="lg:col-start-1" />
     </>
   );
 }

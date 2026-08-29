@@ -47,7 +47,7 @@ export function GroupMascot({ avgStreak }: { avgStreak: number }) {
   const stemTop = stage.leaves === 0 ? 62 : 46 - Math.floor((stage.leaves - 1) / 2) * 12 - 6;
 
   return (
-    <div className="bg-surface mx-4 mt-5.5 flex items-center gap-3.5 rounded-3xl px-4.5 py-3.5">
+    <div className="bg-surface mx-4 mt-5.5 flex items-center gap-3.5 rounded-3xl px-4.5 py-3.5 lg:mx-0 lg:mt-0">
       <svg width="56" height="56" viewBox="0 0 64 64" aria-hidden className="flex-none">
         <path d="M20 52 L44 52 L40 62 L24 62 Z" fill={POT_COLOR} />
         {stage.leaves > 0 && (

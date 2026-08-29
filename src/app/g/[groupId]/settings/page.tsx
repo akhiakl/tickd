@@ -32,37 +32,52 @@ export default async function GroupSettingsPage({ params }: PageProps<"/g/[group
   if (snapshot.myRole !== "admin") redirect(`/g/${groupId}`);
 
   return (
-    <Screen className="pt-2 pb-10">
+    // At lg: a two-column composition (invite + members on the left,
+    // checklist editor + danger zone on the right) instead of one long
+    // stacked column. See
+    // design/project/desktop-redesign/GroupSettingsDesktop.dc.html and
+    // that folder's NOTES.md.
+    <Screen
+      className="pt-2 pb-10 lg:px-10 lg:pt-10 lg:pb-16"
+      maxWidthClassName="max-w-md md:max-w-xl lg:max-w-[1000px]"
+    >
       <div className="flex items-center gap-3 py-1.5 pb-4.5">
         <BackButton href={`/g/${groupId}`} />
-        <span className="font-heading text-[21px]">Group settings</span>
+        <span className="font-heading text-[21px] lg:text-[28px]">Group settings</span>
       </div>
 
-      <InviteCodePanel groupId={groupId} initialCode={snapshot.inviteCode} />
+      <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-8">
+        <InviteCodePanel
+          groupId={groupId}
+          initialCode={snapshot.inviteCode}
+          className="lg:col-start-1"
+        />
 
-      <div className="text-faint px-2 pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase">
-        Checklist items
-      </div>
-      <div className="px-0">
-        <ChecklistSettingsEditor groupId={groupId} items={snapshot.items} />
-      </div>
+        <div className="text-faint px-2 pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase lg:col-start-2 lg:px-0">
+          Checklist items
+        </div>
+        <div className="px-0 lg:col-start-2">
+          <ChecklistSettingsEditor groupId={groupId} items={snapshot.items} />
+        </div>
 
-      <div className="text-faint px-2 pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase">
-        Members
-      </div>
-      <MembersSettingsList
-        groupId={groupId}
-        members={snapshot.members.map((m) => ({
-          userId: m.userId,
-          name: m.name,
-          color: m.color,
-          avatarSeed: m.avatarSeed,
-          isMe: m.isMe,
-        }))}
-      />
+        <div className="text-faint px-2 pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase lg:col-start-1 lg:px-0">
+          Members
+        </div>
+        <MembersSettingsList
+          groupId={groupId}
+          members={snapshot.members.map((m) => ({
+            userId: m.userId,
+            name: m.name,
+            color: m.color,
+            avatarSeed: m.avatarSeed,
+            isMe: m.isMe,
+          }))}
+          className="lg:col-start-1"
+        />
 
-      <div className="pt-6.5">
-        <DangerZone groupId={groupId} dayIndex={snapshot.dayIndex} />
+        <div className="pt-6.5 lg:col-start-2">
+          <DangerZone groupId={groupId} dayIndex={snapshot.dayIndex} />
+        </div>
       </div>
     </Screen>
   );

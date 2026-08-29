@@ -1,12 +1,19 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { Route } from "next";
 import { CheckSquare, Grid3x3, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function BottomNav({ groupId }: { groupId: string }) {
+/**
+ * Desktop's replacement for BottomNav (see that component's own comment) -
+ * an in-flow pill tab row rather than a fixed bar, since a real desktop
+ * viewport has no need to pin navigation to the bottom edge. Same three
+ * destinations, same active-tab logic; hidden below `lg` where BottomNav
+ * takes over instead. See design/project/desktop-redesign/TodayDesktop.dc.html.
+ */
+export function DesktopTabs({ groupId }: { groupId: string }) {
   const pathname = usePathname();
   const base = `/g/${groupId}`;
   const tabs = [
@@ -21,21 +28,18 @@ export function BottomNav({ groupId }: { groupId: string }) {
   ];
 
   return (
-    // Hidden at lg: the desktop layout replaces this fixed bottom bar with
-    // an in-flow tab row up top (DesktopTabs) - see
-    // design/project/desktop-redesign's NOTES.md.
-    <div className="border-text/10 bg-bg flex flex-none gap-1 border-t px-2.5 pt-1.5 pb-5 lg:hidden">
+    <div className="mb-8 hidden gap-2.5 lg:flex">
       {tabs.map(({ href, label, icon: Icon, active }) => (
         <Link
           key={href}
           href={href as Route}
           className={cn(
-            "flex flex-1 flex-col items-center gap-1 rounded-[18px] py-2 text-[11px] font-bold",
-            active ? "bg-accent text-on-panel" : "text-muted bg-transparent",
+            "font-heading flex items-center gap-2 rounded-full px-5.5 py-2.5 text-[14.5px]",
+            active ? "bg-accent text-on-panel" : "bg-surface text-text hover:bg-surface-2",
           )}
         >
-          <Icon size={21} strokeWidth={2.4} />
-          <span>{label}</span>
+          <Icon size={16} strokeWidth={2.4} />
+          {label}
         </Link>
       ))}
     </div>

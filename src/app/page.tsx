@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { Circle, Check, Grid2x2, Flame, ChevronRight } from "lucide-react";
 import { auth } from "@/auth";
 import { getMyGroups } from "@/server/queries/my-groups";
 import { getUserById } from "@/server/queries/users";
@@ -8,7 +9,6 @@ import { Logo } from "@/components/ui/logo";
 import { LinkButton } from "@/components/ui/link-button";
 import { Avatar } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/nav/theme-toggle";
-import { ChevronRight } from "lucide-react";
 
 /**
  * Signed-in indicator, doubling as the way back into /account from the
@@ -92,10 +92,126 @@ function MyGroupsSkeleton() {
   );
 }
 
+/** Illustrative sample data for the desktop hero's wall preview graphic -
+ * not real app data, same as the rest of this bundle's demo content. See
+ * design/project/desktop-redesign/Main.dc.html and that folder's NOTES.md. */
+const PREVIEW_AVATARS = [
+  { letter: "A", className: "bg-accent" },
+  { letter: "P", className: "bg-flame" },
+  { letter: "M", className: "bg-sage" },
+  { letter: "L", className: "bg-panel-2" },
+  { letter: "T", className: "bg-flame-light text-panel" },
+] as const;
+
+const PREVIEW_CELLS = [
+  1, 2, 2, 0, 2, 1, 2, 2, 2, 1, 2, 0, 2, 1, 2, 1, 2, 2, 2, 0, 1, 2, 2, 1, 2, 2, 2, 1,
+] as const;
+
+const PREVIEW_CELL_CLASS = ["bg-zero", "bg-ok-3", "bg-ok-4"] as const;
+
+/**
+ * Desktop-only: the mobile column stretched into a wide, mostly-empty
+ * viewport used to be this page's whole desktop story - this fills that
+ * space with a real composition instead (two-column hero with an
+ * illustrative "wall" graphic, a "how it works" section, a closing CTA
+ * band). The mobile layout below it is untouched. See
+ * design/project/desktop-redesign/Main.dc.html and that folder's
+ * NOTES.md.
+ */
+function DesktopWallPreview() {
+  return (
+    <div className="relative hidden py-5 lg:block">
+      <div className="bg-surface-2 absolute inset-6 -rotate-3 rounded-[28px]" />
+      <div className="bg-panel relative mx-auto max-w-[440px] rotate-[1.4deg] rounded-[28px] p-6.5 shadow-[0_30px_60px_-20px_rgba(29,32,25,0.35)]">
+        <div className="flex">
+          {PREVIEW_AVATARS.map((a, i) => (
+            <div
+              key={a.letter}
+              style={i > 0 ? { marginLeft: -10 } : undefined}
+              className={`border-panel font-heading text-on-panel flex h-8.5 w-8.5 items-center justify-center rounded-full border-2 text-[13px] ${a.className}`}
+            >
+              {a.letter}
+            </div>
+          ))}
+        </div>
+        <div className="text-panel-soft mt-4.5 text-[10.5px] tracking-[0.13em]">THE WALL</div>
+        <div className="mt-2.5 grid grid-cols-7 gap-1.5">
+          {PREVIEW_CELLS.map((v, i) => (
+            <div key={i} className={`aspect-square rounded-[5px] ${PREVIEW_CELL_CLASS[v]}`} />
+          ))}
+        </div>
+      </div>
+      <div className="bg-flame text-on-panel absolute right-6 bottom-5 flex -rotate-4 items-center gap-1.5 rounded-full py-2.5 pr-4.5 pl-3.5 shadow-[0_14px_26px_-8px_rgba(208,122,60,0.55)]">
+        <Flame size={15} className="fill-current" />
+        <span className="font-heading text-[14px]">6-day streak</span>
+      </div>
+    </div>
+  );
+}
+
+const STEPS = [
+  {
+    icon: Circle,
+    title: "Start or join",
+    body: "Create a group or drop in an invite code - no email, no password, just a name.",
+  },
+  {
+    icon: Check,
+    title: "Tick your list",
+    body: "A few things, once a day. Tap to check them off before the day resets.",
+  },
+  {
+    icon: Grid2x2,
+    title: "Watch the wall fill in",
+    body: "Everyone's day lands on one shared grid. Miss one, and it shows.",
+  },
+] as const;
+
+/** Desktop-only "how it works" section - see DesktopWallPreview's own
+ * comment. */
+function HowItWorks() {
+  return (
+    <div className="mt-37 hidden lg:block">
+      <h2 className="font-heading text-[34px]">Three habits, one shared list.</h2>
+      <p className="text-muted mt-2.5 text-[16px]">
+        No app-store gimmicks - just a list your group actually keeps up with.
+      </p>
+      <div className="mt-10 grid grid-cols-3 gap-7">
+        {STEPS.map(({ icon: Icon, title, body }) => (
+          <div key={title} className="bg-surface rounded-3xl p-7">
+            <div className="bg-ok-bg text-accent-d mb-4.5 flex h-12 w-12 items-center justify-center rounded-full">
+              <Icon size={22} strokeWidth={2} />
+            </div>
+            <div className="font-heading text-[19px]">{title}</div>
+            <p className="text-muted mt-2 text-[14.5px] leading-normal">{body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Desktop-only closing CTA band - see DesktopWallPreview's own comment. */
+function ClosingCta() {
+  return (
+    <div className="bg-panel mt-30 hidden items-center justify-between gap-6 rounded-[28px] p-12 lg:flex">
+      <div className="font-heading text-on-panel max-w-[420px] text-[27px] leading-[1.15]">
+        Ready to keep each other honest?
+      </div>
+      <LinkButton href="/create" className="w-auto flex-none">
+        Start a group
+      </LinkButton>
+    </div>
+  );
+}
+
 export default function LandingPage() {
   return (
-    <Screen className="flex min-h-dvh flex-col px-6 pt-6 pb-10">
-      <div className="flex items-center justify-between gap-2.5">
+    <Screen
+      className="flex min-h-dvh flex-col px-6 pt-6 pb-10 lg:px-10 lg:pt-10 lg:pb-18"
+      maxWidthClassName="max-w-md md:max-w-xl lg:max-w-[1160px]"
+    >
+      <div className="flex items-center justify-between gap-2.5 lg:mb-22">
         <div className="flex items-center gap-2.5">
           <Logo size={34} />
           <span className="font-heading text-[22px] tracking-tight">Tickd</span>
@@ -108,26 +224,37 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <h1 className="font-heading mt-11 text-[52px] leading-[0.96] tracking-tight text-balance">
-        Everyone&apos;s
-        <br />
-        in. Every day.
-      </h1>
-      <p className="text-muted mt-4 max-w-[290px] text-[16.5px] leading-relaxed text-pretty">
-        A shared daily checklist for your group. Tick your list, watch the wall fill in, don&apos;t
-        be the one with the gap.
-      </p>
+      <div className="lg:grid lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-20">
+        <div>
+          <h1 className="font-heading mt-11 text-[52px] leading-[0.96] tracking-tight text-balance lg:mt-0 lg:text-[74px]">
+            Everyone&apos;s
+            <br />
+            in. Every day.
+          </h1>
+          <p className="text-muted mt-4 max-w-[290px] text-[16.5px] leading-relaxed text-pretty lg:max-w-[460px] lg:text-[19px]">
+            A shared daily checklist for your group. Tick your list, watch the wall fill in,
+            don&apos;t be the one with the gap.
+          </p>
 
-      <div className="mt-8 flex flex-col gap-2.5">
-        <LinkButton href="/create">Start a group</LinkButton>
-        <LinkButton href="/join" variant="outline">
-          Join with a code
-        </LinkButton>
+          <div className="mt-8 flex flex-col gap-2.5 lg:flex-row lg:flex-wrap">
+            <LinkButton href="/create" className="lg:w-auto">
+              Start a group
+            </LinkButton>
+            <LinkButton href="/join" variant="outline" className="lg:w-auto">
+              Join with a code
+            </LinkButton>
+          </div>
+
+          <Suspense fallback={<MyGroupsSkeleton />}>
+            <MyGroups />
+          </Suspense>
+        </div>
+
+        <DesktopWallPreview />
       </div>
 
-      <Suspense fallback={<MyGroupsSkeleton />}>
-        <MyGroups />
-      </Suspense>
+      <HowItWorks />
+      <ClosingCta />
     </Screen>
   );
 }

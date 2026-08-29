@@ -21,7 +21,10 @@ export default async function WallPage({ params }: PageProps<"/g/[groupId]/wall"
   const me = snapshot.members.find((m) => m.isMe)!;
 
   return (
-    <div className="pt-1.5 pb-8">
+    // At lg: a real, non-scrolling member sidebar with a fully labeled
+    // legend, beside the calendar - see WallGrid's own comment and
+    // design/project/desktop-redesign/WallDesktop.dc.html.
+    <div className="pt-1.5 pb-8 lg:mx-auto lg:max-w-[1160px] lg:px-10 lg:pt-10 lg:pb-16">
       <GroupTabHeader
         groupId={groupId}
         groupName={snapshot.name}
@@ -33,13 +36,16 @@ export default async function WallPage({ params }: PageProps<"/g/[groupId]/wall"
         subtitle={<span className="text-muted truncate text-[13px]">The wall</span>}
       />
 
-      <div className="px-5.5 pt-3.5 pb-3.5">
+      {/* The desktop sidebar (WallGrid) already spells out day/people
+          count and a full legend, so these compact mobile-only rows hide
+          at lg instead of duplicating them. */}
+      <div className="px-5.5 pt-3.5 pb-3.5 lg:hidden">
         <div className="text-muted text-[13px]">
           {snapshot.durationDays} days - {snapshot.members.length} people - tap any day
         </div>
       </div>
 
-      <div className="text-muted flex flex-wrap gap-3.5 px-5.5 pb-3.5 text-[11px]">
+      <div className="text-muted flex flex-wrap gap-3.5 px-5.5 pb-3.5 text-[11px] lg:hidden">
         <span className="flex items-center gap-1.5">
           <span className="bg-ok block h-[11px] w-[11px] rounded-[3px]" />
           all {snapshot.items.length}

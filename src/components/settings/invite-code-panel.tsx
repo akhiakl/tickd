@@ -5,6 +5,7 @@ import { regenerateInvite } from "@/server/actions/groups";
 import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
 import { getBaseUrl } from "@/lib/base-url";
+import { cn } from "@/lib/utils";
 
 // Same source and fallback as src/app/layout.tsx's metadataBase - a
 // hardcoded "tickd.app" here would copy a link pointing at production
@@ -14,9 +15,11 @@ const APP_HOST = new URL(getBaseUrl()).host;
 export function InviteCodePanel({
   groupId,
   initialCode,
+  className,
 }: {
   groupId: string;
   initialCode: string;
+  className?: string;
 }) {
   const [code, setCode] = useState(initialCode);
   const [pending, startTransition] = useTransition();
@@ -40,7 +43,9 @@ export function InviteCodePanel({
   }
 
   return (
-    <div className="bg-panel text-on-panel mx-4 rounded-[28px] px-5 py-4.5">
+    <div
+      className={cn("bg-panel text-on-panel mx-4 rounded-[28px] px-5 py-4.5 lg:mx-0", className)}
+    >
       <div className="text-panel-soft text-[10.5px] tracking-[0.12em]">INVITE CODE</div>
       <div className="font-heading my-1.5 text-[30px] tracking-[0.16em]">{code}</div>
       <div className="flex gap-2">

@@ -11,6 +11,7 @@ import { Confetti } from "@/components/ui/confetti";
 import { TodayStatsPanel } from "@/components/today/today-stats-panel";
 import { TodayChecklist } from "@/components/today/today-checklist";
 import { StreakMilestoneToast } from "@/components/today/streak-milestone-toast";
+import { ShareButton } from "@/components/today/share-button";
 import type { ChecklistItemView } from "@/types/domain";
 
 function confettiStorageKey(groupId: string, today: string) {
@@ -35,6 +36,7 @@ export function TodayLive({
   dayIndex,
   durationDays,
   priorStreak,
+  mascot,
   children,
 }: {
   groupId: string;
@@ -57,9 +59,15 @@ export function TodayLive({
    * anything's currently checked, without re-running the full history
    * calculation on every tap. */
   priorStreak: number;
-  /** Rendered between the ring and the checklist - the not-started banner,
-   * group mascot, and "Today's list" heading all need to sit there, but
-   * none of them need the live state this component owns. */
+  /** GroupMascot, grouped visually with TodayStatsPanel (see the wrapper
+   * div around both, below) - at lg they form one sticky sidebar column;
+   * below lg the wrapper is `display: contents` so this still renders in
+   * plain document order right after the ring, same as before this prop
+   * existed. */
+  mascot?: ReactNode;
+  /** Rendered between the ring/mascot and the checklist - the not-started
+   * banner and "Today's list" heading sit here; neither needs the live
+   * state this component owns. */
   children?: ReactNode;
 }) {
   const [, startTransition] = useTransition();
@@ -261,25 +269,43 @@ export function TodayLive({
 
   return (
     <>
-      <TodayStatsPanel
-        doneToday={doneToday}
-        itemCount={optimisticItems.length}
-        dayIndex={dayIndex}
-        durationDays={durationDays}
-        streak={liveStreak}
-      />
-
-      {children}
-
-      <div className="relative">
-        <TodayChecklist
-          items={optimisticItems}
-          checkedIds={optimisticChecked}
-          onToggle={toggle}
-          disabled={disabled}
+      {/* `contents` below lg: no box of its own, so TodayStatsPanel and
+          `mascot` render in plain document order exactly as before (ring,
+          then mascot, from TodayChecklistSection's own ordering). At lg
+          it becomes a real sticky column instead - the desktop sidebar
+          (see design/project/desktop-redesign/TodayDesktop.dc.html and
+          that folder's NOTES.md). One tradeoff from grouping these two
+          into a single sticky column: on the (rare) "hasn't started yet"
+          screen, the not-started banner - which the desktop layout keeps
+          in the main column via `children` below - renders after this
+          group rather than between the ring and the mascot as it does on
+          every other build of this page; not worth a deeper restructure
+          for a state most groups never see. */}
+      <div className="contents lg:sticky lg:top-6 lg:col-start-2 lg:flex lg:flex-col lg:gap-4.5 lg:self-start">
+        <TodayStatsPanel
+          doneToday={doneToday}
+          itemCount={optimisticItems.length}
+          dayIndex={dayIndex}
+          durationDays={durationDays}
+          streak={liveStreak}
+          desktopShare={<ShareButton groupId={groupId} variant="inline" />}
         />
-        <Toast message={message} />
-        <Confetti trigger={celebration} />
+        {mascot}
+      </div>
+
+      <div className="contents lg:col-start-1">
+        {children}
+
+        <div className="relative">
+          <TodayChecklist
+            items={optimisticItems}
+            checkedIds={optimisticChecked}
+            onToggle={toggle}
+            disabled={disabled}
+          />
+          <Toast message={message} />
+          <Confetti trigger={celebration} />
+        </div>
       </div>
 
       <StreakMilestoneToast groupId={groupId} streak={liveStreak} />

@@ -44,31 +44,46 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
     // puts its top edge ~150px above the viewport bottom, so the last
     // checklist/member row needs at least that much clearance to never
     // sit underneath it when scrolled all the way down.
-    <div className="pt-1.5 pb-40">
-      <GroupTabHeader
-        groupId={groupId}
-        groupName={snapshot.name}
-        myName={me.name}
-        myColor={me.color}
-        myAvatarSeed={me.avatarSeed}
-        isAdmin={snapshot.myRole === "admin"}
-        groups={groups}
-        subtitle={<TodayDateLabel dayIndex={dayIndex} durationDays={durationDays} />}
-      />
+    // At lg: a real desktop composition instead of the mobile column
+    // stretched wide - checklist + a sticky sidebar (stats/streak panel +
+    // mascot, with Share moved inline into that panel instead of floating)
+    // in a two-column grid, replacing BottomNav with GroupTabHeader's own
+    // desktop tab row. See design/project/desktop-redesign/TodayDesktop.dc.html
+    // and that folder's NOTES.md. Below lg this is untouched: a single
+    // stacked column, unaffected by the lg: grid utilities below (which
+    // only take effect once the grid itself turns on).
+    <div className="pt-1.5 pb-40 lg:mx-auto lg:max-w-[1160px] lg:px-10 lg:pt-10 lg:pb-16">
+      <div className="lg:grid lg:grid-cols-[1fr_372px] lg:items-start lg:gap-8">
+        <GroupTabHeader
+          groupId={groupId}
+          groupName={snapshot.name}
+          myName={me.name}
+          myColor={me.color}
+          myAvatarSeed={me.avatarSeed}
+          isAdmin={snapshot.myRole === "admin"}
+          groups={groups}
+          subtitle={<TodayDateLabel dayIndex={dayIndex} durationDays={durationDays} />}
+        />
 
-      {/* Streamed in behind its own boundary - see today-checklist-section's
-          comment for why this doesn't cost a second DB round trip. */}
-      <Suspense fallback={<ChecklistSkeleton />}>
-        <TodayChecklistSection groupId={groupId} userId={userId} />
-      </Suspense>
+        {/* Streamed in behind its own boundary - see today-checklist-section's
+            comment for why this doesn't cost a second DB round trip. */}
+        <Suspense fallback={<ChecklistSkeleton />}>
+          <TodayChecklistSection groupId={groupId} userId={userId} />
+        </Suspense>
 
-      {/* Streamed in behind its own boundary - see member-list-section's
-          comment for why this doesn't cost a second DB round trip. */}
-      <Suspense fallback={<MemberListSkeleton />}>
-        <MemberListSection groupId={groupId} userId={userId} />
-      </Suspense>
+        {/* Streamed in behind its own boundary - see member-list-section's
+            comment for why this doesn't cost a second DB round trip. */}
+        <Suspense fallback={<MemberListSkeleton />}>
+          <MemberListSection groupId={groupId} userId={userId} />
+        </Suspense>
+      </div>
 
-      <ShareButton groupId={groupId} />
+      {/* Fixed floating button stays for mobile; at lg the sidebar's own
+          inline Share button (rendered by TodayChecklistSection) takes
+          over and this one hides - it fixes to the viewport, not this
+          column, so it has to opt out itself rather than being cropped
+          by a parent. */}
+      <ShareButton groupId={groupId} className="lg:hidden" />
       <NewBadgeToast groupId={groupId} earnedBadgeIds={myBadgeIds} />
     </div>
   );
@@ -77,7 +92,7 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
 /** Stand-in for TodayChecklistSection while it streams in. */
 function ChecklistSkeleton() {
   return (
-    <div className="px-4">
+    <div className="px-4 lg:col-start-1 lg:px-0">
       <div className="skeleton mt-5.5 h-24 rounded-3xl" />
       <div className="skeleton mt-6 h-14 rounded-2xl" />
       <div className="skeleton mt-2 h-14 rounded-2xl" />
@@ -89,7 +104,7 @@ function ChecklistSkeleton() {
 /** Stand-in for MemberListSection while it streams in. */
 function MemberListSkeleton() {
   return (
-    <div className="mt-11 flex flex-col gap-2 px-4">
+    <div className="mt-11 flex flex-col gap-2 px-4 lg:col-start-1 lg:px-0">
       {Array.from({ length: 4 }, (_, i) => (
         <div key={i} className="skeleton h-14 rounded-2xl" />
       ))}

@@ -26,11 +26,19 @@ export type MemberListRow = {
   doneToday: boolean;
 };
 
-export function MemberList({ groupId, rows }: { groupId: string; rows: MemberListRow[] }) {
+export function MemberList({
+  groupId,
+  rows,
+  className,
+}: {
+  groupId: string;
+  rows: MemberListRow[];
+  className?: string;
+}) {
   const { message, showToast } = useToast();
 
   return (
-    <div className="relative flex flex-col gap-0.5 px-4">
+    <div className={cn("relative flex flex-col gap-0.5 px-4 lg:px-0", className)}>
       {rows.map((row) => (
         <MemberRow key={row.userId} groupId={groupId} row={row} showToast={showToast} />
       ))}

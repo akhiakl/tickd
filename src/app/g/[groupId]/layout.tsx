@@ -20,5 +20,13 @@ export default async function GroupLayout({ children, params }: LayoutProps<"/g/
   const snapshot = await getGroupSnapshot(groupId, userId);
   if (!snapshot) redirect("/");
 
-  return <Screen bare>{children}</Screen>;
+  // Uncapped at lg: every screen under a group has its own desktop
+  // composition (see design/project/desktop-redesign) with its own ideal
+  // width, so the cap moves down to each page's own wrapper instead of
+  // being fixed once here.
+  return (
+    <Screen bare maxWidthClassName="max-w-md md:max-w-xl lg:max-w-none">
+      {children}
+    </Screen>
+  );
 }
