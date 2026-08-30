@@ -306,7 +306,16 @@ export function TodayLive({
           sticky sidebar at every width the grid actually has two columns
           to offer (sticky is a no-op, harmlessly, everywhere else).
           `order-1`: comes first below lg (see the checklist column's own
-          comment). */}
+          comment). StreakMilestoneToast lives in here too, not as a
+          fourth top-level sibling - its own root is a real (if usually
+          0-height) box, and this whole return spreads directly into the
+          page's grid via Suspense/Fragment passthrough (see
+          (tabs)/page.tsx), so a stray top-level box here would claim its
+          own grid row and a full `gap` on each side of it - exactly the
+          bug that used to push a large blank gap between the header and
+          this panel. Nested inside this flex column instead, the same
+          zero-height box only ever costs one `gap-4.5`, not a full grid
+          gap on each side. */}
       <div className="order-1 flex flex-col gap-4.5 lg:sticky lg:top-6 lg:order-none lg:col-start-2 lg:self-start">
         <TodayStatsPanel
           doneToday={doneToday}
@@ -314,12 +323,11 @@ export function TodayLive({
           dayIndex={dayIndex}
           durationDays={durationDays}
           streak={liveStreak}
-          share={<ShareButton groupId={groupId} />}
+          share={<ShareButton groupId={groupId} variant="inline" className="hidden lg:flex" />}
         />
         {mascot}
+        <StreakMilestoneToast groupId={groupId} streak={liveStreak} />
       </div>
-
-      <StreakMilestoneToast groupId={groupId} streak={liveStreak} />
     </>
   );
 }

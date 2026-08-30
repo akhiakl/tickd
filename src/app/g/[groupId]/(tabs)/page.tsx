@@ -5,6 +5,7 @@ import { requireValidUserId } from "@/server/auth/require-user";
 import { GroupTabHeader } from "@/components/nav/group-tab-header";
 import { TodayDateLabel } from "@/components/today/today-date-label";
 import { NewBadgeToast } from "@/components/today/new-badge-toast";
+import { ShareButton } from "@/components/today/share-button";
 import { earnedBadges } from "@/lib/achievements";
 import { TodayChecklistSection } from "./today-checklist-section";
 import { MemberListSection } from "./member-list-section";
@@ -39,14 +40,14 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
     // One responsive grid at every width - single column below lg, then
     // checklist + a sticky sidebar (stats/streak panel with Share inline,
     // plus the mascot) at lg - instead of a desktop-only layout bolted
-    // onto an unrelated mobile one. pb-28 reserves room for GroupNav's
-    // fixed bottom bar below lg (it hides itself above lg, no clearance
-    // needed there). See
-    // design/project/desktop-redesign/TodayDesktop.dc.html - its own
+    // onto an unrelated mobile one. pb-40 reserves room for both GroupNav's
+    // fixed bottom bar and the floating Share button that sits above it
+    // below lg (both hide themselves above lg, no clearance needed there).
+    // See design/project/desktop-redesign/TodayDesktop.dc.html - its own
     // "Mobile" and "Desktop" artboards are byte-identical HTML, reflowed
     // purely by that file's own `@media` rules - and that folder's
     // NOTES.md.
-    <div className="px-5 pt-1.5 pb-28 sm:px-6 lg:mx-auto lg:max-w-[1160px] lg:px-10 lg:pt-10 lg:pb-16">
+    <div className="px-5 pt-1.5 pb-40 sm:px-6 lg:mx-auto lg:max-w-[1160px] lg:px-10 lg:pt-10 lg:pb-16">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_372px] lg:items-start">
         <GroupTabHeader
           groupId={groupId}
@@ -73,6 +74,10 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
       </div>
 
       <NewBadgeToast groupId={groupId} earnedBadgeIds={myBadgeIds} />
+      {/* floating on mobile only - the inline variant above (inside
+          TodayStatsPanel) covers lg and up, see ShareButton's own comment
+          on the two variants. */}
+      <ShareButton groupId={groupId} variant="floating" className="lg:hidden" />
     </div>
   );
 }
