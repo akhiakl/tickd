@@ -272,11 +272,12 @@ export function TodayLive({
           grid at every width, single-column below lg and two-column at
           lg, rather than a desktop-only overlay bolted onto an unrelated
           mobile layout. See
-          design/project/desktop-redesign/TodayDesktop.dc.html - its own
-          "Mobile" and "Desktop" artboards are byte-identical HTML,
-          reflowed purely by that file's own `@media` rules - and that
-          folder's NOTES.md. */}
-      <div className="flex flex-col gap-6 lg:col-start-1">
+          design/project/desktop-redesign/TodayDesktop.dc.html and that
+          folder's NOTES.md. `order-2`/`lg:order-none`: below lg, the
+          stats/streak/mascot column (below) comes first, matching the
+          app's original mobile order - only the two-column split at lg
+          is new, not the mobile stacking order. */}
+      <div className="order-2 flex flex-col gap-6 lg:order-none lg:col-start-1">
         {banner}
         <div>
           <div className="flex items-baseline justify-between px-1 pb-2.5">
@@ -303,8 +304,10 @@ export function TodayLive({
       {/* Other column: the stats/streak panel (Share lives inside it, not
           floating - see ShareButton's own comment) + the mascot, as one
           sticky sidebar at every width the grid actually has two columns
-          to offer (sticky is a no-op, harmlessly, everywhere else). */}
-      <div className="flex flex-col gap-4.5 lg:sticky lg:top-6 lg:col-start-2 lg:self-start">
+          to offer (sticky is a no-op, harmlessly, everywhere else).
+          `order-1`: comes first below lg (see the checklist column's own
+          comment). */}
+      <div className="order-1 flex flex-col gap-4.5 lg:sticky lg:top-6 lg:order-none lg:col-start-2 lg:self-start">
         <TodayStatsPanel
           doneToday={doneToday}
           itemCount={optimisticItems.length}

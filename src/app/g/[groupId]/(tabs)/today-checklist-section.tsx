@@ -68,7 +68,9 @@ export async function TodayChecklistSection({
         }
       />
 
-      <div className="flex gap-2.5 lg:col-start-1">
+      {/* order-3: after the stats/mascot sidebar (order-1) and checklist
+          (order-2) below lg - see TodayLive's own comment. */}
+      <div className="order-3 flex gap-2.5 lg:order-none lg:col-start-1">
         <div className="bg-surface flex-1 rounded-3xl px-4.5 py-4">
           <div className="text-faint text-[10.5px] tracking-[0.1em]">GROUP TODAY</div>
           <div className="font-heading mt-0.5 text-2xl">
