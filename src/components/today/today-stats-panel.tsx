@@ -45,7 +45,12 @@ export function TodayStatsPanel({
           </div>
         </div>
       </div>
-      <div className="border-on-panel/[0.14] mt-5 border-t pt-4.5">{share}</div>
+      {/* This divider+padding only makes sense around the inline Share
+          button, which is itself lg-and-up only (mobile gets a floating
+          Share button instead - see (tabs)/page.tsx) - `hidden lg:block`
+          here too, or this box would show as an empty bordered gap below
+          the streak row on mobile even with nothing visible inside it. */}
+      <div className="border-on-panel/[0.14] mt-5 hidden border-t pt-4.5 lg:block">{share}</div>
     </div>
   );
 }
