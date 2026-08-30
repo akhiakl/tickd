@@ -141,7 +141,11 @@ function WallPreview() {
           ))}
         </div>
       </div>
-      <div className="bg-flame text-on-panel absolute right-6 bottom-5 flex -rotate-4 items-center gap-1.5 rounded-full py-2.5 pr-4.5 pl-3.5 shadow-[0_14px_26px_-8px_rgba(208,122,60,0.55)]">
+      {/* text-panel, not text-on-panel: --color-flame's contrast against
+          the light on-panel text (2.85:1) fails WCAG AA - dark text
+          against this bg is the pairing the "T" avatar swatch above
+          already uses for the same reason. */}
+      <div className="bg-flame text-panel absolute right-6 bottom-5 flex -rotate-4 items-center gap-1.5 rounded-full py-2.5 pr-4.5 pl-3.5 shadow-[0_14px_26px_-8px_rgba(208,122,60,0.55)]">
         <Flame size={15} className="fill-current" />
         <span className="font-heading text-[14px]">6-day streak</span>
       </div>

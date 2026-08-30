@@ -29,7 +29,9 @@ export default async function WallPage({ params }: PageProps<"/g/[groupId]/wall"
     // "Mobile" and "Desktop" artboards are byte-identical HTML, reflowed
     // purely by that file's own `@media` rules - and that folder's
     // NOTES.md.
-    <div className="px-5 pt-1.5 pb-8 sm:px-6 lg:mx-auto lg:max-w-[1160px] lg:px-10 lg:pt-10 lg:pb-16">
+    // pb-28 (not the old pb-8) clears GroupNav's fixed bottom bar below
+    // lg - it hides itself above lg, no clearance needed there.
+    <div className="px-5 pt-1.5 pb-28 sm:px-6 lg:mx-auto lg:max-w-[1160px] lg:px-10 lg:pt-10 lg:pb-16">
       <GroupTabHeader
         groupId={groupId}
         groupName={snapshot.name}
