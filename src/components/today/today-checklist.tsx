@@ -25,7 +25,7 @@ export function TodayChecklist({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-2 px-4">
+    <div className="flex flex-col gap-2">
       {items.map((item) => {
         const done = checkedIds.has(item.id);
         return (

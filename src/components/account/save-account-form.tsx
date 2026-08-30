@@ -79,7 +79,7 @@ export function SaveAccountForm() {
 
   if (saved) {
     return (
-      <div className="bg-surface mx-4 rounded-[22px] px-4.5 py-4">
+      <div className="bg-surface mx-4 rounded-[22px] px-4.5 py-4 lg:mx-0">
         <div className="text-[15px] font-bold">Account saved</div>
         <div className="text-muted mt-0.5 text-[12.5px]">
           Log in as @{username} from any device to get back to this account.
@@ -89,14 +89,23 @@ export function SaveAccountForm() {
   }
 
   return (
-    <form onSubmit={submit} className="bg-surface mx-4 rounded-[22px] px-4.5 py-4">
-      <div className="text-[15px] font-bold">Save your account</div>
-      <div className="text-muted mt-0.5 mb-3.5 text-[12.5px]">
+    // Promoted to a prominent panel - previously a bg-surface card at the
+    // same visual weight as every preference toggle below it, even though
+    // converting a guest to a persistent login is arguably the most
+    // important thing on this page. See
+    // design/project/desktop-redesign/AccountDesktop.dc.html and that
+    // folder's NOTES.md.
+    <form
+      onSubmit={submit}
+      className="bg-panel text-on-panel mx-4 rounded-[26px] px-5.5 py-6.5 shadow-[0_16px_32px_-14px_rgba(29,32,25,0.35)] lg:mx-0"
+    >
+      <div className="font-heading text-[20px]">Save your account</div>
+      <div className="text-panel-soft mt-2 mb-5 text-[13.5px] leading-normal">
         Set a username and password so you can log back in from another device without losing this
         one.
       </div>
 
-      <div className="relative mb-2">
+      <div className="relative mb-2.5">
         <input
           value={username}
           onChange={(e) => setUsername(e.target.value.toLowerCase())}
@@ -106,19 +115,21 @@ export function SaveAccountForm() {
           autoCorrect="off"
           aria-label="Username"
           placeholder="Username"
-          className="border-text/[0.16] bg-bg text-text w-full rounded-2xl border-[1.5px] px-4 py-3 pr-10 text-[15px]"
+          className="text-on-panel placeholder:text-panel-soft bg-on-panel/10 w-full rounded-2xl border-0 px-4 py-3 pr-10 text-[15px]"
         />
         <span className="absolute top-1/2 right-3.5 -translate-y-1/2">
-          {status === "checking" && <Loader2 size={16} className="text-muted animate-spin" />}
+          {status === "checking" && <Loader2 size={16} className="text-panel-soft animate-spin" />}
           {status === "available" && <Check size={16} className="text-accent" />}
-          {(status === "taken" || status === "invalid") && <X size={16} className="text-flame" />}
+          {(status === "taken" || status === "invalid") && (
+            <X size={16} className="text-flame-light" />
+          )}
         </span>
       </div>
       {status === "taken" && (
-        <p className="text-flame -mt-1 mb-2 text-[12px]">That username is taken.</p>
+        <p className="text-flame-light -mt-1 mb-2 text-[12px]">That username is taken.</p>
       )}
       {status === "invalid" && invalidReason && (
-        <p className="text-flame -mt-1 mb-2 text-[12px]">{invalidReason}</p>
+        <p className="text-flame-light -mt-1 mb-2 text-[12px]">{invalidReason}</p>
       )}
 
       <input
@@ -129,15 +140,14 @@ export function SaveAccountForm() {
         maxLength={72}
         aria-label="Password"
         placeholder="Password"
-        className="border-text/[0.16] bg-bg text-text w-full rounded-2xl border-[1.5px] px-4 py-3 text-[15px]"
+        className="text-on-panel placeholder:text-panel-soft bg-on-panel/10 w-full rounded-2xl border-0 px-4 py-3 text-[15px]"
       />
 
-      {error && <p className="text-flame mt-2.5 text-[12.5px]">{error}</p>}
+      {error && <p className="text-flame-light mt-2.5 text-[12.5px]">{error}</p>}
 
       <Button
         type="submit"
         disabled={pending || status === "taken" || status === "invalid" || status === "checking"}
-        size="sm"
         className="mt-3.5"
       >
         {pending ? "Saving..." : "Save account"}
