@@ -126,9 +126,13 @@ export default async function RanksPage({ params, searchParams }: PageProps<"/g/
                 <Trophy size={17} strokeWidth={2.4} />
               </span>
             ) : (
+              // w-[34px], matching the trophy badge's own width above -
+              // otherwise a medal row's avatar sits at a different x than
+              // a plain-numbered row's, since a 34px circle and a 22px
+              // number column don't line up.
               <span
                 className={cn(
-                  "font-heading w-[22px] flex-none text-center text-[15px]",
+                  "font-heading w-[34px] flex-none text-center text-[15px]",
                   m.isMe ? "text-panel-soft" : "text-muted",
                 )}
               >

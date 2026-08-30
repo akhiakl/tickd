@@ -154,20 +154,13 @@ export function WallGrid({
             </button>
           ))}
         </div>
-
-        <div className="text-muted pt-5.5 pb-3 text-[12px] font-semibold tracking-[0.1em]">
-          LEGEND
-        </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-2 lg:flex-col lg:gap-2.25">
-          <LegendRow className="bg-ok" label="All done" />
-          <LegendRow className="bg-ok-3" label="Mostly done" />
-          <LegendRow className="bg-ok-4" label="Partial" />
-          <LegendRow className="bg-zero" label="Zero" />
-          <LegendRow className="bg-future" label="Not yet / before start" muted />
-        </div>
       </div>
 
-      <div className="lg:col-start-2">
+      {/* lg:row-span-2: spans both of col1's rows (members above, legend
+          below) height-wise, so the calendar's own height never forces a
+          gap into either of those - see the legend item's own comment on
+          why it isn't just grouped into the members div above instead. */}
+      <div className="lg:col-start-2 lg:row-span-2">
         <div className="flex items-center justify-between">
           <button
             type="button"
@@ -272,6 +265,27 @@ export function WallGrid({
             </div>
           </div>
         )}
+      </div>
+
+      {/* Its own grid item, not grouped into the members div above - below
+          lg that puts it after the calendar (matching the app's original
+          mobile order: members, calendar, then legend) via plain
+          document order, not a `hidden`/`order` trick; at lg it lands
+          back under the members list via lg:col-start-1, sized by its
+          own content rather than whatever the calendar's height would
+          otherwise force into a shared row (see the calendar item's own
+          comment). */}
+      <div className="lg:col-start-1">
+        <div className="text-muted pt-5.5 pb-3 text-[12px] font-semibold tracking-[0.1em]">
+          LEGEND
+        </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-2 lg:flex-col lg:gap-2.25">
+          <LegendRow className="bg-ok" label="All done" />
+          <LegendRow className="bg-ok-3" label="Mostly done" />
+          <LegendRow className="bg-ok-4" label="Partial" />
+          <LegendRow className="bg-zero" label="Zero" />
+          <LegendRow className="bg-future" label="Not yet / before start" muted />
+        </div>
       </div>
     </div>
   );

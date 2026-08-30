@@ -46,8 +46,9 @@ export async function MemberListSection({ groupId, userId }: { groupId: string; 
     // One grid item, not two - a heading and its list need a small,
     // fixed gap between them regardless of anything else, not whatever
     // the parent grid's row gap happens to be (see (tabs)/page.tsx's
-    // grid).
-    <div className="lg:col-start-1">
+    // grid). order-4: last below lg, after the stats/mascot sidebar,
+    // checklist, and group/personal totals (see TodayLive's own comment).
+    <div className="order-4 lg:order-none lg:col-start-1">
       <div className="flex items-baseline justify-between pb-2.5">
         <span className="text-faint text-[11px] tracking-[0.12em] uppercase">The group</span>
         <span className="text-muted text-[12px]">{members.length} people</span>
