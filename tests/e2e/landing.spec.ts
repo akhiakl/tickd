@@ -6,15 +6,19 @@ test.describe("landing page", () => {
   test.describe("signed out", () => {
     test("shows the hero and both entry points", async ({ page }) => {
       await page.goto("/");
-      await expect(page.getByText("Everyone's")).toBeVisible();
-      await expect(page.getByRole("link", { name: "Start a group" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Everyone's in. Every day." })).toBeVisible();
+      // The hero's CTA and the closing CTA band both have a "Start a
+      // group" link now that the page is one responsive document rather
+      // than a mobile-only hero with a desktop-only closing band -
+      // `.first()` picks the hero's.
+      await expect(page.getByRole("link", { name: "Start a group" }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: "Join with a code" })).toBeVisible();
       await expect(page.getByText("Your groups")).toHaveCount(0);
     });
 
     test("redirects to the guest name screen when starting a group", async ({ page }) => {
       await page.goto("/");
-      await page.getByRole("link", { name: "Start a group" }).click();
+      await page.getByRole("link", { name: "Start a group" }).first().click();
       await expect(page).toHaveURL(/\/signin\/guest\?callbackUrl=%2Fcreate/);
     });
 

@@ -110,17 +110,17 @@ const PREVIEW_CELLS = [
 const PREVIEW_CELL_CLASS = ["bg-zero", "bg-ok-3", "bg-ok-4"] as const;
 
 /**
- * Desktop-only: the mobile column stretched into a wide, mostly-empty
- * viewport used to be this page's whole desktop story - this fills that
- * space with a real composition instead (two-column hero with an
- * illustrative "wall" graphic, a "how it works" section, a closing CTA
- * band). The mobile layout below it is untouched. See
- * design/project/desktop-redesign/Main.dc.html and that folder's
- * NOTES.md.
+ * One responsive composition at every width, not a desktop-only overlay
+ * bolted onto an unrelated mobile page: a two-column hero with this
+ * illustrative "wall" graphic below the headline/CTA on narrow widths and
+ * beside it at lg, a "how it works" section, and a closing CTA band. See
+ * design/project/desktop-redesign/Main.dc.html - its own "Mobile" and
+ * "Desktop" artboards are byte-identical HTML, reflowed purely by that
+ * file's own `@media` rules - and that folder's NOTES.md.
  */
-function DesktopWallPreview() {
+function WallPreview() {
   return (
-    <div className="relative hidden py-5 lg:block">
+    <div className="relative py-5">
       <div className="bg-surface-2 absolute inset-6 -rotate-3 rounded-[28px]" />
       <div className="bg-panel relative mx-auto max-w-[440px] rotate-[1.4deg] rounded-[28px] p-6.5 shadow-[0_30px_60px_-20px_rgba(29,32,25,0.35)]">
         <div className="flex">
@@ -167,18 +167,17 @@ const STEPS = [
   },
 ] as const;
 
-/** Desktop-only "how it works" section - see DesktopWallPreview's own
- * comment. */
+/** "How it works" section - see WallPreview's own comment. */
 function HowItWorks() {
   return (
-    <div className="mt-37 hidden lg:block">
-      <h2 className="font-heading text-[34px]">Three habits, one shared list.</h2>
-      <p className="text-muted mt-2.5 text-[16px]">
+    <div className="mt-16 lg:mt-37">
+      <h2 className="font-heading text-[26px] lg:text-[34px]">Three habits, one shared list.</h2>
+      <p className="text-muted mt-2.5 text-[15px] lg:text-[16px]">
         No app-store gimmicks - just a list your group actually keeps up with.
       </p>
-      <div className="mt-10 grid grid-cols-3 gap-7">
+      <div className="mt-7 grid grid-cols-1 gap-4 lg:mt-10 lg:grid-cols-3 lg:gap-7">
         {STEPS.map(({ icon: Icon, title, body }) => (
-          <div key={title} className="bg-surface rounded-3xl p-7">
+          <div key={title} className="bg-surface rounded-3xl p-6 lg:p-7">
             <div className="bg-ok-bg text-accent-d mb-4.5 flex h-12 w-12 items-center justify-center rounded-full">
               <Icon size={22} strokeWidth={2} />
             </div>
@@ -191,14 +190,14 @@ function HowItWorks() {
   );
 }
 
-/** Desktop-only closing CTA band - see DesktopWallPreview's own comment. */
+/** Closing CTA band - see WallPreview's own comment. */
 function ClosingCta() {
   return (
-    <div className="bg-panel mt-30 hidden items-center justify-between gap-6 rounded-[28px] p-12 lg:flex">
-      <div className="font-heading text-on-panel max-w-[420px] text-[27px] leading-[1.15]">
+    <div className="bg-panel mt-14 flex flex-col items-start gap-6 rounded-[28px] p-8 lg:mt-30 lg:flex-row lg:items-center lg:justify-between lg:p-12">
+      <div className="font-heading text-on-panel max-w-[420px] text-[22px] leading-[1.15] lg:text-[27px]">
         Ready to keep each other honest?
       </div>
-      <LinkButton href="/create" className="w-auto flex-none">
+      <LinkButton href="/create" className="lg:w-auto lg:flex-none">
         Start a group
       </LinkButton>
     </div>
@@ -250,7 +249,7 @@ export default function LandingPage() {
           </Suspense>
         </div>
 
-        <DesktopWallPreview />
+        <WallPreview />
       </div>
 
       <HowItWorks />

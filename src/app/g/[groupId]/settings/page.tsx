@@ -47,36 +47,37 @@ export default async function GroupSettingsPage({ params }: PageProps<"/g/[group
       </div>
 
       <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-8">
-        <InviteCodePanel
-          groupId={groupId}
-          initialCode={snapshot.inviteCode}
-          className="lg:col-start-1"
-        />
+        {/* One grid item per column, not four alternating ones - a
+            heading needs to sit right above its own content regardless
+            of how tall the other column's content is, not however tall
+            a shared grid row happens to be. */}
+        <div className="lg:col-start-1">
+          <InviteCodePanel groupId={groupId} initialCode={snapshot.inviteCode} />
 
-        <div className="text-faint px-2 pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase lg:col-start-2 lg:px-0">
-          Checklist items
+          <div className="text-faint px-2 pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase">
+            Members
+          </div>
+          <MembersSettingsList
+            groupId={groupId}
+            members={snapshot.members.map((m) => ({
+              userId: m.userId,
+              name: m.name,
+              color: m.color,
+              avatarSeed: m.avatarSeed,
+              isMe: m.isMe,
+            }))}
+          />
         </div>
-        <div className="px-0 lg:col-start-2">
+
+        <div className="lg:col-start-2">
+          <div className="text-faint px-2 pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase lg:pt-0">
+            Checklist items
+          </div>
           <ChecklistSettingsEditor groupId={groupId} items={snapshot.items} />
-        </div>
 
-        <div className="text-faint px-2 pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase lg:col-start-1 lg:px-0">
-          Members
-        </div>
-        <MembersSettingsList
-          groupId={groupId}
-          members={snapshot.members.map((m) => ({
-            userId: m.userId,
-            name: m.name,
-            color: m.color,
-            avatarSeed: m.avatarSeed,
-            isMe: m.isMe,
-          }))}
-          className="lg:col-start-1"
-        />
-
-        <div className="pt-6.5 lg:col-start-2">
-          <DangerZone groupId={groupId} dayIndex={snapshot.dayIndex} />
+          <div className="pt-6.5">
+            <DangerZone groupId={groupId} dayIndex={snapshot.dayIndex} />
+          </div>
         </div>
       </div>
     </Screen>

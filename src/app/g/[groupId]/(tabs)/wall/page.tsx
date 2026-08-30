@@ -21,10 +21,15 @@ export default async function WallPage({ params }: PageProps<"/g/[groupId]/wall"
   const me = snapshot.members.find((m) => m.isMe)!;
 
   return (
-    // At lg: a real, non-scrolling member sidebar with a fully labeled
-    // legend, beside the calendar - see WallGrid's own comment and
-    // design/project/desktop-redesign/WallDesktop.dc.html.
-    <div className="pt-1.5 pb-8 lg:mx-auto lg:max-w-[1160px] lg:px-10 lg:pt-10 lg:pb-16">
+    // One responsive layout at every width: WallGrid's own member list +
+    // legend (see its comment) carry the day/people count and full legend
+    // at every size now, not just at lg, so there's no separate compact
+    // mobile-only summary here any more. See
+    // design/project/desktop-redesign/WallDesktop.dc.html - its own
+    // "Mobile" and "Desktop" artboards are byte-identical HTML, reflowed
+    // purely by that file's own `@media` rules - and that folder's
+    // NOTES.md.
+    <div className="px-5 pt-1.5 pb-8 sm:px-6 lg:mx-auto lg:max-w-[1160px] lg:px-10 lg:pt-10 lg:pb-16">
       <GroupTabHeader
         groupId={groupId}
         groupName={snapshot.name}
@@ -36,40 +41,14 @@ export default async function WallPage({ params }: PageProps<"/g/[groupId]/wall"
         subtitle={<span className="text-muted truncate text-[13px]">The wall</span>}
       />
 
-      {/* The desktop sidebar (WallGrid) already spells out day/people
-          count and a full legend, so these compact mobile-only rows hide
-          at lg instead of duplicating them. */}
-      <div className="px-5.5 pt-3.5 pb-3.5 lg:hidden">
-        <div className="text-muted text-[13px]">
-          {snapshot.durationDays} days - {snapshot.members.length} people - tap any day
-        </div>
+      <div className="mt-3.5">
+        <WallGrid
+          members={snapshot.members}
+          startDate={snapshot.startDate}
+          durationDays={snapshot.durationDays}
+          items={snapshot.items}
+        />
       </div>
-
-      <div className="text-muted flex flex-wrap gap-3.5 px-5.5 pb-3.5 text-[11px] lg:hidden">
-        <span className="flex items-center gap-1.5">
-          <span className="bg-ok block h-[11px] w-[11px] rounded-[3px]" />
-          all {snapshot.items.length}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="bg-ok-3 block h-[11px] w-[11px] rounded-[3px]" />
-          partial
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="bg-zero block h-[11px] w-[11px] rounded-[3px]" />
-          zero
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="bg-surface block h-[11px] w-[11px] rounded-[3px] opacity-50" />
-          before the challenge started
-        </span>
-      </div>
-
-      <WallGrid
-        members={snapshot.members}
-        startDate={snapshot.startDate}
-        durationDays={snapshot.durationDays}
-        items={snapshot.items}
-      />
     </div>
   );
 }

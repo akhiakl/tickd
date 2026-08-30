@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { Settings, RefreshCw, TriangleAlert } from "lucide-react";
 import { GroupSwitcher } from "@/components/group-switcher/group-switcher";
 import { ThemeToggle } from "@/components/nav/theme-toggle";
-import { DesktopTabs } from "@/components/nav/desktop-tabs";
+import { GroupNav } from "@/components/nav/group-nav";
 import { Avatar } from "@/components/ui/avatar";
 import { useTxQueueStatus } from "@/lib/sync/use-tx-queue-status";
 import { drainController } from "@/lib/sync/drain";
@@ -46,7 +46,7 @@ export function GroupTabHeader({
 
   return (
     <>
-      <div className="flex items-start justify-between gap-3 px-5.5 pt-1.5 lg:col-span-2 lg:px-0">
+      <div className="flex items-start justify-between gap-3 pt-1.5 lg:col-span-2">
         <div className="min-w-0 flex-1">
           <GroupSwitcher groups={groups} currentGroupId={groupId} groupName={groupName} />
           <div className="mt-0.5 flex min-w-0 items-center gap-2.5">
@@ -105,10 +105,11 @@ export function GroupTabHeader({
           <Avatar name={myName} color={myColor} seed={myAvatarSeed} size={36} />
         </Link>
       </div>
-      {/* lg:col-span-2: full-width tab row below the header, replacing
-        BottomNav (see that component's own comment). */}
+      {/* lg:col-span-2: full-width tab row below the header at lg; below
+          that GroupNav fixes itself to the viewport bottom instead (see
+          its own comment) - either way this is the one place it renders. */}
       <div className="lg:col-span-2">
-        <DesktopTabs groupId={groupId} />
+        <GroupNav groupId={groupId} />
       </div>
     </>
   );

@@ -18,11 +18,11 @@ test.describe("The wall", () => {
 
     await page.goto(`/g/${group.groupId}/wall`);
     await expect(page.getByText("The wall")).toBeVisible();
-    await expect(page.getByText(`${group.durationDays} days`)).toBeVisible();
-    await expect(page.getByText("all 8")).toBeVisible();
-    await expect(page.getByText("partial")).toBeVisible();
-    await expect(page.getByText("zero")).toBeVisible();
-    await expect(page.getByText("before the challenge started")).toBeVisible();
+    await expect(page.getByText("All done")).toBeVisible();
+    await expect(page.getByText("Mostly done")).toBeVisible();
+    await expect(page.getByText("Partial")).toBeVisible();
+    await expect(page.getByText("Zero")).toBeVisible();
+    await expect(page.getByText("Not yet / before start")).toBeVisible();
 
     await expect(page.getByRole("button", { name: "You" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Priya" })).toBeVisible();

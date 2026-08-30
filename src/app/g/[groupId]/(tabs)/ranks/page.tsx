@@ -64,7 +64,7 @@ export default async function RanksPage({ params, searchParams }: PageProps<"/g/
     .sort((a, b) => b.score - a.score);
 
   return (
-    <div className="pt-1.5 pb-8 lg:mx-auto lg:max-w-[760px] lg:px-10 lg:pt-10 lg:pb-16">
+    <div className="px-5 pt-1.5 pb-8 sm:px-6 lg:mx-auto lg:max-w-[760px] lg:px-10 lg:pt-10 lg:pb-16">
       <GroupTabHeader
         groupId={groupId}
         groupName={snapshot.name}
@@ -76,11 +76,11 @@ export default async function RanksPage({ params, searchParams }: PageProps<"/g/
         subtitle={<span className="text-muted truncate text-[13px]">Standings</span>}
       />
 
-      <div className="px-5.5 pt-3.5 pb-3.5 lg:px-0">
+      <div className="pt-3.5 pb-3.5">
         <div className="text-muted text-[13px]">by items completed</div>
       </div>
 
-      <div className="flex gap-1.5 px-5.5 pb-4 lg:px-0">
+      <div className="flex gap-1.5 pb-4">
         {WINDOWS.map((w2) => (
           <Link
             key={w2.value}
@@ -95,7 +95,7 @@ export default async function RanksPage({ params, searchParams }: PageProps<"/g/
         ))}
       </div>
 
-      <div className="flex flex-col gap-1.5 px-4 lg:px-0">
+      <div className="flex flex-col gap-1.5">
         {ranked.map((m, i) => (
           <Link
             key={m.userId}

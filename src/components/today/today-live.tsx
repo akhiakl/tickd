@@ -37,7 +37,7 @@ export function TodayLive({
   durationDays,
   priorStreak,
   mascot,
-  children,
+  banner,
 }: {
   groupId: string;
   items: ChecklistItemView[];
@@ -59,16 +59,13 @@ export function TodayLive({
    * anything's currently checked, without re-running the full history
    * calculation on every tap. */
   priorStreak: number;
-  /** GroupMascot, grouped visually with TodayStatsPanel (see the wrapper
-   * div around both, below) - at lg they form one sticky sidebar column;
-   * below lg the wrapper is `display: contents` so this still renders in
-   * plain document order right after the ring, same as before this prop
-   * existed. */
+  /** GroupMascot, grouped visually with TodayStatsPanel into one sidebar
+   * column (see the wrapper div around both, below). */
   mascot?: ReactNode;
-  /** Rendered between the ring/mascot and the checklist - the not-started
-   * banner and "Today's list" heading sit here; neither needs the live
-   * state this component owns. */
-  children?: ReactNode;
+  /** The not-started banner, shown above the checklist when `disabled` -
+   * the only thing here that needs data (the group's start date) this
+   * component doesn't otherwise have. */
+  banner?: ReactNode;
 }) {
   const [, startTransition] = useTransition();
   const { message, showToast } = useToast();
@@ -269,43 +266,54 @@ export function TodayLive({
 
   return (
     <>
-      {/* `contents` below lg: no box of its own, so TodayStatsPanel and
-          `mascot` render in plain document order exactly as before (ring,
-          then mascot, from TodayChecklistSection's own ordering). At lg
-          it becomes a real sticky column instead - the desktop sidebar
-          (see design/project/desktop-redesign/TodayDesktop.dc.html and
-          that folder's NOTES.md). One tradeoff from grouping these two
-          into a single sticky column: on the (rare) "hasn't started yet"
-          screen, the not-started banner - which the desktop layout keeps
-          in the main column via `children` below - renders after this
-          group rather than between the ring and the mascot as it does on
-          every other build of this page; not worth a deeper restructure
-          for a state most groups never see. */}
-      <div className="contents lg:sticky lg:top-6 lg:col-start-2 lg:flex lg:flex-col lg:gap-4.5 lg:self-start">
+      {/* One column: checklist. Always a real box (not conditionally
+          `display: contents`) and always the same markup at every width -
+          the grid this sits in (see (tabs)/page.tsx) is itself a real
+          grid at every width, single-column below lg and two-column at
+          lg, rather than a desktop-only overlay bolted onto an unrelated
+          mobile layout. See
+          design/project/desktop-redesign/TodayDesktop.dc.html - its own
+          "Mobile" and "Desktop" artboards are byte-identical HTML,
+          reflowed purely by that file's own `@media` rules - and that
+          folder's NOTES.md. */}
+      <div className="flex flex-col gap-6 lg:col-start-1">
+        {banner}
+        <div>
+          <div className="flex items-baseline justify-between px-1 pb-2.5">
+            <span className="text-faint text-[11px] tracking-[0.12em] uppercase">
+              Today&apos;s list
+            </span>
+            <span className="text-muted text-[12px]">
+              {disabled ? "not started yet" : "tap to tick"}
+            </span>
+          </div>
+          <div className="relative">
+            <TodayChecklist
+              items={optimisticItems}
+              checkedIds={optimisticChecked}
+              onToggle={toggle}
+              disabled={disabled}
+            />
+            <Toast message={message} />
+            <Confetti trigger={celebration} />
+          </div>
+        </div>
+      </div>
+
+      {/* Other column: the stats/streak panel (Share lives inside it, not
+          floating - see ShareButton's own comment) + the mascot, as one
+          sticky sidebar at every width the grid actually has two columns
+          to offer (sticky is a no-op, harmlessly, everywhere else). */}
+      <div className="flex flex-col gap-4.5 lg:sticky lg:top-6 lg:col-start-2 lg:self-start">
         <TodayStatsPanel
           doneToday={doneToday}
           itemCount={optimisticItems.length}
           dayIndex={dayIndex}
           durationDays={durationDays}
           streak={liveStreak}
-          desktopShare={<ShareButton groupId={groupId} variant="inline" />}
+          share={<ShareButton groupId={groupId} />}
         />
         {mascot}
-      </div>
-
-      <div className="contents lg:col-start-1">
-        {children}
-
-        <div className="relative">
-          <TodayChecklist
-            items={optimisticItems}
-            checkedIds={optimisticChecked}
-            onToggle={toggle}
-            disabled={disabled}
-          />
-          <Toast message={message} />
-          <Confetti trigger={celebration} />
-        </div>
       </div>
 
       <StreakMilestoneToast groupId={groupId} streak={liveStreak} />

@@ -19,9 +19,9 @@ type WallMember = {
   localItemsByDate: Record<string, string[]>;
 };
 
-/** One row of the desktop legend (see WallGrid's sidebar, below) - the
- * mobile version packs the same five states into tiny inline swatches
- * with barely any label; this spells each one out. */
+/** One row of the legend, below the member list - spelled out in full at
+ * every width rather than packed into tiny inline swatches with barely
+ * any label. */
 function LegendRow({
   className,
   label,
@@ -59,14 +59,14 @@ export function cellTextClass(count: number | null, itemCount: number) {
 }
 
 /**
- * A real month calendar, one member at a time (switch via the avatar row)
- * rather than the whole group's rows stacked in one grid - each member's
- * cells are colored from *their own* localCountsByDate/localToday (see
- * src/types/domain.ts's MemberSnapshot comments), so what counts as
- * "today" or "done" here always matches what that member sees on their
- * own Today page. Only ever pages through the months the challenge's own
- * date range touches (monthsInRange) - not a full year of mostly-empty
- * calendar either side of a short challenge.
+ * A real month calendar, one member at a time (switch via the member
+ * list) rather than the whole group's rows stacked in one grid - each
+ * member's cells are colored from *their own* localCountsByDate/
+ * localToday (see src/types/domain.ts's MemberSnapshot comments), so
+ * what counts as "today" or "done" here always matches what that member
+ * sees on their own Today page. Only ever pages through the months the
+ * challenge's own date range touches (monthsInRange) - not a full year
+ * of mostly-empty calendar either side of a short challenge.
  */
 export function WallGrid({
   members,
@@ -103,82 +103,62 @@ export function WallGrid({
   if (!member || !month) return null;
 
   return (
-    // At lg: a real, non-scrolling sidebar (member list + a fully labeled
-    // legend) beside the calendar, instead of the mobile member row -
-    // which, being a horizontally-scrolling strip with no scroll
-    // affordance, cuts off past however many members fit the viewport
-    // width. See design/project/desktop-redesign/WallDesktop.dc.html and
-    // that folder's NOTES.md.
-    <div className="lg:grid lg:grid-cols-[280px_1fr] lg:items-start lg:gap-8">
-      {/* pt-1.5 (not just the horizontal/bottom padding) matters here:
-          overflow-x-auto forces the browser to clip overflow-y too, and
-          each button's selection ring is a box-shadow that extends past
-          the avatar's own box - with no top padding, the ring on a
-          selected avatar in the top row gets clipped instead of drawn. */}
-      <div className="no-scrollbar flex gap-2 overflow-x-auto px-5.5 pt-1.5 pb-3.5 lg:hidden">
-        {members.map((m) => (
-          <button
-            key={m.userId}
-            type="button"
-            onClick={() => selectMember(m.userId)}
-            aria-label={m.isMe ? "You" : m.name}
-            aria-pressed={m.userId === member.userId}
-            className="flex-none rounded-full"
-          >
-            <span
-              className={cn(
-                "block rounded-full ring-2 transition-colors",
-                m.userId === member.userId ? "ring-accent" : "ring-transparent",
-              )}
-            >
-              <Avatar name={m.name} color={m.color} seed={m.avatarSeed} size={40} />
-            </span>
-            <span
-              className={cn(
-                "mt-1 block max-w-[40px] truncate text-center text-[10px] font-bold",
-                m.userId === member.userId ? "text-text" : "text-faint",
-              )}
-            >
-              {m.isMe ? "You" : m.name}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      <div className="hidden lg:col-start-1 lg:block">
-        <div className="text-muted px-1 pb-2.5 text-[12px] font-semibold tracking-[0.1em]">
-          MEMBERS
-        </div>
-        <div className="flex max-h-[380px] flex-col gap-0.5 overflow-y-auto">
+    // One responsive grid at every width: a member list + legend sidebar
+    // beside the calendar, single column below lg. The member list
+    // itself is one row of buttons, not a horizontal-scroll strip on
+    // mobile plus a separate vertical list on desktop - it reflows
+    // between the two via responsive classes on each button. See
+    // design/project/desktop-redesign/WallDesktop.dc.html - its own
+    // "Mobile" and "Desktop" artboards are byte-identical HTML, reflowed
+    // purely by that file's own `@media` rules - and that folder's
+    // NOTES.md.
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr] lg:items-start lg:gap-8">
+      <div className="lg:col-start-1">
+        <div className="text-muted pb-2.5 text-[12px] font-semibold tracking-[0.1em]">MEMBERS</div>
+        {/* pt-1.5 (not just the other padding) matters below lg: overflow-x-auto
+            forces the browser to clip overflow-y too, and each button's
+            selection ring is a box-shadow that extends past the avatar's
+            own box - with no top padding, the ring on a selected avatar
+            gets clipped instead of drawn. */}
+        <div className="no-scrollbar flex gap-2 overflow-x-auto pt-1.5 pb-1 lg:max-h-[380px] lg:flex-col lg:gap-0.5 lg:overflow-x-visible lg:overflow-y-auto lg:pt-0 lg:pb-0">
           {members.map((m) => (
             <button
               key={m.userId}
               type="button"
               onClick={() => selectMember(m.userId)}
+              aria-label={m.isMe ? "You" : m.name}
               aria-pressed={m.userId === member.userId}
               className={cn(
-                "flex items-center gap-3 rounded-[14px] px-2.5 py-2 text-left",
-                m.userId === member.userId ? "bg-surface" : "bg-transparent",
+                "flex flex-none flex-col items-center gap-1 rounded-[14px] px-1 py-1 text-left lg:flex-row lg:justify-start lg:gap-3 lg:px-2.5 lg:py-2",
+                m.userId === member.userId && "lg:bg-surface",
               )}
             >
-              <Avatar name={m.name} color={m.color} seed={m.avatarSeed} size={32} />
               <span
                 className={cn(
-                  "truncate text-[13.5px]",
-                  m.userId === member.userId ? "text-text font-bold" : "text-muted",
+                  "block rounded-full ring-2 transition-colors lg:ring-0",
+                  m.userId === member.userId ? "ring-accent" : "ring-transparent",
                 )}
               >
-                {m.name}
-                {m.isMe && " · You"}
+                <Avatar name={m.name} color={m.color} seed={m.avatarSeed} size={32} />
+              </span>
+              <span
+                className={cn(
+                  "max-w-[40px] truncate text-center text-[10px] font-bold lg:max-w-none lg:text-left lg:text-[13.5px] lg:font-normal",
+                  m.userId === member.userId
+                    ? "text-text lg:font-bold"
+                    : "text-faint lg:text-muted",
+                )}
+              >
+                {m.isMe ? "You" : m.name}
               </span>
             </button>
           ))}
         </div>
 
-        <div className="text-muted px-1 pt-5.5 pb-3 text-[12px] font-semibold tracking-[0.1em]">
+        <div className="text-muted pt-5.5 pb-3 text-[12px] font-semibold tracking-[0.1em]">
           LEGEND
         </div>
-        <div className="flex flex-col gap-2.25">
+        <div className="flex flex-wrap gap-x-4 gap-y-2 lg:flex-col lg:gap-2.25">
           <LegendRow className="bg-ok" label="All done" />
           <LegendRow className="bg-ok-3" label="Mostly done" />
           <LegendRow className="bg-ok-4" label="Partial" />
@@ -188,7 +168,7 @@ export function WallGrid({
       </div>
 
       <div className="lg:col-start-2">
-        <div className="mx-5.5 flex items-center justify-between lg:mx-0">
+        <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={() => setMonthIndex((i) => i - 1)}
@@ -210,7 +190,7 @@ export function WallGrid({
           </button>
         </div>
 
-        <div className="mx-5.5 mt-2.5 lg:mx-0">
+        <div className="mt-2.5">
           <div className="text-faint grid grid-cols-7 gap-1.5 text-center text-[10px] font-bold">
             {WEEKDAY_LABELS.map((day) => (
               <span key={day}>{day}</span>
@@ -253,7 +233,7 @@ export function WallGrid({
         </div>
 
         {selectedDate && (
-          <div className="animate-rise bg-panel text-on-panel mx-4 mt-4.5 rounded-[28px] px-5 py-4.5 lg:mx-0">
+          <div className="animate-rise bg-panel text-on-panel mt-4.5 rounded-[28px] px-5 py-4.5">
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-heading text-[18px]">

@@ -38,7 +38,7 @@ export function MemberList({
   const { message, showToast } = useToast();
 
   return (
-    <div className={cn("relative flex flex-col gap-0.5 px-4 lg:px-0", className)}>
+    <div className={cn("relative flex flex-col gap-0.5", className)}>
       {rows.map((row) => (
         <MemberRow key={row.userId} groupId={groupId} row={row} showToast={showToast} />
       ))}
