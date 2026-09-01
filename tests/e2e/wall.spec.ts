@@ -81,10 +81,13 @@ test.describe("The wall", () => {
     const now = Date.now();
     const today = toISODate(new Date(now));
     const tomorrow = toISODate(new Date(now + 86_400_000));
-    // Only assert this when it's still the same displayed month - a run
-    // that happens to land on the last day of the month would need to
-    // page forward first, which isn't what this test is checking.
-    if (tomorrow.slice(0, 7) === group.startDate.slice(0, 7)) {
+    // Only assert this when it's still the same displayed month - the
+    // calendar defaults to *today's* month (see the Previous-month
+    // comment below), not the group's start month, so a run that happens
+    // to land on the last day of the month (tomorrow crossing into the
+    // next one) would need to page forward first, which isn't what this
+    // test is checking.
+    if (tomorrow.slice(0, 7) === today.slice(0, 7)) {
       await expect(page.getByLabel(tomorrow)).toBeDisabled();
     }
 
