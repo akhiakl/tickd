@@ -11,6 +11,7 @@ import { Confetti } from "@/components/ui/confetti";
 import { TodayStatsPanel } from "@/components/today/today-stats-panel";
 import { TodayChecklist } from "@/components/today/today-checklist";
 import { StreakMilestoneToast } from "@/components/today/streak-milestone-toast";
+import { ShareButton } from "@/components/today/share-button";
 import type { ChecklistItemView } from "@/types/domain";
 
 function confettiStorageKey(groupId: string, today: string) {
@@ -35,7 +36,8 @@ export function TodayLive({
   dayIndex,
   durationDays,
   priorStreak,
-  children,
+  mascot,
+  banner,
 }: {
   groupId: string;
   items: ChecklistItemView[];
@@ -57,10 +59,13 @@ export function TodayLive({
    * anything's currently checked, without re-running the full history
    * calculation on every tap. */
   priorStreak: number;
-  /** Rendered between the ring and the checklist - the not-started banner,
-   * group mascot, and "Today's list" heading all need to sit there, but
-   * none of them need the live state this component owns. */
-  children?: ReactNode;
+  /** GroupMascot, grouped visually with TodayStatsPanel into one sidebar
+   * column (see the wrapper div around both, below). */
+  mascot?: ReactNode;
+  /** The not-started banner, shown above the checklist when `disabled` -
+   * the only thing here that needs data (the group's start date) this
+   * component doesn't otherwise have. */
+  banner?: ReactNode;
 }) {
   const [, startTransition] = useTransition();
   const { message, showToast } = useToast();
@@ -261,28 +266,68 @@ export function TodayLive({
 
   return (
     <>
-      <TodayStatsPanel
-        doneToday={doneToday}
-        itemCount={optimisticItems.length}
-        dayIndex={dayIndex}
-        durationDays={durationDays}
-        streak={liveStreak}
-      />
-
-      {children}
-
-      <div className="relative">
-        <TodayChecklist
-          items={optimisticItems}
-          checkedIds={optimisticChecked}
-          onToggle={toggle}
-          disabled={disabled}
-        />
-        <Toast message={message} />
-        <Confetti trigger={celebration} />
+      {/* One column: checklist. Always a real box (not conditionally
+          `display: contents`) and always the same markup at every width -
+          the grid this sits in (see (tabs)/page.tsx) is itself a real
+          grid at every width, single-column below lg and two-column at
+          lg, rather than a desktop-only overlay bolted onto an unrelated
+          mobile layout. See
+          design/project/desktop-redesign/TodayDesktop.dc.html and that
+          folder's NOTES.md. `order-2`/`lg:order-none`: below lg, the
+          stats/streak/mascot column (below) comes first, matching the
+          app's original mobile order - only the two-column split at lg
+          is new, not the mobile stacking order. */}
+      <div className="order-2 flex flex-col gap-6 lg:order-none lg:col-start-1">
+        {banner}
+        <div>
+          <div className="flex items-baseline justify-between px-1 pb-2.5">
+            <span className="text-faint text-[11px] tracking-[0.12em] uppercase">
+              Today&apos;s list
+            </span>
+            <span className="text-muted text-[12px]">
+              {disabled ? "not started yet" : "tap to tick"}
+            </span>
+          </div>
+          <div className="relative">
+            <TodayChecklist
+              items={optimisticItems}
+              checkedIds={optimisticChecked}
+              onToggle={toggle}
+              disabled={disabled}
+            />
+            <Toast message={message} />
+            <Confetti trigger={celebration} />
+          </div>
+        </div>
       </div>
 
-      <StreakMilestoneToast groupId={groupId} streak={liveStreak} />
+      {/* Other column: the stats/streak panel (Share lives inside it, not
+          floating - see ShareButton's own comment) + the mascot, as one
+          sticky sidebar at every width the grid actually has two columns
+          to offer (sticky is a no-op, harmlessly, everywhere else).
+          `order-1`: comes first below lg (see the checklist column's own
+          comment). StreakMilestoneToast lives in here too, not as a
+          fourth top-level sibling - its own root is a real (if usually
+          0-height) box, and this whole return spreads directly into the
+          page's grid via Suspense/Fragment passthrough (see
+          (tabs)/page.tsx), so a stray top-level box here would claim its
+          own grid row and a full `gap` on each side of it - exactly the
+          bug that used to push a large blank gap between the header and
+          this panel. Nested inside this flex column instead, the same
+          zero-height box only ever costs one `gap-4.5`, not a full grid
+          gap on each side. */}
+      <div className="order-1 flex flex-col gap-4.5 lg:sticky lg:top-6 lg:order-none lg:col-start-2 lg:self-start">
+        <TodayStatsPanel
+          doneToday={doneToday}
+          itemCount={optimisticItems.length}
+          dayIndex={dayIndex}
+          durationDays={durationDays}
+          streak={liveStreak}
+          share={<ShareButton groupId={groupId} variant="inline" className="hidden lg:flex" />}
+        />
+        {mascot}
+        <StreakMilestoneToast groupId={groupId} streak={liveStreak} />
+      </div>
     </>
   );
 }

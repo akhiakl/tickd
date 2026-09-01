@@ -55,29 +55,22 @@ export async function TodayChecklistSection({
         dayIndex={dayIndex}
         durationDays={durationDays}
         priorStreak={myPriorStreak}
-      >
-        {notStartedYet && (
-          <div className="bg-surface mx-4 mt-5.5 rounded-3xl px-4.5 py-4">
-            <div className="text-[15px] font-bold">This challenge hasn&apos;t started yet</div>
-            <div className="text-muted mt-0.5 text-[12.5px]">
-              Starts {snapshot.startDate} - the checklist unlocks that day.
+        mascot={<GroupMascot avgStreak={avgStreak} />}
+        banner={
+          notStartedYet && (
+            <div className="bg-surface rounded-3xl px-4.5 py-4">
+              <div className="text-[15px] font-bold">This challenge hasn&apos;t started yet</div>
+              <div className="text-muted mt-0.5 text-[12.5px]">
+                Starts {snapshot.startDate} - the checklist unlocks that day.
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
+      />
 
-        <GroupMascot avgStreak={avgStreak} />
-
-        <div className="flex items-baseline justify-between px-6 pt-6.5 pb-2.5">
-          <span className="text-faint text-[11px] tracking-[0.12em] uppercase">
-            Today&apos;s list
-          </span>
-          <span className="text-muted text-[12px]">
-            {notStartedYet ? "not started yet" : "tap to tick"}
-          </span>
-        </div>
-      </TodayLive>
-
-      <div className="mx-4 mt-5.5 flex gap-2.5">
+      {/* order-3: after the stats/mascot sidebar (order-1) and checklist
+          (order-2) below lg - see TodayLive's own comment. */}
+      <div className="order-3 flex gap-2.5 lg:order-none lg:col-start-1">
         <div className="bg-surface flex-1 rounded-3xl px-4.5 py-4">
           <div className="text-faint text-[10.5px] tracking-[0.1em]">GROUP TODAY</div>
           <div className="font-heading mt-0.5 text-2xl">

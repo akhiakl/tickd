@@ -4,7 +4,11 @@ import { FAKE_AUTH0_URL } from "../fixtures/constants";
 test.describe("landing page (Auth0 mode)", () => {
   test("redirects straight to Auth0's hosted login when starting a group", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: "Start a group" }).click();
+    // The hero's CTA and the closing CTA band both have a "Start a group"
+    // link now that the page is one responsive document rather than a
+    // mobile-only hero with a desktop-only closing band - `.first()`
+    // picks the hero's.
+    await page.getByRole("link", { name: "Start a group" }).first().click();
     await expect(page).toHaveURL(new RegExp(`^${FAKE_AUTH0_URL}/authorize`));
   });
 

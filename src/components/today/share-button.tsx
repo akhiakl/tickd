@@ -8,7 +8,25 @@ import { useToast } from "@/lib/use-toast";
 import { Toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
-export function ShareButton({ groupId }: { groupId: string }) {
+export function ShareButton({
+  groupId,
+  className,
+  variant = "floating",
+}: {
+  groupId: string;
+  className?: string;
+  /** "floating": the mobile fixed pill anchored to the viewport bottom
+   * (default) - the app's original mobile treatment. "inline": a
+   * full-width static button meant to sit inside the desktop sidebar's
+   * stats panel instead - see TodayStatsPanel's own comment and
+   * design/project/desktop-redesign/TodayDesktop.dc.html, which moves
+   * Share there on desktop (floating there would collide with the last
+   * checklist row on a wide viewport). Each call site is responsible for
+   * its own responsive visibility (`className="lg:hidden"` /
+   * `"hidden lg:flex"`) - this component doesn't assume which width a
+   * given variant belongs to. */
+  variant?: "floating" | "inline";
+}) {
   const [open, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const { message, showToast } = useToast();
@@ -51,30 +69,49 @@ export function ShareButton({ groupId }: { groupId: string }) {
 
   return (
     <>
-      {/* fixed, not absolute: this needs to float at a constant spot on
-          screen regardless of how far the checklist/member list below it
-          is scrolled - absolute would anchor to whichever ancestor
-          happens to establish its containing block, which isn't
-          guaranteed to track the viewport as the page scrolls. The outer
-          div matches Screen's own responsive column width
-          (max-w-md/xl/2xl) and is what's actually `fixed` + centered;
-          the button positions `absolute` within *that*, so it lines up
-          with the page content instead of the raw window edge on wider
-          viewports. The outer div has no in-flow content of its own (the
-          button is taken out of flow), so it collapses to zero height -
-          harmless, and `pointer-events-none` (undone on the button
-          itself) keeps that zero-height box from blocking clicks/scroll
-          anywhere else on the page. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md md:max-w-xl lg:max-w-2xl">
+      {variant === "inline" ? (
         <button
           type="button"
           onClick={openSheet}
-          className="bg-accent font-heading text-on-panel pointer-events-auto absolute right-4.5 bottom-24 flex cursor-pointer items-center gap-2 rounded-full py-3.5 pr-5 pl-4.5 text-[15px] shadow-lg"
+          className={cn(
+            "bg-accent font-heading text-on-panel flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-3.5 text-[15px]",
+            className,
+          )}
         >
           <ArrowUpFromLine size={19} strokeWidth={2.4} />
           Share today
         </button>
-      </div>
+      ) : (
+        // fixed, not absolute: this needs to float at a constant spot on
+        // screen regardless of how far the checklist/member list below it
+        // is scrolled - absolute would anchor to whichever ancestor
+        // happens to establish its containing block, which isn't
+        // guaranteed to track the viewport as the page scrolls. The outer
+        // div matches Screen's own responsive column width
+        // (max-w-md/xl/2xl) and is what's actually `fixed` + centered;
+        // the button positions `absolute` within *that*, so it lines up
+        // with the page content instead of the raw window edge on wider
+        // viewports. The outer div has no in-flow content of its own (the
+        // button is taken out of flow), so it collapses to zero height -
+        // harmless, and `pointer-events-none` (undone on the button
+        // itself) keeps that zero-height box from blocking clicks/scroll
+        // anywhere else on the page.
+        <div
+          className={cn(
+            "pointer-events-none fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md md:max-w-xl lg:max-w-2xl",
+            className,
+          )}
+        >
+          <button
+            type="button"
+            onClick={openSheet}
+            className="bg-accent font-heading text-on-panel pointer-events-auto absolute right-4.5 bottom-24 flex cursor-pointer items-center gap-2 rounded-full py-3.5 pr-5 pl-4.5 text-[15px] shadow-lg"
+          >
+            <ArrowUpFromLine size={19} strokeWidth={2.4} />
+            Share today
+          </button>
+        </div>
+      )}
 
       <Sheet
         open={open}

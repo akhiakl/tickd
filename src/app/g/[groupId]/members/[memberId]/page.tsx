@@ -56,94 +56,112 @@ export default async function MemberProfilePage({
   });
 
   return (
-    <Screen className="pt-2 pb-10">
+    // At lg: profile + stats + badges on the left, per-item + history on
+    // the right, instead of one long stacked column - both halves are
+    // already contiguous in document order (nothing needs reordering),
+    // just grouped under their own column below. See
+    // design/project/desktop-redesign/MemberDetailDesktop.dc.html and that
+    // folder's NOTES.md.
+    <Screen
+      className="pt-2 pb-10 lg:px-10 lg:pt-10 lg:pb-16"
+      maxWidthClassName="max-w-md md:max-w-xl lg:max-w-[1080px]"
+    >
       <div className="flex items-center gap-3 py-1.5">
         <BackButton href={`/g/${groupId}`} />
         <span className="text-faint text-[11px] tracking-[0.12em] uppercase">Member</span>
       </div>
 
-      <div className="flex items-center gap-4 pt-4.5">
-        <Avatar name={member.name} color={member.color} seed={member.avatarSeed} size={62} />
-        <div>
-          <div className="font-heading text-[27px] leading-tight">
-            {member.name}
-            {member.isMe && " (you)"}
+      <div className="lg:grid lg:grid-cols-[340px_1fr] lg:items-start lg:gap-8">
+        <div className="lg:col-start-1">
+          <div className="flex items-center gap-4 pt-4.5">
+            <Avatar name={member.name} color={member.color} seed={member.avatarSeed} size={62} />
+            <div>
+              <div className="font-heading text-[27px] leading-tight">
+                {member.name}
+                {member.isMe && " (you)"}
+              </div>
+              <div className="text-muted flex items-center gap-1.5 text-[13px]">
+                <span>
+                  joined day 1 -{" "}
+                  {Math.round((computeTotal(counts) / (dayIndex * items.length)) * 100)}% of the
+                  challenge
+                </span>
+                <LocalTimeBadge timezone={member.timezone} />
+              </div>
+            </div>
           </div>
-          <div className="text-muted flex items-center gap-1.5 text-[13px]">
-            <span>
-              joined day 1 - {Math.round((computeTotal(counts) / (dayIndex * items.length)) * 100)}%
-              of the challenge
-            </span>
-            <LocalTimeBadge timezone={member.timezone} />
+
+          <div className="flex gap-2 px-0 pt-5">
+            {[
+              { value: currentStreakWithToday(counts), label: "Current streak" },
+              { value: computeBestStreak(counts), label: "Longest run" },
+              { value: computeTotal(counts), label: "Items done" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="bg-surface flex-1 rounded-[22px] px-3 py-3.5 text-center"
+              >
+                <div className="font-heading text-2xl">{stat.value}</div>
+                <div className="text-faint mt-0.5 text-[10px] tracking-[0.08em] uppercase">
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-faint pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase">
+            Badges
+          </div>
+          <BadgeRow earned={badges} />
+        </div>
+
+        <div className="lg:col-start-2">
+          <div className="text-faint pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase lg:pt-0">
+            Per item
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {perItem.map((item) => (
+              <div key={item.id}>
+                <div className="mb-1.5 flex justify-between text-[13.5px] font-semibold">
+                  <span>{item.label}</span>
+                  <span className="text-muted">{item.pct}%</span>
+                </div>
+                <div className="bg-text/10 h-[7px] overflow-hidden rounded-full">
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${item.pct}%`, background: member.color }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-faint pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase">
+            History
+          </div>
+          <div className="flex max-w-[340px] flex-wrap gap-1.5 lg:max-w-none">
+            {allDates.map((date, i) => {
+              const future = date > localToday;
+              const count = future ? null : (member.localCountsByDate[date] ?? 0);
+              const full = count === items.length;
+              const partial = count !== null && count > 0 && !full;
+              return (
+                <span
+                  key={date}
+                  className={cn(
+                    "flex h-[34px] w-[38px] items-center justify-center rounded-[10px] text-[11px] font-bold",
+                    future && "border-text/20 text-muted border border-dashed",
+                    !future && count === 0 && "bg-zero text-muted",
+                    !future && full && "bg-ok text-bg",
+                    !future && partial && "bg-ok-4 text-muted",
+                  )}
+                >
+                  {i + 1}
+                </span>
+              );
+            })}
           </div>
         </div>
-      </div>
-
-      <div className="flex gap-2 px-0 pt-5">
-        {[
-          { value: currentStreakWithToday(counts), label: "Current streak" },
-          { value: computeBestStreak(counts), label: "Longest run" },
-          { value: computeTotal(counts), label: "Items done" },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-surface flex-1 rounded-[22px] px-3 py-3.5 text-center"
-          >
-            <div className="font-heading text-2xl">{stat.value}</div>
-            <div className="text-faint mt-0.5 text-[10px] tracking-[0.08em] uppercase">
-              {stat.label}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="text-faint pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase">Badges</div>
-      <BadgeRow earned={badges} />
-
-      <div className="text-faint pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase">
-        Per item
-      </div>
-      <div className="flex flex-col gap-2.5">
-        {perItem.map((item) => (
-          <div key={item.id}>
-            <div className="mb-1.5 flex justify-between text-[13.5px] font-semibold">
-              <span>{item.label}</span>
-              <span className="text-muted">{item.pct}%</span>
-            </div>
-            <div className="bg-text/10 h-[7px] overflow-hidden rounded-full">
-              <div
-                className="h-full rounded-full"
-                style={{ width: `${item.pct}%`, background: member.color }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="text-faint pt-6.5 pb-2.5 text-[11px] tracking-[0.12em] uppercase">
-        History
-      </div>
-      <div className="flex max-w-[340px] flex-wrap gap-1.5">
-        {allDates.map((date, i) => {
-          const future = date > localToday;
-          const count = future ? null : (member.localCountsByDate[date] ?? 0);
-          const full = count === items.length;
-          const partial = count !== null && count > 0 && !full;
-          return (
-            <span
-              key={date}
-              className={cn(
-                "flex h-[34px] w-[38px] items-center justify-center rounded-[10px] text-[11px] font-bold",
-                future && "border-text/20 text-muted border border-dashed",
-                !future && count === 0 && "bg-zero text-muted",
-                !future && full && "bg-ok text-bg",
-                !future && partial && "bg-ok-4 text-muted",
-              )}
-            >
-              {i + 1}
-            </span>
-          );
-        })}
       </div>
     </Screen>
   );

@@ -4,8 +4,8 @@ import { getMyGroups } from "@/server/queries/my-groups";
 import { requireValidUserId } from "@/server/auth/require-user";
 import { GroupTabHeader } from "@/components/nav/group-tab-header";
 import { TodayDateLabel } from "@/components/today/today-date-label";
-import { ShareButton } from "@/components/today/share-button";
 import { NewBadgeToast } from "@/components/today/new-badge-toast";
+import { ShareButton } from "@/components/today/share-button";
 import { earnedBadges } from "@/lib/achievements";
 import { TodayChecklistSection } from "./today-checklist-section";
 import { MemberListSection } from "./member-list-section";
@@ -37,39 +37,47 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
   }).map((b) => b.id);
 
   return (
-    // pb-40 (not the old pb-30) reserves enough room for ShareButton, now
-    // that it's genuinely fixed to the viewport at all scroll positions
-    // instead of an absolute-positioned element that happened to render
-    // near the bottom: fixed bottom-24 + the button's own ~54px height
-    // puts its top edge ~150px above the viewport bottom, so the last
-    // checklist/member row needs at least that much clearance to never
-    // sit underneath it when scrolled all the way down.
-    <div className="pt-1.5 pb-40">
-      <GroupTabHeader
-        groupId={groupId}
-        groupName={snapshot.name}
-        myName={me.name}
-        myColor={me.color}
-        myAvatarSeed={me.avatarSeed}
-        isAdmin={snapshot.myRole === "admin"}
-        groups={groups}
-        subtitle={<TodayDateLabel dayIndex={dayIndex} durationDays={durationDays} />}
-      />
+    // One responsive grid at every width - single column below lg, then
+    // checklist + a sticky sidebar (stats/streak panel with Share inline,
+    // plus the mascot) at lg - instead of a desktop-only layout bolted
+    // onto an unrelated mobile one. pb-40 reserves room for both GroupNav's
+    // fixed bottom bar and the floating Share button that sits above it
+    // below lg (both hide themselves above lg, no clearance needed there).
+    // See design/project/desktop-redesign/TodayDesktop.dc.html - its own
+    // "Mobile" and "Desktop" artboards are byte-identical HTML, reflowed
+    // purely by that file's own `@media` rules - and that folder's
+    // NOTES.md.
+    <div className="px-5 pt-1.5 pb-40 sm:px-6 lg:mx-auto lg:max-w-[1160px] lg:px-10 lg:pt-10 lg:pb-16">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_372px] lg:items-start">
+        <GroupTabHeader
+          groupId={groupId}
+          groupName={snapshot.name}
+          myName={me.name}
+          myColor={me.color}
+          myAvatarSeed={me.avatarSeed}
+          isAdmin={snapshot.myRole === "admin"}
+          groups={groups}
+          subtitle={<TodayDateLabel dayIndex={dayIndex} durationDays={durationDays} />}
+        />
 
-      {/* Streamed in behind its own boundary - see today-checklist-section's
-          comment for why this doesn't cost a second DB round trip. */}
-      <Suspense fallback={<ChecklistSkeleton />}>
-        <TodayChecklistSection groupId={groupId} userId={userId} />
-      </Suspense>
+        {/* Streamed in behind its own boundary - see today-checklist-section's
+            comment for why this doesn't cost a second DB round trip. */}
+        <Suspense fallback={<ChecklistSkeleton />}>
+          <TodayChecklistSection groupId={groupId} userId={userId} />
+        </Suspense>
 
-      {/* Streamed in behind its own boundary - see member-list-section's
-          comment for why this doesn't cost a second DB round trip. */}
-      <Suspense fallback={<MemberListSkeleton />}>
-        <MemberListSection groupId={groupId} userId={userId} />
-      </Suspense>
+        {/* Streamed in behind its own boundary - see member-list-section's
+            comment for why this doesn't cost a second DB round trip. */}
+        <Suspense fallback={<MemberListSkeleton />}>
+          <MemberListSection groupId={groupId} userId={userId} />
+        </Suspense>
+      </div>
 
-      <ShareButton groupId={groupId} />
       <NewBadgeToast groupId={groupId} earnedBadgeIds={myBadgeIds} />
+      {/* floating on mobile only - the inline variant above (inside
+          TodayStatsPanel) covers lg and up, see ShareButton's own comment
+          on the two variants. */}
+      <ShareButton groupId={groupId} variant="floating" className="lg:hidden" />
     </div>
   );
 }
@@ -77,8 +85,8 @@ export default async function TodayPage({ params }: PageProps<"/g/[groupId]">) {
 /** Stand-in for TodayChecklistSection while it streams in. */
 function ChecklistSkeleton() {
   return (
-    <div className="px-4">
-      <div className="skeleton mt-5.5 h-24 rounded-3xl" />
+    <div className="lg:col-start-1">
+      <div className="skeleton h-24 rounded-3xl" />
       <div className="skeleton mt-6 h-14 rounded-2xl" />
       <div className="skeleton mt-2 h-14 rounded-2xl" />
       <div className="skeleton mt-2 h-14 rounded-2xl" />
@@ -89,7 +97,7 @@ function ChecklistSkeleton() {
 /** Stand-in for MemberListSection while it streams in. */
 function MemberListSkeleton() {
   return (
-    <div className="mt-11 flex flex-col gap-2 px-4">
+    <div className="mt-11 flex flex-col gap-2 lg:col-start-1">
       {Array.from({ length: 4 }, (_, i) => (
         <div key={i} className="skeleton h-14 rounded-2xl" />
       ))}
