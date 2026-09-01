@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { getUserById } from "@/server/queries/users";
+import { findGroupByInviteCode } from "@/server/queries/invite";
 import { requireValidUserId } from "@/server/auth/require-user";
 import { Screen } from "@/components/layout/screen";
 import { BackButton } from "@/components/ui/back-button";
@@ -24,6 +26,23 @@ async function JoinContent({ searchParams }: { searchParams: PageProps<"/join">[
   const user = await getUserById(userId);
   if (!user) return null;
 
+  // Normalized once and reused below for both the membership check and
+  // the form's initialCode, so the two can't disagree about a code with
+  // stray leading/trailing whitespace (which trim() would drop from one
+  // but not the other if computed separately).
+  const normalizedCode = typeof code === "string" ? code.trim().toUpperCase() : "";
+
+  // Arriving here from an invite link (a group's Manage screen, or a
+  // group card someone shared) for a group the visitor is already in -
+  // send them straight to it instead of making them hit "Join the group"
+  // again for a no-op membership row. A code that doesn't resolve, or
+  // resolves but they're not a member of yet, falls through to the form
+  // below exactly as before.
+  if (normalizedCode) {
+    const match = await findGroupByInviteCode(normalizedCode, userId);
+    if (match?.alreadyMember) redirect(`/g/${match.groupId}`);
+  }
+
   return (
     <>
       <div className="bg-surface mb-6 flex items-center gap-3.5 rounded-[26px] px-4.5 py-4">
@@ -34,7 +53,7 @@ async function JoinContent({ searchParams }: { searchParams: PageProps<"/join">[
         </div>
       </div>
 
-      <JoinGroupForm initialCode={typeof code === "string" ? code.toUpperCase() : ""} />
+      <JoinGroupForm initialCode={normalizedCode} />
     </>
   );
 }
