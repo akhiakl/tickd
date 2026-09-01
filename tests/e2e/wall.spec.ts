@@ -46,6 +46,14 @@ test.describe("The wall", () => {
     // Priya ticked the first half of the checklist every seeded day.
     const oneDayAgo = daysAgoISO(1);
     await page.getByRole("button", { name: "Priya" }).click();
+    // The calendar defaults to the month containing "today" - when today
+    // is the 1st of the month, "1 day ago" falls in the previous month
+    // and isn't on the visible page yet, so page back to it first. Most
+    // days this is a no-op (the button is simply absent because it's
+    // already on the right page).
+    if (oneDayAgo.slice(0, 7) !== toISODate(new Date()).slice(0, 7)) {
+      await page.getByRole("button", { name: "Previous month" }).click();
+    }
     await page.getByRole("button", { name: `${oneDayAgo}, 4 of 8 done` }).click();
     await expect(page.getByText(`Priya - ${oneDayAgo}`)).toBeVisible();
     await expect(page.getByText("4 of 8 done")).toBeVisible();
@@ -65,6 +73,7 @@ test.describe("The wall", () => {
     await signInAs(context, group.admin, baseURL!);
     await page.goto(`/g/${group.groupId}/wall`);
 
+    const today = toISODate(new Date());
     const tomorrow = toISODate(new Date(Date.now() + 86_400_000));
     // Only assert this when it's still the same displayed month - a run
     // that happens to land on the last day of the month would need to
@@ -73,6 +82,17 @@ test.describe("The wall", () => {
       await expect(page.getByLabel(tomorrow)).toBeDisabled();
     }
 
-    await expect(page.getByRole("button", { name: "Previous month" })).toBeDisabled();
+    // The calendar defaults to today's month, not necessarily the
+    // group's start month - those only coincide when historyDays doesn't
+    // cross a month boundary (e.g. a run on the 1st-3rd with 4 days of
+    // history reaches back into the prior month). "Previous month" is
+    // only disabled once there's nothing earlier to page back to, i.e.
+    // when the displayed month already *is* the start month.
+    const previousMonth = page.getByRole("button", { name: "Previous month" });
+    if (today.slice(0, 7) === group.startDate.slice(0, 7)) {
+      await expect(previousMonth).toBeDisabled();
+    } else {
+      await expect(previousMonth).toBeEnabled();
+    }
   });
 });
