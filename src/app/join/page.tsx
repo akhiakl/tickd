@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { getUserById } from "@/server/queries/users";
+import { findGroupByInviteCode } from "@/server/queries/invite";
 import { requireValidUserId } from "@/server/auth/require-user";
 import { Screen } from "@/components/layout/screen";
 import { BackButton } from "@/components/ui/back-button";
@@ -23,6 +25,17 @@ async function JoinContent({ searchParams }: { searchParams: PageProps<"/join">[
   const userId = await requireValidUserId(currentPath);
   const user = await getUserById(userId);
   if (!user) return null;
+
+  // Arriving here from an invite link (a group's Manage screen, or a
+  // group card someone shared) for a group the visitor is already in -
+  // send them straight to it instead of making them hit "Join the group"
+  // again for a no-op membership row. A code that doesn't resolve, or
+  // resolves but they're not a member of yet, falls through to the form
+  // below exactly as before.
+  if (typeof code === "string" && code.trim()) {
+    const match = await findGroupByInviteCode(code.trim().toUpperCase(), userId);
+    if (match?.alreadyMember) redirect(`/g/${match.groupId}`);
+  }
 
   return (
     <>

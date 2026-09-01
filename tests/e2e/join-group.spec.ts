@@ -56,6 +56,28 @@ test.describe("join a group", () => {
     await expect(page.getByLabel("Invite code")).toHaveValue("LOWERCASE-CODE");
   });
 
+  test("visiting an invite link for a group you're already in redirects straight there", async ({
+    page,
+    context,
+    baseURL,
+  }) => {
+    const group = await seedFreshGroup();
+    const user = await seedLoneUser("Joiner");
+    await signInAs(context, user, baseURL!);
+
+    // Join once via the normal flow...
+    await page.goto("/join");
+    await page.getByLabel("Invite code").fill(group.inviteCode);
+    await page.getByRole("button", { name: "Join the group" }).click();
+    await expect(page).toHaveURL(`/g/${group.groupId}`);
+
+    // ...then visiting the same invite link again (e.g. clicking it a
+    // second time from a group card, or a stale share) should skip the
+    // join form entirely instead of asking them to join again.
+    await page.goto(`/join?code=${group.inviteCode}`);
+    await expect(page).toHaveURL(`/g/${group.groupId}`);
+  });
+
   test("short-link /j/<code> redirects to /join?code=<code> and pre-fills the invite code", async ({
     page,
     context,
