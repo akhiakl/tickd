@@ -26,14 +26,20 @@ async function JoinContent({ searchParams }: { searchParams: PageProps<"/join">[
   const user = await getUserById(userId);
   if (!user) return null;
 
+  // Normalized once and reused below for both the membership check and
+  // the form's initialCode, so the two can't disagree about a code with
+  // stray leading/trailing whitespace (which trim() would drop from one
+  // but not the other if computed separately).
+  const normalizedCode = typeof code === "string" ? code.trim().toUpperCase() : "";
+
   // Arriving here from an invite link (a group's Manage screen, or a
   // group card someone shared) for a group the visitor is already in -
   // send them straight to it instead of making them hit "Join the group"
   // again for a no-op membership row. A code that doesn't resolve, or
   // resolves but they're not a member of yet, falls through to the form
   // below exactly as before.
-  if (typeof code === "string" && code.trim()) {
-    const match = await findGroupByInviteCode(code.trim().toUpperCase(), userId);
+  if (normalizedCode) {
+    const match = await findGroupByInviteCode(normalizedCode, userId);
     if (match?.alreadyMember) redirect(`/g/${match.groupId}`);
   }
 
@@ -47,7 +53,7 @@ async function JoinContent({ searchParams }: { searchParams: PageProps<"/join">[
         </div>
       </div>
 
-      <JoinGroupForm initialCode={typeof code === "string" ? code.toUpperCase() : ""} />
+      <JoinGroupForm initialCode={normalizedCode} />
     </>
   );
 }
