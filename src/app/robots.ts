@@ -15,6 +15,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/account", "/create", "/g/", "/join", "/j/", "/api/"],
     },
-    sitemap: `${getBaseUrl()}/sitemap.xml`,
+    sitemap: new URL("/sitemap.xml", getBaseUrl()).toString(),
   };
 }
