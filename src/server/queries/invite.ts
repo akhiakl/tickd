@@ -34,12 +34,14 @@ export async function findGroupByInviteCode(
   return { groupId: row.groupId, alreadyMember: row.memberUserId != null };
 }
 
-// Matches the exact shape `randomInviteCode()` (src/server/actions/groups.ts)
-// generates: 4 uppercase letters, a dash, 4 uppercase alphanumeric chars.
-// `getGroupNameByInviteCode` is reachable by unauthenticated requests (see
-// the /join bot exemption in src/proxy.ts), so anything that can't possibly
-// be a real invite code is rejected before it costs a DB round trip.
-const INVITE_CODE_PATTERN = /^[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+// Matches the exact character sets `randomInviteCode()`
+// (src/server/actions/groups.ts) draws from: 4 letters (A-Z minus the
+// ambiguous I/O), a dash, then 4 letters-or-digits from that same reduced
+// alphabet plus 2-9 (no 0/1, easily confused with O/I). `getGroupNameByInviteCode`
+// is reachable by unauthenticated requests (see the /join bot exemption in
+// src/proxy.ts), so anything that can't possibly be a real invite code is
+// rejected before it costs a DB round trip.
+const INVITE_CODE_PATTERN = /^[A-HJ-NP-Z]{4}-[A-HJ-NP-Z2-9]{4}$/;
 
 /**
  * Resolves an invite code to just the group's name, without a `userId` -
