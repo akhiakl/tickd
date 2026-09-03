@@ -8,7 +8,11 @@ import { BackButton } from "@/components/ui/back-button";
 import { Avatar } from "@/components/ui/avatar";
 import { JoinGroupForm } from "@/components/join/join-group-form";
 
-export const metadata = { title: "Join a group" };
+export const metadata = {
+  title: "Join a group",
+  description: "Join a group with an invite code.",
+  robots: { index: false, follow: false },
+};
 
 /**
  * Everything here reads the session (`auth()`) or `searchParams`, both

@@ -8,7 +8,11 @@ import { WallGrid } from "@/components/wall/wall-grid";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 export const instant = false;
 
-export const metadata = { title: "The wall" };
+export const metadata = {
+  title: "The wall",
+  description: "The group's shared calendar - every day, everyone's progress, at a glance.",
+  robots: { index: false, follow: false },
+};
 
 export default async function WallPage({ params }: PageProps<"/g/[groupId]/wall">) {
   const { groupId } = await params;
