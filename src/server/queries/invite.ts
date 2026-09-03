@@ -33,3 +33,20 @@ export async function findGroupByInviteCode(
 
   return { groupId: row.groupId, alreadyMember: row.memberUserId != null };
 }
+
+/**
+ * Resolves an invite code to just the group's name, without a `userId` -
+ * unlike `findGroupByInviteCode` above, this is meant to run for visitors
+ * who aren't signed in at all (`/join`'s `generateMetadata`, so a shared
+ * invite link's own link-preview card can say "Join <Group>" instead of
+ * something generic). Not cached, for the same reason as above: a group
+ * created moments ago should resolve immediately.
+ */
+export async function getGroupNameByInviteCode(inviteCode: string): Promise<string | null> {
+  const [row] = await db
+    .select({ name: groups.name })
+    .from(groups)
+    .where(eq(groups.inviteCode, inviteCode))
+    .limit(1);
+  return row?.name ?? null;
+}
