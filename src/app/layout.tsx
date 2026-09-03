@@ -8,15 +8,37 @@ import { TimezoneSync } from "@/components/timezone-sync";
 import { getBaseUrl } from "@/lib/base-url";
 import "./globals.css";
 
+const description =
+  "A shared daily checklist for your group. Tick your list, watch the wall fill in, don't be the one with the gap.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
   title: {
     default: "Tickd",
     template: "%s / Tickd",
   },
-  description:
-    "A shared daily checklist for your group. Tick your list, watch the wall fill in, don't be the one with the gap.",
+  description,
   applicationName: "Tickd",
+  keywords: ["shared checklist", "group habit tracker", "daily challenge", "accountability app"],
+  // Per-page metadata (e.g. the account/settings/join pages behind
+  // requireValidUserId()) overrides this with `robots: { index: false }` -
+  // this default only applies to routes that don't set their own.
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Tickd",
+    title: "Tickd",
+    description,
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tickd",
+    description,
+  },
 };
 
 export const viewport: Viewport = {

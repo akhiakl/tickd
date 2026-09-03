@@ -22,7 +22,11 @@ const ChecklistSettingsEditor = dynamic(
   { loading: () => <div className="bg-surface h-40 animate-pulse rounded-3xl" /> },
 );
 
-export const metadata = { title: "Group settings" };
+export const metadata = {
+  title: "Group settings",
+  description: "Manage the group's members, checklist, and invite link.",
+  robots: { index: false, follow: false },
+};
 
 export default async function GroupSettingsPage({ params }: PageProps<"/g/[groupId]/settings">) {
   const { groupId } = await params;

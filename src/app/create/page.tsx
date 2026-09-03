@@ -2,7 +2,11 @@ import { Screen } from "@/components/layout/screen";
 import { BackButton } from "@/components/ui/back-button";
 import { CreateGroupForm } from "@/components/create/create-group-form";
 
-export const metadata = { title: "New group" };
+export const metadata = {
+  title: "New group",
+  description: "Start a new shared checklist challenge for your group.",
+  robots: { index: false, follow: false },
+};
 
 export default function CreateGroupPage() {
   return (

@@ -13,7 +13,11 @@ import { SignOutButton } from "@/components/account/sign-out-button";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 export const instant = false;
 
-export const metadata = { title: "Your account" };
+export const metadata = {
+  title: "Your account",
+  description: "Manage your profile and the groups you're a member of.",
+  robots: { index: false, follow: false },
+};
 
 export default async function AccountPage() {
   const userId = await requireValidUserId("/account");

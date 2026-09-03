@@ -19,7 +19,11 @@ import { cn } from "@/lib/utils";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 export const instant = false;
 
-export const metadata = { title: "Standings" };
+export const metadata = {
+  title: "Standings",
+  description: "See how everyone in the group is stacking up.",
+  robots: { index: false, follow: false },
+};
 
 /** Top-3 medal styling - gold/silver/bronze badge + a tinted row
  * background, so the leaderboard's top 3 actually stand out instead of

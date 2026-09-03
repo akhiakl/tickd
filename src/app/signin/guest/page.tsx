@@ -4,7 +4,10 @@ import { Screen } from "@/components/layout/screen";
 import { BackButton } from "@/components/ui/back-button";
 import { GuestSignInForm } from "@/components/signin/guest-sign-in-form";
 
-export const metadata = { title: "What should we call you?" };
+export const metadata = {
+  title: "What should we call you?",
+  description: "Pick a name to get started with Tickd - no email, no password.",
+};
 
 /** `searchParams` is request-time-only under Cache Components - awaited here,
  * inside the Suspense boundary below, rather than in the page itself. */
