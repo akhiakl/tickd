@@ -34,6 +34,13 @@ export async function findGroupByInviteCode(
   return { groupId: row.groupId, alreadyMember: row.memberUserId != null };
 }
 
+// Matches the exact shape `randomInviteCode()` (src/server/actions/groups.ts)
+// generates: 4 uppercase letters, a dash, 4 uppercase alphanumeric chars.
+// `getGroupNameByInviteCode` is reachable by unauthenticated requests (see
+// the /join bot exemption in src/proxy.ts), so anything that can't possibly
+// be a real invite code is rejected before it costs a DB round trip.
+const INVITE_CODE_PATTERN = /^[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+
 /**
  * Resolves an invite code to just the group's name, without a `userId` -
  * unlike `findGroupByInviteCode` above, this is meant to run for visitors
@@ -43,6 +50,8 @@ export async function findGroupByInviteCode(
  * created moments ago should resolve immediately.
  */
 export async function getGroupNameByInviteCode(inviteCode: string): Promise<string | null> {
+  if (!INVITE_CODE_PATTERN.test(inviteCode)) return null;
+
   const [row] = await db
     .select({ name: groups.name })
     .from(groups)
