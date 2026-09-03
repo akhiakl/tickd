@@ -10,8 +10,10 @@ import { getBaseUrl } from "@/lib/base-url";
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
+      // No lastModified: there's no real content timestamp to report for
+      // the landing page, and stamping "now" on every generation would
+      // just be noise that could trigger unnecessary recrawls.
       url: new URL("/", getBaseUrl()).toString(),
-      lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 1,
     },
