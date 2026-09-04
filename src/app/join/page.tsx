@@ -1,18 +1,47 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getUserById } from "@/server/queries/users";
-import { findGroupByInviteCode } from "@/server/queries/invite";
+import { findGroupByInviteCode, getGroupNameByInviteCode } from "@/server/queries/invite";
 import { requireValidUserId } from "@/server/auth/require-user";
 import { Screen } from "@/components/layout/screen";
 import { BackButton } from "@/components/ui/back-button";
 import { Avatar } from "@/components/ui/avatar";
 import { JoinGroupForm } from "@/components/join/join-group-form";
 
-export const metadata = {
+const DEFAULT_METADATA: Metadata = {
   title: "Join a group",
   description: "Join a group with an invite code.",
   robots: { index: false, follow: false },
 };
+
+/**
+ * A function rather than the usual static export: an invite link's own
+ * `?code=` decides what this page's link-preview card should say, and that
+ * lookup doesn't need (or wait on) a session - see `getGroupNameByInviteCode`
+ * and `src/proxy.ts`'s public-preview exemption for /join. Falls back to
+ * the generic copy for a bare `/join`, or a code that doesn't resolve.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: PageProps<"/join">["searchParams"];
+}): Promise<Metadata> {
+  const { code } = await searchParams;
+  const normalizedCode = typeof code === "string" ? code.trim().toUpperCase() : "";
+  const groupName = normalizedCode ? await getGroupNameByInviteCode(normalizedCode) : null;
+  if (!groupName) return DEFAULT_METADATA;
+
+  const title = `Join ${groupName}`;
+  const description = `You've been invited to join ${groupName} on Tickd - a shared daily checklist for your group.`;
+  return {
+    title,
+    description,
+    robots: { index: false, follow: false },
+    openGraph: { title, description },
+    twitter: { title, description },
+  };
+}
 
 /**
  * Everything here reads the session (`auth()`) or `searchParams`, both
