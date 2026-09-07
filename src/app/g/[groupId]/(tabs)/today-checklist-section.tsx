@@ -1,9 +1,13 @@
+import { Flame } from "lucide-react";
 import { getGroupSnapshot } from "@/server/queries/group-snapshot";
 import {
+  challengeDayIndex,
   computeStreak,
   computeTotal,
   currentStreakWithToday,
   dateRange,
+  groupComboStreak,
+  todayISODate,
 } from "@/lib/challenge-stats";
 import { TodayLive } from "@/components/today/today-live";
 import { GroupMascot } from "@/components/today/group-mascot";
@@ -44,6 +48,20 @@ export async function TodayChecklistSection({
 
   const notStartedYet = today < snapshot.startDate;
 
+  // The group's own combo streak: every member, every item, on the
+  // group's one shared UTC calendar - see groupComboStreak's own comment
+  // for why that's `countsByDate`, not each member's `localCountsByDate`.
+  // Walked over the shared calendar's own day count, not the viewer's
+  // localDayIndex (that's specific to their own timezone, see
+  // src/types/domain.ts's GroupSnapshot.dayIndex comment).
+  const sharedDayIndex = challengeDayIndex(snapshot.startDate, durationDays, todayISODate());
+  const sharedDates = dateRange(snapshot.startDate, sharedDayIndex);
+  const comboStreak = groupComboStreak(
+    members.map((m) => m.countsByDate),
+    items.length,
+    sharedDates,
+  );
+
   return (
     <>
       <TodayLive
@@ -71,8 +89,20 @@ export async function TodayChecklistSection({
       {/* order-3: after the stats/mascot sidebar (order-1) and checklist
           (order-2) below lg - see TodayLive's own comment. */}
       <div className="order-3 flex gap-2.5 lg:order-none lg:col-start-1">
-        <div className="bg-surface flex-1 rounded-3xl px-4.5 py-4">
+        <div className="bg-surface relative flex-1 rounded-3xl px-4.5 py-4">
           <div className="text-faint text-[10.5px] tracking-[0.1em]">GROUP TODAY</div>
+          {/* Absolutely positioned rather than a sibling wrapper around the
+              label, so it doesn't change the label div's own parent - the
+              e2e suite walks up from the "GROUP TODAY" text node to read
+              the card's total. Only shows once there's something to show -
+              a fresh group with no combo streak yet shouldn't advertise a
+              "0". */}
+          {comboStreak > 0 && (
+            <span className="text-flame absolute top-4 right-4.5 flex items-center gap-0.5 text-[11px] font-bold">
+              <Flame size={11} className="fill-flame text-flame" />
+              {comboStreak}
+            </span>
+          )}
           <div className="font-heading mt-0.5 text-2xl">
             {members.reduce((sum, m) => sum + (m.localCountsByDate[m.localToday] ?? 0), 0)}
             <span className="text-faint text-sm">/{members.length * items.length}</span>

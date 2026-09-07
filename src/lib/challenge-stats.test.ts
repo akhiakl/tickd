@@ -7,6 +7,7 @@ import {
   currentStreakWithToday,
   dateRange,
   daysBetween,
+  groupComboStreak,
   rankScore,
 } from "./challenge-stats";
 
@@ -98,5 +99,38 @@ describe("rankScore", () => {
   it("only sums the trailing 7 days for the week window", () => {
     const history = [8, 8, 8, 8, 8, 8, 8, 8, 1, 1, 1, 1, 1, 1, 1];
     expect(rankScore(history, "week")).toBe(7);
+  });
+});
+
+describe("groupComboStreak", () => {
+  const dates = ["2026-08-01", "2026-08-02", "2026-08-03", "2026-08-04"];
+
+  it("counts back while every member finished every item each day", () => {
+    const members = [
+      { "2026-08-01": 2, "2026-08-02": 2, "2026-08-03": 2, "2026-08-04": 2 },
+      { "2026-08-01": 2, "2026-08-02": 2, "2026-08-03": 2, "2026-08-04": 2 },
+    ];
+    expect(groupComboStreak(members, 2, dates)).toBe(4);
+  });
+
+  it("zeroes out the day after anyone misses even one item", () => {
+    const members = [
+      { "2026-08-01": 2, "2026-08-02": 1, "2026-08-03": 2, "2026-08-04": 2 },
+      { "2026-08-01": 2, "2026-08-02": 2, "2026-08-03": 2, "2026-08-04": 2 },
+    ];
+    expect(groupComboStreak(members, 2, dates)).toBe(2);
+  });
+
+  it("doesn't zero out on an unfinished today", () => {
+    const members = [
+      { "2026-08-01": 2, "2026-08-02": 2, "2026-08-03": 2, "2026-08-04": 0 },
+      { "2026-08-01": 2, "2026-08-02": 2, "2026-08-03": 2, "2026-08-04": 0 },
+    ];
+    expect(groupComboStreak(members, 2, dates)).toBe(3);
+  });
+
+  it("is zero with no items or no members", () => {
+    expect(groupComboStreak([{ "2026-08-01": 0 }], 0, ["2026-08-01"])).toBe(0);
+    expect(groupComboStreak([], 2, dates)).toBe(0);
   });
 });

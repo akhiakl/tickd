@@ -1,5 +1,6 @@
 import { getGroupSnapshot } from "@/server/queries/group-snapshot";
 import { computeTotal, currentStreakWithToday, dateRange } from "@/lib/challenge-stats";
+import { roastLine } from "@/lib/roast";
 import { MemberList, type MemberListRow } from "@/components/today/member-list";
 
 /**
@@ -27,6 +28,17 @@ export async function MemberListSection({ groupId, userId }: { groupId: string; 
       const counts = mDates.map((d) => m.localCountsByDate[d] ?? 0);
       const total = computeTotal(counts);
       const pct = Math.round((total / (m.localDayIndex * items.length)) * 100);
+
+      // "In the gap" - yesterday was a total miss and nothing's landed
+      // today either. Any check today heals it immediately (counts.at(-1)
+      // > 0), same spirit as doneToday below but on effort rather than
+      // full completion - the crack is about *starting* to fix a gap, not
+      // finishing today's list. A brand-new member (localDayIndex 1, no
+      // yesterday yet) is never gapped - they haven't had a day to miss.
+      const gapped =
+        m.localDayIndex > 1 && (counts.at(-2) ?? 0) === 0 && (counts.at(-1) ?? 0) === 0;
+      const displayName = m.isMe ? "You" : m.name;
+
       return {
         userId: m.userId,
         name: m.name,
@@ -38,6 +50,10 @@ export async function MemberListSection({ groupId, userId }: { groupId: string; 
         streak: currentStreakWithToday(counts),
         pct,
         doneToday: (m.localCountsByDate[m.localToday] ?? 0) === items.length,
+        gapped,
+        // Seeded on the member + their own local day, not Math.random() -
+        // see roastLine's own comment on why that matters.
+        roast: gapped ? roastLine(displayName, `${m.userId}:${m.localToday}`) : null,
       };
     })
     .sort((a, b) => b.pct - a.pct);
