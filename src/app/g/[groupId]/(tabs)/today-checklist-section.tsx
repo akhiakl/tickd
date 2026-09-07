@@ -89,18 +89,20 @@ export async function TodayChecklistSection({
       {/* order-3: after the stats/mascot sidebar (order-1) and checklist
           (order-2) below lg - see TodayLive's own comment. */}
       <div className="order-3 flex gap-2.5 lg:order-none lg:col-start-1">
-        <div className="bg-surface flex-1 rounded-3xl px-4.5 py-4">
-          <div className="flex items-center justify-between">
-            <div className="text-faint text-[10.5px] tracking-[0.1em]">GROUP TODAY</div>
-            {/* Only shows once there's something to show - a fresh
-                group with no combo streak yet shouldn't advertise a "0". */}
-            {comboStreak > 0 && (
-              <span className="text-flame flex items-center gap-0.5 text-[11px] font-bold">
-                <Flame size={11} className="fill-flame text-flame" />
-                {comboStreak}
-              </span>
-            )}
-          </div>
+        <div className="bg-surface relative flex-1 rounded-3xl px-4.5 py-4">
+          <div className="text-faint text-[10.5px] tracking-[0.1em]">GROUP TODAY</div>
+          {/* Absolutely positioned rather than a sibling wrapper around the
+              label, so it doesn't change the label div's own parent - the
+              e2e suite walks up from the "GROUP TODAY" text node to read
+              the card's total. Only shows once there's something to show -
+              a fresh group with no combo streak yet shouldn't advertise a
+              "0". */}
+          {comboStreak > 0 && (
+            <span className="text-flame absolute top-4 right-4.5 flex items-center gap-0.5 text-[11px] font-bold">
+              <Flame size={11} className="fill-flame text-flame" />
+              {comboStreak}
+            </span>
+          )}
           <div className="font-heading mt-0.5 text-2xl">
             {members.reduce((sum, m) => sum + (m.localCountsByDate[m.localToday] ?? 0), 0)}
             <span className="text-faint text-sm">/{members.length * items.length}</span>
