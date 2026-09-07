@@ -24,6 +24,14 @@ export type MemberListRow = {
    * timezone - drives whether a poke button shows at all (no point
    * poking someone who's already done). */
   doneToday: boolean;
+  /** Yesterday was a total miss and nothing's landed today either yet -
+   * see member-list-section.tsx's comment for the exact rule. Drives the
+   * cracked-avatar badge and the roast caption below. */
+  gapped: boolean;
+  /** A deterministic, playful call-out line for a gapped member - null
+   * whenever `gapped` is false. Picked server-side (src/lib/roast.ts) so
+   * it's the same for every viewer and doesn't reshuffle on re-render. */
+  roast: string | null;
 };
 
 export function MemberList({
@@ -86,7 +94,29 @@ function MemberRow({
         href={`/g/${groupId}/members/${row.userId}`}
         className="flex min-w-0 flex-1 items-center gap-2.5"
       >
-        <Avatar name={row.name} color={row.color} seed={row.avatarSeed} size={32} />
+        <span className="relative flex-none">
+          <Avatar
+            name={row.name}
+            color={row.color}
+            seed={row.avatarSeed}
+            size={32}
+            className={row.gapped ? "opacity-60 grayscale" : undefined}
+          />
+          {/* The crack: a small badge marking a member currently "in the
+              gap" (see MemberListRow.gapped's comment), in the same
+              danger tokens group settings' delete button uses - nothing
+              new introduced just for this. */}
+          {row.gapped && (
+            <span
+              aria-hidden
+              className="bg-danger text-on-panel ring-surface absolute -right-0.5 -bottom-0.5 flex h-4 w-4 items-center justify-center rounded-full ring-2"
+            >
+              <svg width="8" height="9" viewBox="0 0 8 9" fill="none">
+                <path d="M3 0L5 3.5H3.2L5 9L1 4.5H2.8L1 0Z" fill="currentColor" />
+              </svg>
+            </span>
+          )}
+        </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[14.5px] font-bold">
             {row.name}
@@ -97,12 +127,18 @@ function MemberRow({
             {row.username && localTime && <span aria-hidden>·</span>}
             {localTime && <span className="flex-none">{localTime}</span>}
           </span>
-          <span className="bg-text/10 mt-1 block h-[5px] overflow-hidden rounded-full">
-            <span
-              className="block h-full rounded-full"
-              style={{ width: `${Math.min(100, row.pct)}%`, background: row.color }}
-            />
-          </span>
+          {row.roast ? (
+            <span className="text-danger-d bg-danger-bg mt-1 inline-block truncate rounded-full px-2 py-0.5 text-[10.5px] font-bold">
+              {row.roast}
+            </span>
+          ) : (
+            <span className="bg-text/10 mt-1 block h-[5px] overflow-hidden rounded-full">
+              <span
+                className="block h-full rounded-full"
+                style={{ width: `${Math.min(100, row.pct)}%`, background: row.color }}
+              />
+            </span>
+          )}
         </span>
       </Link>
       {!row.isMe && !row.doneToday && (

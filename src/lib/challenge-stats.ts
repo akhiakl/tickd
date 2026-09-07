@@ -104,3 +104,30 @@ export function rankScore(countsOldToNew: number[], window: RankWindow): number 
   }
   return computeTotal(countsOldToNew);
 }
+
+/**
+ * The whole group's own streak: consecutive shared days where *every*
+ * member finished *every* item, walked over the group's one shared UTC
+ * calendar (`countsByDate`, not each member's `localCountsByDate` -
+ * a group-wide streak needs one clock everyone agrees on, not five
+ * different "today"s). One person missing one item zeroes it for
+ * everyone the next day - same all-or-nothing spirit as the wall's
+ * per-day coloring, just carried forward as a running count instead of
+ * a single day's snapshot.
+ *
+ * Reuses `currentStreakWithToday`'s "an unfinished today doesn't zero out
+ * yesterday's streak" rule: the group keeps its streak alive until today
+ * actually ends without everyone finishing, exactly like an individual's.
+ */
+export function groupComboStreak(
+  memberCountsByDate: Record<string, number>[],
+  itemCount: number,
+  datesOldToNewIncludingToday: string[],
+): number {
+  if (itemCount === 0 || memberCountsByDate.length === 0) return 0;
+
+  const allDone = datesOldToNewIncludingToday.map((date) =>
+    memberCountsByDate.every((counts) => (counts[date] ?? 0) === itemCount) ? 1 : 0,
+  );
+  return currentStreakWithToday(allDone);
+}
